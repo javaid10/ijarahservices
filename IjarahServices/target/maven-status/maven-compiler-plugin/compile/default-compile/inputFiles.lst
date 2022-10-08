@@ -1,0 +1,17 @@
+/Users/gciconsulting/IdeaProjects/IjarahServices/src/main/java/com/ijarah/utils/constants/ServiceIDConstants.java
+/Users/gciconsulting/IdeaProjects/IjarahServices/src/main/java/com/ijarah/utils/interfaces/AbstractHelperMethods.java
+/Users/gciconsulting/IdeaProjects/IjarahServices/src/main/java/com/ijarah/utils/constants/OperationIDConstants.java
+/Users/gciconsulting/IdeaProjects/IjarahServices/src/main/java/com/ijarah/utils/URLProvider.java
+/Users/gciconsulting/IdeaProjects/IjarahServices/src/main/java/com/ijarah/utils/enums/StatusEnum.java
+/Users/gciconsulting/IdeaProjects/IjarahServices/src/main/java/com/ijarah/utils/IjarahHelperMethods.java
+/Users/gciconsulting/IdeaProjects/IjarahServices/src/main/java/com/ijarah/services/AlQaidaList.java
+/Users/gciconsulting/IdeaProjects/IjarahServices/src/main/java/com/ijarah/utils/enums/IjarahErrors.java
+/Users/gciconsulting/IdeaProjects/IjarahServices/src/main/java/com/ijarah/services/TalibanList.java
+/Users/gciconsulting/IdeaProjects/IjarahServices/src/main/java/com/ijarah/utils/enums/EnvironmentConfig.java
+/Users/gciconsulting/IdeaProjects/IjarahServices/src/main/java/com/ijarah/utils/ServiceCaller.java
+/Users/gciconsulting/IdeaProjects/IjarahServices/src/main/java/com/ijarah/services/ScoringEngine.java
+/Users/gciconsulting/IdeaProjects/IjarahServices/src/main/java/com/ijarah/utils/interfaces/AbstractInvocationWrapper.java
+/Users/gciconsulting/IdeaProjects/IjarahServices/src/main/java/com/ijarah/services/CreateLoan.java
+/Users/gciconsulting/IdeaProjects/IjarahServices/src/main/java/com/ijarah/utils/interfaces/ScoringEngineMethods.java
+/Users/gciconsulting/IdeaProjects/IjarahServices/src/main/java/com/ijarah/utils/FabricHelperMethods.java
+/Users/gciconsulting/IdeaProjects/IjarahServices/src/main/java/com/ijarah/utils/DBPServiceInvocationWrapper.java

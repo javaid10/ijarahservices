@@ -1,0 +1,427 @@
+/dev/null
+[app.services][DEBUG][2022-10-05T18:40:51.630+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DevicePayloadLogger:log:11]:Device Request URL : https://api2.staging.morafinance.com:8443/services/ScoringEngine/scoringEngine
+[app.services][DEBUG][2022-10-05T18:40:51.630+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DevicePayloadLogger:log:11]:Device Payload Query Parameters : null
+[app.services][DEBUG][2022-10-05T18:40:51.631+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DevicePayloadLogger:log:11]:Device Payload Raw Request Body : nationalID: 1849677624
+Product: TAWARRUQ
+applicationID: M2009774
+Mobile: 966505589169
+[app.services][DEBUG][2022-10-05T18:40:51.631+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DevicePayloadLogger:log:11]:Device Payload Request Headers : x-kony-server-console: ADMIN-PORTAL-LOGICAL-URL-CHANGE
+content-length: 81
+host: api2.staging.morafinance.com:8443
+x-kony-authorization: eyAidHlwIjogImp3dCIsICJhbGciOiAiUlMyNTYiIH0.eyAiX2VtYWlsIjogInJhamF0aEBiYW5rLmNvbSIsICJfdmVyIjogInYxLjEiLCAiaXNzIjogImh0dHBzOi8vYXBpMi5zdGFnaW5nLm1vcmFmaW5hbmNlLmNvbTo4NDQzL2F1dGhTZXJ2aWNlL2FjY291bnRzIiwgIl9zY29wZSI6ICJnIiwgIl9pc3NtZXRhIjogIi9tZXRhZGF0YS8yd2pVVzc0ajd6QjNFSkNnbENIRnJnPT0iLCAiX3Nlc3Npb25faWQiOiAiMDU5NDJkMzYtYTAyNy00YzJkLWI3MjMtMzA2NTk3YjBlMzcwIiwgIl9wdWlkIjogNDc0MjQ2ODIwMDUyMSwgIl9pZHAiOiAidXNlcnN0b3JlIiwgImV4cCI6IDE2NjQ5ODgwNTEsICJpYXQiOiAxNjY0OTg0NDUxLCAiX3Nlc3Npb25fdGlkIjogImFjY291bnRzIiwgIl9wcm92X3VzZXJpZCI6ICJyYWphdGhAYmFuay5jb20iLCAianRpIjogIjE5MTUzNWE3LTFmY2UtNGFkNC04MmUzLTQwZTczMzgyZTg1YyIsICJfYWNzIjogImFjY291bnRzIiB9.PWYielbAnw4JTm2pDljYIiGHvyWcYDH2Jx_BJAvc-k-VmkRBUBxt9bziCrR1qeW40asJs-9kIPTli5tCrrAaGjBiGvtdGflS-12-jRrTcEzSGWKlsNpXJD1CXiN5NnrwvsbKGJEk4CCMrppOYgT5YFrKiaVy7W2fJCtG0TiILsru6RNAPFRbaUXiZdrsq6sE3TxkauTQX3kXiD7XZKpxyaHlNVUqtm6Oh9zmFl0netEJZySulmNMZ8iIv-of02xKJwDaiyCEyn2MserJ-P7drt-fH0jwmF-JvSqqSWC5N2uRrk9Lm5pNbt7UUjfZAUWS7qZt8KULZ-um_gHLJzWEvA
+content-type: text/plain; charset=UTF-8
+connection: Keep-Alive
+x-kony-oauth2-access-token: 
+x-kony-api-version: 1.0
+x-kony-sfdc-instance-url: 
+accept-encoding: gzip,deflate
+x-kony-sfdc-access-token: 
+user-agent: Apache-HttpClient/4.5.10 (Java/11.0.2)
+[app.services][ERROR][2022-10-05T18:40:51.634+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.request.validator.AbstractRequestValidator:throwServiceNotFoundWithIdError:59]:Service with service ID 'dbxdb__tbl_customerapplication_get' does not exist
+[app.services][ERROR][2022-10-05T18:40:51.635+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.exceptions.MiddlewareException:logError:116]:MW10102: AppRegistryException - Service does not exist for the specified serviceID.
+[app.services][ERROR][2022-10-05T18:40:51.637+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.ijarah.utils.ServiceCaller:internal:79]:Exception occured while invoking a Fabric service with ServiceId: DBMoraServices, OperationId: dbxdb__tbl_customerapplication_get. and with [ErrorCode=10001,  Message=Service execution error]
+[app.services][ERROR][2022-10-05T18:40:51.638+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.request.validator.AbstractRequestValidator:throwServiceNotFoundWithIdError:59]:Service with service ID 'dbxdb__customer_get' does not exist
+[app.services][ERROR][2022-10-05T18:40:51.639+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.exceptions.MiddlewareException:logError:116]:MW10102: AppRegistryException - Service does not exist for the specified serviceID.
+[app.services][ERROR][2022-10-05T18:40:51.642+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.ijarah.utils.ServiceCaller:internal:79]:Exception occured while invoking a Fabric service with ServiceId: DBXDBServices, OperationId: dbxdb__customer_get. and with [ErrorCode=10001,  Message=Service execution error]
+[app.services][DEBUG][2022-10-05T18:40:51.647+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DatasourcePayloadLogger:log:11]:Datasource Payload request for Service : getToken
+[app.services][DEBUG][2022-10-05T18:40:51.647+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DatasourcePayloadLogger:log:11]:Datasource Payload request : {
+    "Username": "ijrhdmin",
+    "Password": "ijrhadmin_123"
+}
+[app.services][DEBUG][2022-10-05T18:40:51.649+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DatasourcePayloadLogger:log:11]:Datasource Payload response for Service : getToken
+[app.services][DEBUG][2022-10-05T18:40:51.649+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DatasourcePayloadLogger:log:11]:Datasource Payload response : {"data":{},"opstatus":0,"message":"","token":"eyJhbGciOiJSUzI1NiIsImtpZCI6ImY3Zjc2NGVmNTYyNDQ5NzhlYzMxZjY1ZmRmMjhmOGY5IiwidHlwIjoiSldUIn0.eyJuYmYiOjE2NjQwNDY2NTgsImV4cCI6MTY2NDA1MDI1OCwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo2MDY2LyIsImF1ZCI6WyJodHRwOi8vbG9jYWxob3N0OjYwNjYvcmVzb3VyY2VzIiwiYmJmZmFwaSIsImVucSIsInVhbSJdLCJjbGllbnRfaWQiOiJhcGlDbGllbnQiLCJzdWIiOiIyNDU3NCIsImF1dGhfdGltZSI6MTY2NDA0NjY1OCwiaWRwIjoibG9jYWwiLCJsZHQiOiIwOTI0MjAyMjIyMTB8MzQxNSIsInVzciI6IkVROjF8Q0U6MXxDUToxfE5BOjF8REU6MXxOVzoxfE1TOjF8U006MXxTTDoxfFNSOjF8QlI6MXxEUToxfERJOjF8QkM6MXxOQjoxfEFNOjF8U0g6MXxDUzoxfENDOjF8TUM6MXxCVToxfEdFOjF8UkY6MXxUQjoxfE1SOjF8VVI6MXxHTjoxfFJDOjF8QkE6MXxTUDoxfFlQOjF8REc6MXxHTDoxfFFNOjF8UU46MXxRVzoxfFRSOjF8UFc6MXxQUzoxfE1QOjF8TVc6MXxNTToxfEREOjF8RUU6MXxGRjoxfEdHOjF8S0s6MXxMTDoxfE1NOjF8Tk46MXxPTzoxfE5SOjF8Q046MXxDTToxfENVOjF8QlM6MXxCVjoxfERGOjF8RFo6MXxEWDoxfERZOjF8RFY6MXxEVDoxfERPOjF8VEs6MXxDWjoxfENLOjF8Q0w6MXxHQ0NSOjF8Qkg6MXxBQToxfEFGUkQ6MXxQVzoxfFBTOjF8TVc6MXxNTToxfE1SOjF8TVU6MXxNQToxfE1COjF8TVY6MXxFRToxfEZGOjF8U1I6MXxTVToxfFNBOjF8U0I6MXxTVjoxfEtLOjF8S0Q6MXxNSToxfE1MOjF8SUlMOjF8UEQ6MXxNRDoxfFNEOjF8SUQ6MXxMRToxfE1LOjF8U0s6MXxHRzoxfEZTOjF8U0M6MXxQRDoxfE1EOjF8U0Q6MXxJRDoxfE1FOjF8U0U6MXxCTDoxfEJOOjF8Qk06MXxNRzoxfE1IOjF8TUo6MXxDRDoxfENGOjF8Q0c6MXxDSjoxfExHOjF8QUM6MXxTTzoxfERCOjF8VUI6MXxVTjoxfFVDOjF8Q1I6MXxDTzoxfFVHOjF8Q0I6MXxBUzoxfEdDOjF8VUY6MXxDVjoxfEFZOjF8R1M6MXxTVDoxfERNOjF8Q1o6MXxDWDoxfFJNOjF8VE06MXxSRzoxfFhHOjF8RFU6MXxRRDoxfFBHOjF8T0c6MXxEQToxfFFYOjF8UEw6MXxPTDoxfFJTOjF8UlE6MXxQUjoxfFBPOjF8TFM6MXxMTzoxfFNEOjF8TlA6MXxDRTI6MXxOTToxfFJWMjoxfERQOjEiLCJ1c2VybmFtZSI6ImlqcmhkbWluIiwibmVuIjoiU2VydmljZXxBZG1pbiIsIm5hciI6Itiz2LHZgdizfNin2K_ZhdmGIiwibWVtYmVyaWQiOiIyMjEiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiIxIiwic2NvcGUiOlsiYmJmZmFwaSIsImVucSIsInVhbSJdLCJhbXIiOlsiMjQ1NzQsIGlqcmhkbWluIl19.SbgSjRN5ocNnqGdUxBAQzIKQ06UPcbfD8jwGiAg6cDwT4Xwly2bnt2lW5F7TPKO-HB6BWd7k3R1-fRmw_QbgN_DOYcHR40sZYAOCZUMh_GR90ri7bfDNIQMPEQhsR7RAlZwZdRi_0q5D3Xl00lfWkHdsDaou8oSKYskKv5pmiOlnxLmfVyFpFAGKxplhkT-bkgpe_xBVRtbRHhRXSfVLlmVt51BxqfHqwSPpJ8LEsP0-0p2XPF_zS0_Nt-xGP1d8hEcUNzyUNT0W-ru_ouQYjOMU-lzZmJYkmMJVro4U4R9xpchSijAnwJ-Cm5LL8arNAaR5ICIIjiFVmeNu5pdb_w","isSuccess":true,"httpStatusCode":200}
+[app.services][DEBUG][2022-10-05T18:40:51.650+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DatasourcePayloadLogger:log:11]:Datasource Payload request for Service : SalaryCertificateModel
+[app.services][DEBUG][2022-10-05T18:40:51.651+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DatasourcePayloadLogger:log:11]:Datasource Payload request : {
+    "identityInfo": {
+        "idType": "1",
+        "idNumber": "$idNumber"
+    },
+    "employerTypeId": "1",
+    "dateOfBirth": "$dateOfBirth",
+    "responseType": "2",
+    "accept": "true",
+    "enquiryReason": "1"
+}
+[app.services][ERROR][2022-10-05T18:40:51.652+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: No results for path: $['data']
+[app.services][ERROR][2022-10-05T18:40:51.652+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.653+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.653+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.654+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.654+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.655+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.655+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.656+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.656+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.657+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.658+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.658+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.659+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.660+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.660+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.661+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.662+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.663+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.663+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.664+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.664+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.665+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.665+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.666+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.666+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.667+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.667+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.668+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.669+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.670+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.670+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.671+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.671+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.672+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.673+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.673+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.674+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.674+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.json.JsonPathEngineImpl:readPathFromDocumentContext:214]:No record found in the given path: Missing property in path $['data']
+[app.services][ERROR][2022-10-05T18:40:51.675+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.exceptions.MiddlewareException:maskTrace:73]:MW8004: ConnectorException - Error occurred while invoking SimahSalaryCert for post processor mora.com.mock.SimahSalaryCertPostProcessor.
+java.io.FileNotFoundException: /home/mora/MockFiles/SimahSalaryCert/null.json (No such file or directory)
+	at java.io.FileInputStream.open0(Native Method) ~[?:?]
+	at java.io.FileInputStream.open(FileInputStream.java:219) ~[?:?]
+	at java.io.FileInputStream.<init>(FileInputStream.java:157) ~[?:?]
+	at java.io.FileReader.<init>(FileReader.java:75) ~[?:?]
+	at mora.com.mock.ReadFile.readJSONFile(ReadFile.java:38) ~[?:?]
+	at mora.com.mock.SimahSalaryCertPostProcessor.execute(SimahSalaryCertPostProcessor.java:24) ~[?:?]
+	at com.konylabs.middleware.connectors.postprocessor.JavaPostProcessor.executeCore(JavaPostProcessor.java:31) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.postprocessor.JavaPostProcessor.executeCore(JavaPostProcessor.java:12) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.prepostprocessor.JavaPrePostProcessor.executeCore(JavaPrePostProcessor.java:46) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.prepostprocessor.PrePostProcessor.execute(PrePostProcessor.java:44) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.prepostprocessor.CompositePrePostProcessor.execute(CompositePrePostProcessor.java:44) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.postprocessor.PostProcessUtils.execute(PostProcessUtils.java:18) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.BaseConnector.executeCore(BaseConnector.java:184) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.AbstractConnector.execute(AbstractConnector.java:53) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.services.ServiceDelegate.invokeService(ServiceDelegate.java:209) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.services.ServiceDelegate.execute(ServiceDelegate.java:108) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.AbstractCompositeConnector.registerObserverAndInvokeService(AbstractCompositeConnector.java:165) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.AbstractCompositeConnector.invokeService(AbstractCompositeConnector.java:98) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.CompositeConnector.executeSequentialCompositeService(CompositeConnector.java:303) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.CompositeConnector.executeCore(CompositeConnector.java:69) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.AbstractConnector.execute(AbstractConnector.java:53) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.services.ServiceDelegate.invokeService(ServiceDelegate.java:209) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.services.ServiceDelegate.execute(ServiceDelegate.java:90) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.api.ServiceRequestImpl.invokeServiceAndGetResult(ServiceRequestImpl.java:209) ~[middleware-9.2.1.5.jar:?]
+	at com.dbp.core.fabric.extn.DBPServiceExecutor.getResult(DBPServiceExecutor.java:132) ~[?:?]
+	at com.dbp.core.fabric.extn.DBPServiceInvocationWrapper.invokeServiceAndGetResult(DBPServiceInvocationWrapper.java:63) ~[?:?]
+	at com.ijarah.utils.DBPServiceInvocationWrapper.invokeServiceAndGetResult(DBPServiceInvocationWrapper.java:37) ~[?:?]
+	at com.ijarah.utils.ServiceCaller.invokeServiceAndGetResult(ServiceCaller.java:46) ~[?:?]
+	at com.ijarah.utils.ServiceCaller.internal(ServiceCaller.java:75) ~[?:?]
+	at com.ijarah.services.ScoringEngine.getSIMAHSalaryCertificate(ScoringEngine.java:743) ~[?:?]
+	at com.ijarah.services.ScoringEngine.invoke(ScoringEngine.java:102) ~[?:?]
+	at com.konylabs.middleware.connectors.JavaConnector.executeService(JavaConnector.java:114) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.JavaConnector.executeCore(JavaConnector.java:59) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.AbstractConnector.execute(AbstractConnector.java:53) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.services.ServiceDelegate.invokeService(ServiceDelegate.java:209) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.services.ServiceDelegate.execute(ServiceDelegate.java:90) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.sequence.impl.SequenceImpl.executeProcessor(SequenceImpl.java:146) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.sequence.impl.SequenceImpl.execute(SequenceImpl.java:71) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.controller.impl.DataControllerImpl.processDataRequest(DataControllerImpl.java:423) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.controller.impl.DataControllerImpl.processNonPassThroughHttpResponse(DataControllerImpl.java:259) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.controller.impl.DataControllerImpl.processHttpRequest(DataControllerImpl.java:251) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.controller.impl.DataControllerImpl.processHttpRequest(DataControllerImpl.java:416) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.entry.MWServlet.processHttpRequest(MWServlet.java:169) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.entry.MWServlet.executeRequest(MWServlet.java:141) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.entry.MWServlet.doPost(MWServlet.java:80) ~[middleware-9.2.1.5.jar:?]
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:660) ~[servlet-api.jar:?]
+	at com.konylabs.middleware.servlet.AbstractServlet.service(AbstractServlet.java:27) ~[middleware-9.2.1.5.jar:?]
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:741) ~[servlet-api.jar:?]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:231) ~[catalina.jar:9.0.33]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) ~[catalina.jar:9.0.33]
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:53) ~[tomcat-websocket.jar:9.0.33]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193) ~[catalina.jar:9.0.33]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) ~[catalina.jar:9.0.33]
+	at org.apache.catalina.filters.HttpHeaderSecurityFilter.doFilter(HttpHeaderSecurityFilter.java:126) ~[catalina.jar:9.0.33]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193) ~[catalina.jar:9.0.33]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) ~[catalina.jar:9.0.33]
+	at org.apache.logging.log4j.web.Log4jServletFilter.doFilter(Log4jServletFilter.java:71) ~[log4j-web-2.8.2.jar:2.8.2]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193) ~[catalina.jar:9.0.33]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) ~[catalina.jar:9.0.33]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:53) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.config.AuditLogFilter.doFilterCore(AuditLogFilter.java:36) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AbstractFilter.doFilter(AbstractFilter.java:70) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) ~[middleware-9.2.1.5.jar:?]
+	at com.kony.utilities.integrationregulator.IntegrationServiceInvocationRegulator.doFilter(IntegrationServiceInvocationRegulator.java:44) ~[?:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.DCFilter.doFilterCore(DCFilter.java:34) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AbstractFilter.doFilter(AbstractFilter.java:70) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.RecordingFilter.doFilterCore(RecordingFilter.java:34) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AbstractFilter.doFilter(AbstractFilter.java:70) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.api.events.EventsAutoFilter.doFilterCore(EventsAutoFilter.java:69) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AbstractFilter.doFilter(AbstractFilter.java:70) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.PayloadParsingFilter.doFilterCore(PayloadParsingFilter.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AbstractFilter.doFilter(AbstractFilter.java:70) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.SessionsFilter.doFilterCore(SessionsFilter.java:43) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AbstractFilter.doFilter(AbstractFilter.java:70) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.MWValidationAndAuthenticationFilter.doFilterCore(MWValidationAndAuthenticationFilter.java:148) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.MWValidationAndAuthenticationFilter.doFilterCore(MWValidationAndAuthenticationFilter.java:86) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AbstractFilter.doFilter(AbstractFilter.java:70) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.appservices.common.filters.FrontendResolutionFilter.doFilterCore(FrontendResolutionFilter.java:103) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AbstractFilter.doFilter(AbstractFilter.java:70) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AddAdditionalResponseHeaderAttribute.doFilterCore(AddAdditionalResponseHeaderAttribute.java:29) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AbstractFilter.doFilter(AbstractFilter.java:70) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.appservices.common.filters.MWTenantFilter.doFilterCore(MWTenantFilter.java:60) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AbstractFilter.doFilter(AbstractFilter.java:70) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.MetricsFilter.doFilterCore(MetricsFilter.java:33) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AbstractFilter.doFilter(AbstractFilter.java:70) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.appservices.common.filters.DiagnosticContextFilter.doFilterCore(DiagnosticContextFilter.java:26) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AbstractFilter.doFilter(AbstractFilter.java:70) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) [middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) [middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyCompositeFilter.doFilter(KonyCompositeFilter.java:52) [middleware-9.2.1.5.jar:?]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193) [catalina.jar:9.0.33]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) [catalina.jar:9.0.33]
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:202) [catalina.jar:9.0.33]
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:96) [catalina.jar:9.0.33]
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:666) [catalina.jar:9.0.33]
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:139) [catalina.jar:9.0.33]
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:92) [catalina.jar:9.0.33]
+	at org.apache.catalina.valves.AbstractAccessLogValve.invoke(AbstractAccessLogValve.java:688) [catalina.jar:9.0.33]
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74) [catalina.jar:9.0.33]
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:343) [catalina.jar:9.0.33]
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:373) [tomcat-coyote.jar:9.0.33]
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:65) [tomcat-coyote.jar:9.0.33]
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:868) [tomcat-coyote.jar:9.0.33]
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1594) [tomcat-coyote.jar:9.0.33]
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:49) [tomcat-coyote.jar:9.0.33]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128) [?:?]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628) [?:?]
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61) [tomcat-util.jar:9.0.33]
+	at java.lang.Thread.run(Thread.java:834) [?:?]
+[app.services][ERROR][2022-10-05T18:40:51.734+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.exceptions.MiddlewareException:maskTrace:73]:MW8004: ProcessorException - Error occurred while invoking SimahSalaryCert for post processor mora.com.mock.SimahSalaryCertPostProcessor.
+com.konylabs.middleware.exceptions.ConnectorException: Error occurred while invoking SimahSalaryCert for post processor mora.com.mock.SimahSalaryCertPostProcessor.
+	at com.konylabs.middleware.connectors.prepostprocessor.JavaPrePostProcessor.executeCore(JavaPrePostProcessor.java:69) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.prepostprocessor.PrePostProcessor.execute(PrePostProcessor.java:44) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.prepostprocessor.CompositePrePostProcessor.execute(CompositePrePostProcessor.java:44) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.postprocessor.PostProcessUtils.execute(PostProcessUtils.java:18) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.BaseConnector.executeCore(BaseConnector.java:184) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.AbstractConnector.execute(AbstractConnector.java:53) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.services.ServiceDelegate.invokeService(ServiceDelegate.java:209) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.services.ServiceDelegate.execute(ServiceDelegate.java:108) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.AbstractCompositeConnector.registerObserverAndInvokeService(AbstractCompositeConnector.java:165) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.AbstractCompositeConnector.invokeService(AbstractCompositeConnector.java:98) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.CompositeConnector.executeSequentialCompositeService(CompositeConnector.java:303) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.CompositeConnector.executeCore(CompositeConnector.java:69) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.AbstractConnector.execute(AbstractConnector.java:53) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.services.ServiceDelegate.invokeService(ServiceDelegate.java:209) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.services.ServiceDelegate.execute(ServiceDelegate.java:90) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.api.ServiceRequestImpl.invokeServiceAndGetResult(ServiceRequestImpl.java:209) ~[middleware-9.2.1.5.jar:?]
+	at com.dbp.core.fabric.extn.DBPServiceExecutor.getResult(DBPServiceExecutor.java:132) ~[?:?]
+	at com.dbp.core.fabric.extn.DBPServiceInvocationWrapper.invokeServiceAndGetResult(DBPServiceInvocationWrapper.java:63) ~[?:?]
+	at com.ijarah.utils.DBPServiceInvocationWrapper.invokeServiceAndGetResult(DBPServiceInvocationWrapper.java:37) ~[?:?]
+	at com.ijarah.utils.ServiceCaller.invokeServiceAndGetResult(ServiceCaller.java:46) ~[?:?]
+	at com.ijarah.utils.ServiceCaller.internal(ServiceCaller.java:75) ~[?:?]
+	at com.ijarah.services.ScoringEngine.getSIMAHSalaryCertificate(ScoringEngine.java:743) ~[?:?]
+	at com.ijarah.services.ScoringEngine.invoke(ScoringEngine.java:102) ~[?:?]
+	at com.konylabs.middleware.connectors.JavaConnector.executeService(JavaConnector.java:114) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.JavaConnector.executeCore(JavaConnector.java:59) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.AbstractConnector.execute(AbstractConnector.java:53) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.services.ServiceDelegate.invokeService(ServiceDelegate.java:209) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.services.ServiceDelegate.execute(ServiceDelegate.java:90) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.sequence.impl.SequenceImpl.executeProcessor(SequenceImpl.java:146) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.sequence.impl.SequenceImpl.execute(SequenceImpl.java:71) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.controller.impl.DataControllerImpl.processDataRequest(DataControllerImpl.java:423) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.controller.impl.DataControllerImpl.processNonPassThroughHttpResponse(DataControllerImpl.java:259) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.controller.impl.DataControllerImpl.processHttpRequest(DataControllerImpl.java:251) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.controller.impl.DataControllerImpl.processHttpRequest(DataControllerImpl.java:416) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.entry.MWServlet.processHttpRequest(MWServlet.java:169) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.entry.MWServlet.executeRequest(MWServlet.java:141) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.entry.MWServlet.doPost(MWServlet.java:80) ~[middleware-9.2.1.5.jar:?]
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:660) ~[servlet-api.jar:?]
+	at com.konylabs.middleware.servlet.AbstractServlet.service(AbstractServlet.java:27) ~[middleware-9.2.1.5.jar:?]
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:741) ~[servlet-api.jar:?]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:231) ~[catalina.jar:9.0.33]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) ~[catalina.jar:9.0.33]
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:53) ~[tomcat-websocket.jar:9.0.33]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193) ~[catalina.jar:9.0.33]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) ~[catalina.jar:9.0.33]
+	at org.apache.catalina.filters.HttpHeaderSecurityFilter.doFilter(HttpHeaderSecurityFilter.java:126) ~[catalina.jar:9.0.33]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193) ~[catalina.jar:9.0.33]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) ~[catalina.jar:9.0.33]
+	at org.apache.logging.log4j.web.Log4jServletFilter.doFilter(Log4jServletFilter.java:71) ~[log4j-web-2.8.2.jar:2.8.2]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193) ~[catalina.jar:9.0.33]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) ~[catalina.jar:9.0.33]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:53) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.config.AuditLogFilter.doFilterCore(AuditLogFilter.java:36) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AbstractFilter.doFilter(AbstractFilter.java:70) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) ~[middleware-9.2.1.5.jar:?]
+	at com.kony.utilities.integrationregulator.IntegrationServiceInvocationRegulator.doFilter(IntegrationServiceInvocationRegulator.java:44) ~[?:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.DCFilter.doFilterCore(DCFilter.java:34) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AbstractFilter.doFilter(AbstractFilter.java:70) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.RecordingFilter.doFilterCore(RecordingFilter.java:34) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AbstractFilter.doFilter(AbstractFilter.java:70) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.api.events.EventsAutoFilter.doFilterCore(EventsAutoFilter.java:69) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AbstractFilter.doFilter(AbstractFilter.java:70) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.PayloadParsingFilter.doFilterCore(PayloadParsingFilter.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AbstractFilter.doFilter(AbstractFilter.java:70) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.SessionsFilter.doFilterCore(SessionsFilter.java:43) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AbstractFilter.doFilter(AbstractFilter.java:70) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.MWValidationAndAuthenticationFilter.doFilterCore(MWValidationAndAuthenticationFilter.java:148) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.MWValidationAndAuthenticationFilter.doFilterCore(MWValidationAndAuthenticationFilter.java:86) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AbstractFilter.doFilter(AbstractFilter.java:70) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.appservices.common.filters.FrontendResolutionFilter.doFilterCore(FrontendResolutionFilter.java:103) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AbstractFilter.doFilter(AbstractFilter.java:70) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AddAdditionalResponseHeaderAttribute.doFilterCore(AddAdditionalResponseHeaderAttribute.java:29) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AbstractFilter.doFilter(AbstractFilter.java:70) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.appservices.common.filters.MWTenantFilter.doFilterCore(MWTenantFilter.java:60) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AbstractFilter.doFilter(AbstractFilter.java:70) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.MetricsFilter.doFilterCore(MetricsFilter.java:33) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AbstractFilter.doFilter(AbstractFilter.java:70) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.appservices.common.filters.DiagnosticContextFilter.doFilterCore(DiagnosticContextFilter.java:26) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.common.AbstractFilter.doFilter(AbstractFilter.java:70) ~[middleware-web-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.lambda$doFilter$0(KonyFilterChain.java:49) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.measureAndExecute(KonyFilterChain.java:65) [middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyFilterChain.doFilter(KonyFilterChain.java:48) [middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.servlet.filters.KonyCompositeFilter.doFilter(KonyCompositeFilter.java:52) [middleware-9.2.1.5.jar:?]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193) [catalina.jar:9.0.33]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) [catalina.jar:9.0.33]
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:202) [catalina.jar:9.0.33]
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:96) [catalina.jar:9.0.33]
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:666) [catalina.jar:9.0.33]
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:139) [catalina.jar:9.0.33]
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:92) [catalina.jar:9.0.33]
+	at org.apache.catalina.valves.AbstractAccessLogValve.invoke(AbstractAccessLogValve.java:688) [catalina.jar:9.0.33]
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74) [catalina.jar:9.0.33]
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:343) [catalina.jar:9.0.33]
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:373) [tomcat-coyote.jar:9.0.33]
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:65) [tomcat-coyote.jar:9.0.33]
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:868) [tomcat-coyote.jar:9.0.33]
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1594) [tomcat-coyote.jar:9.0.33]
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:49) [tomcat-coyote.jar:9.0.33]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128) [?:?]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628) [?:?]
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61) [tomcat-util.jar:9.0.33]
+	at java.lang.Thread.run(Thread.java:834) [?:?]
+Caused by: java.io.FileNotFoundException: /home/mora/MockFiles/SimahSalaryCert/null.json (No such file or directory)
+	at java.io.FileInputStream.open0(Native Method) ~[?:?]
+	at java.io.FileInputStream.open(FileInputStream.java:219) ~[?:?]
+	at java.io.FileInputStream.<init>(FileInputStream.java:157) ~[?:?]
+	at java.io.FileReader.<init>(FileReader.java:75) ~[?:?]
+	at mora.com.mock.ReadFile.readJSONFile(ReadFile.java:38) ~[?:?]
+	at mora.com.mock.SimahSalaryCertPostProcessor.execute(SimahSalaryCertPostProcessor.java:24) ~[?:?]
+	at com.konylabs.middleware.connectors.postprocessor.JavaPostProcessor.executeCore(JavaPostProcessor.java:31) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.postprocessor.JavaPostProcessor.executeCore(JavaPostProcessor.java:12) ~[middleware-9.2.1.5.jar:?]
+	at com.konylabs.middleware.connectors.prepostprocessor.JavaPrePostProcessor.executeCore(JavaPrePostProcessor.java:46) ~[middleware-9.2.1.5.jar:?]
+	... 136 more
+[app.services][ERROR][2022-10-05T18:40:51.764+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.connectors.CompositeConnector:executeSequentialCompositeService:317]:Unable to execute the service SalaryCertificateModel due to previous errors.
+[app.services][DEBUG][2022-10-05T18:40:51.778+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DatasourcePayloadLogger:log:11]:Datasource Payload response for Service : dbxdb_sp_delete_salarycert
+[app.services][DEBUG][2022-10-05T18:40:51.779+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DatasourcePayloadLogger:log:11]:Datasource Payload response : {"records":[{"Message":"Record Deleted"}],"opstatus":0,"httpStatusCode":200}
+[app.services][DEBUG][2022-10-05T18:40:51.798+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DatasourcePayloadLogger:log:11]:Datasource Payload response for Service : SalaryCertificateCreate
+[app.services][DEBUG][2022-10-05T18:40:51.799+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DatasourcePayloadLogger:log:11]:Datasource Payload response : {"tbl_Salary_Cert":[{"id":"257","message":"","Mobile":"966505589169","isSuccess":"true"}],"opstatus":0,"httpStatusCode":200}
+[app.services][DEBUG][2022-10-05T18:40:51.799+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DatasourcePayloadLogger:log:11]:Datasource Payload request for Service : getSalaryByMobile
+[app.services][DEBUG][2022-10-05T18:40:51.800+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DatasourcePayloadLogger:log:11]:Datasource Payload request : {
+    "Mobile": "966505589169"
+}
+[app.services][DEBUG][2022-10-05T18:40:51.817+03:00]:[8b48c877-219f-414e-900f-ceb9721936a7]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=DBXDBServices,op=getSalaryByMobile]:[https-jsse-nio-8443-exec-20]:[com.konylabs.middleware.config.DevicePayloadLogger:log:11]:Device Request URL : https://api2.staging.morafinance.com:8443/services/DBXDBServices/getSalaryByMobile
+[app.services][DEBUG][2022-10-05T18:40:51.817+03:00]:[8b48c877-219f-414e-900f-ceb9721936a7]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=DBXDBServices,op=getSalaryByMobile]:[https-jsse-nio-8443-exec-20]:[com.konylabs.middleware.config.DevicePayloadLogger:log:11]:Device Payload Query Parameters : null
+[app.services][DEBUG][2022-10-05T18:40:51.818+03:00]:[8b48c877-219f-414e-900f-ceb9721936a7]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=DBXDBServices,op=getSalaryByMobile]:[https-jsse-nio-8443-exec-20]:[com.konylabs.middleware.config.DevicePayloadLogger:log:11]:Device Payload Raw Request Body : {"Mobile":"966505589169"}
+[app.services][DEBUG][2022-10-05T18:40:51.818+03:00]:[8b48c877-219f-414e-900f-ceb9721936a7]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=DBXDBServices,op=getSalaryByMobile]:[https-jsse-nio-8443-exec-20]:[com.konylabs.middleware.config.DevicePayloadLogger:log:11]:Device Payload Request Headers : content-length: 32
+host: api2.staging.morafinance.com:8443
+content-type: application/json
+connection: Keep-Alive
+accept-encoding: gzip
+accept: application/json
+user-agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7 (.NET CLR 3.5.30729)
+[app.services][ERROR][2022-10-05T18:40:51.818+03:00]:[8b48c877-219f-414e-900f-ceb9721936a7]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=DBXDBServices,op=getSalaryByMobile]:[https-jsse-nio-8443-exec-20]:[com.konylabs.middleware.api.MWSupplierImpl:getServicesManager:60]:X-Kony-Authorization not found, skipping gateway initialization 
+[app.services][DEBUG][2022-10-05T18:40:51.823+03:00]:[8b48c877-219f-414e-900f-ceb9721936a7]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=DBXDBServices,op=getSalaryByMobile]:[https-jsse-nio-8443-exec-20]:[com.konylabs.middleware.config.DatasourcePayloadLogger:log:11]:Datasource Payload response for Service : getSalaryByMobile
+[app.services][DEBUG][2022-10-05T18:40:51.823+03:00]:[8b48c877-219f-414e-900f-ceb9721936a7]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=DBXDBServices,op=getSalaryByMobile]:[https-jsse-nio-8443-exec-20]:[com.konylabs.middleware.config.DatasourcePayloadLogger:log:11]:Datasource Payload response : {"records":[{"pvtSalary":"0","govSalary":"0"}],"opstatus":0,"httpStatusCode":0}
+[app.services][DEBUG][2022-10-05T18:40:51.824+03:00]:[8b48c877-219f-414e-900f-ceb9721936a7]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=DBXDBServices,op=getSalaryByMobile]:[https-jsse-nio-8443-exec-20]:[com.konylabs.middleware.config.DevicePayloadLogger:log:11]:Device Payload Response Headers : X-Kony-Service-Message: null
+Pragma: no-cache
+X-Kony-Service-Opstatus: 0
+Cache-Control: no-store, no-cache, must-revalidate
+X-Kony-RequestId: 8b48c877-219f-414e-900f-ceb9721936a7
+Content-Type: text/plain
+
+[app.services][DEBUG][2022-10-05T18:40:51.824+03:00]:[8b48c877-219f-414e-900f-ceb9721936a7]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=DBXDBServices,op=getSalaryByMobile]:[https-jsse-nio-8443-exec-20]:[com.konylabs.middleware.config.DevicePayloadLogger:log:11]:Device Payload Response Body : {"records":[{"pvtSalary":"0","govSalary":"0"}],"opstatus":0,"httpStatusCode":0}
+[app.services][DEBUG][2022-10-05T18:40:51.826+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DatasourcePayloadLogger:log:11]:Datasource Payload response for Service : getSalaryByMobile
+[app.services][DEBUG][2022-10-05T18:40:51.826+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DatasourcePayloadLogger:log:11]:Datasource Payload response : {"pvtSalary":"0","totalSalary":"{pvtSalary=0, govSalary=0}","opstatus":0,"govSalary":"0","httpStatusCode":200}
+[app.services][DEBUG][2022-10-05T18:40:51.827+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DatasourcePayloadLogger:log:11]:Datasource Payload response for Service : SimahSalaryCert
+[app.services][DEBUG][2022-10-05T18:40:51.828+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DatasourcePayloadLogger:log:11]:Datasource Payload response : {"pvtSalary":"0","data":{},"records":[{"Message":"Record Deleted"}],"opstatus_getToken":0,"errmsg":"One or more of the services failed in composite service.","message":"","opstatus_dbxdb_sp_delete_salarycert":0,"govSalary":"0","token":"eyJhbGciOiJSUzI1NiIsImtpZCI6ImY3Zjc2NGVmNTYyNDQ5NzhlYzMxZjY1ZmRmMjhmOGY5IiwidHlwIjoiSldUIn0.eyJuYmYiOjE2NjQwNDY2NTgsImV4cCI6MTY2NDA1MDI1OCwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo2MDY2LyIsImF1ZCI6WyJodHRwOi8vbG9jYWxob3N0OjYwNjYvcmVzb3VyY2VzIiwiYmJmZmFwaSIsImVucSIsInVhbSJdLCJjbGllbnRfaWQiOiJhcGlDbGllbnQiLCJzdWIiOiIyNDU3NCIsImF1dGhfdGltZSI6MTY2NDA0NjY1OCwiaWRwIjoibG9jYWwiLCJsZHQiOiIwOTI0MjAyMjIyMTB8MzQxNSIsInVzciI6IkVROjF8Q0U6MXxDUToxfE5BOjF8REU6MXxOVzoxfE1TOjF8U006MXxTTDoxfFNSOjF8QlI6MXxEUToxfERJOjF8QkM6MXxOQjoxfEFNOjF8U0g6MXxDUzoxfENDOjF8TUM6MXxCVToxfEdFOjF8UkY6MXxUQjoxfE1SOjF8VVI6MXxHTjoxfFJDOjF8QkE6MXxTUDoxfFlQOjF8REc6MXxHTDoxfFFNOjF8UU46MXxRVzoxfFRSOjF8UFc6MXxQUzoxfE1QOjF8TVc6MXxNTToxfEREOjF8RUU6MXxGRjoxfEdHOjF8S0s6MXxMTDoxfE1NOjF8Tk46MXxPTzoxfE5SOjF8Q046MXxDTToxfENVOjF8QlM6MXxCVjoxfERGOjF8RFo6MXxEWDoxfERZOjF8RFY6MXxEVDoxfERPOjF8VEs6MXxDWjoxfENLOjF8Q0w6MXxHQ0NSOjF8Qkg6MXxBQToxfEFGUkQ6MXxQVzoxfFBTOjF8TVc6MXxNTToxfE1SOjF8TVU6MXxNQToxfE1COjF8TVY6MXxFRToxfEZGOjF8U1I6MXxTVToxfFNBOjF8U0I6MXxTVjoxfEtLOjF8S0Q6MXxNSToxfE1MOjF8SUlMOjF8UEQ6MXxNRDoxfFNEOjF8SUQ6MXxMRToxfE1LOjF8U0s6MXxHRzoxfEZTOjF8U0M6MXxQRDoxfE1EOjF8U0Q6MXxJRDoxfE1FOjF8U0U6MXxCTDoxfEJOOjF8Qk06MXxNRzoxfE1IOjF8TUo6MXxDRDoxfENGOjF8Q0c6MXxDSjoxfExHOjF8QUM6MXxTTzoxfERCOjF8VUI6MXxVTjoxfFVDOjF8Q1I6MXxDTzoxfFVHOjF8Q0I6MXxBUzoxfEdDOjF8VUY6MXxDVjoxfEFZOjF8R1M6MXxTVDoxfERNOjF8Q1o6MXxDWDoxfFJNOjF8VE06MXxSRzoxfFhHOjF8RFU6MXxRRDoxfFBHOjF8T0c6MXxEQToxfFFYOjF8UEw6MXxPTDoxfFJTOjF8UlE6MXxQUjoxfFBPOjF8TFM6MXxMTzoxfFNEOjF8TlA6MXxDRTI6MXxOTToxfFJWMjoxfERQOjEiLCJ1c2VybmFtZSI6ImlqcmhkbWluIiwibmVuIjoiU2VydmljZXxBZG1pbiIsIm5hciI6Itiz2LHZgdizfNin2K_ZhdmGIiwibWVtYmVyaWQiOiIyMjEiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiIxIiwic2NvcGUiOlsiYmJmZmFwaSIsImVucSIsInVhbSJdLCJhbXIiOlsiMjQ1NzQsIGlqcmhkbWluIl19.SbgSjRN5ocNnqGdUxBAQzIKQ06UPcbfD8jwGiAg6cDwT4Xwly2bnt2lW5F7TPKO-HB6BWd7k3R1-fRmw_QbgN_DOYcHR40sZYAOCZUMh_GR90ri7bfDNIQMPEQhsR7RAlZwZdRi_0q5D3Xl00lfWkHdsDaou8oSKYskKv5pmiOlnxLmfVyFpFAGKxplhkT-bkgpe_xBVRtbRHhRXSfVLlmVt51BxqfHqwSPpJ8LEsP0-0p2XPF_zS0_Nt-xGP1d8hEcUNzyUNT0W-ru_ouQYjOMU-lzZmJYkmMJVro4U4R9xpchSijAnwJ-Cm5LL8arNAaR5ICIIjiFVmeNu5pdb_w","opstatus_getSalaryByMobile":0,"totalSalary":"{pvtSalary=0, govSalary=0}","tbl_Salary_Cert":[{"id":"257","message":"","Mobile":"966505589169","isSuccess":"true"}],"opstatus_SalaryCertificateModel":8004,"opstatus":1582,"opstatus_SalaryCertificateCreate":0,"isSuccess":true,"httpStatusCode":200,"errmsg_SalaryCertificateModel":"Error occurred while invoking SimahSalaryCert for post processor mora.com.mock.SimahSalaryCertPostProcessor."}
+[app.services][DEBUG][2022-10-05T18:40:51.840+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DatasourcePayloadLogger:log:11]:Datasource Payload response for Service : dbxlogs_auditlog_create
+[app.services][DEBUG][2022-10-05T18:40:51.841+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DatasourcePayloadLogger:log:11]:Datasource Payload response : {"auditlog":[{"reponse_payload":"{\"pvtSalary\":\"0\",\"data\":{},\"records\":[{\"Message\":\"Record Deleted\"}],\"opstatus_getToken\":0,\"errmsg\":\"One or more of the services failed in composite service.\",\"message\":\"\",\"opstatus_dbxdb_sp_delete_salarycert\":0,\"govSalary\":\"0\",\"token\":\"eyJhbGciOiJSUzI1NiIsImtpZCI6ImY3Zjc2NGVmNTYyNDQ5NzhlYzMxZjY1ZmRmMjhmOGY5IiwidHlwIjoiSldUIn0.eyJuYmYiOjE2NjQwNDY2NTgsImV4cCI6MTY2NDA1MDI1OCwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo2MDY2LyIsImF1ZCI6WyJodHRwOi8vbG9jYWxob3N0OjYwNjYvcmVzb3VyY2VzIiwiYmJmZmFwaSIsImVucSIsInVhbSJdLCJjbGllbnRfaWQiOiJhcGlDbGllbnQiLCJzdWIiOiIyNDU3NCIsImF1dGhfdGltZSI6MTY2NDA0NjY1OCwiaWRwIjoibG9jYWwiLCJsZHQiOiIwOTI0MjAyMjIyMTB8MzQxNSIsInVzciI6IkVROjF8Q0U6MXxDUToxfE5BOjF8REU6MXxOVzoxfE1TOjF8U006MXxTTDoxfFNSOjF8QlI6MXxEUToxfERJOjF8QkM6MXxOQjoxfEFNOjF8U0g6MXxDUzoxfENDOjF8TUM6MXxCVToxfEdFOjF8UkY6MXxUQjoxfE1SOjF8VVI6MXxHTjoxfFJDOjF8QkE6MXxTUDoxfFlQOjF8REc6MXxHTDoxfFFNOjF8UU46MXxRVzoxfFRSOjF8UFc6MXxQUzoxfE1QOjF8TVc6MXxNTToxfEREOjF8RUU6MXxGRjoxfEdHOjF8S0s6MXxMTDoxfE1NOjF8Tk46MXxPTzoxfE5SOjF8Q046MXxDTToxfENVOjF8QlM6MXxCVjoxfERGOjF8RFo6MXxEWDoxfERZOjF8RFY6MXxEVDoxfERPOjF8VEs6MXxDWjoxfENLOjF8Q0w6MXxHQ0NSOjF8Qkg6MXxBQToxfEFGUkQ6MXxQVzoxfFBTOjF8TVc6MXxNTToxfE1SOjF8TVU6MXxNQToxfE1COjF8TVY6MXxFRToxfEZGOjF8U1I6MXxTVToxfFNBOjF8U0I6MXxTVjoxfEtLOjF8S0Q6MXxNSToxfE1MOjF8SUlMOjF8UEQ6MXxNRDoxfFNEOjF8SUQ6MXxMRToxfE1LOjF8U0s6MXxHRzoxfEZTOjF8U0M6MXxQRDoxfE1EOjF8U0Q6MXxJRDoxfE1FOjF8U0U6MXxCTDoxfEJOOjF8Qk06MXxNRzoxfE1IOjF8TUo6MXxDRDoxfENGOjF8Q0c6MXxDSjoxfExHOjF8QUM6MXxTTzoxfERCOjF8VUI6MXxVTjoxfFVDOjF8Q1I6MXxDTzoxfFVHOjF8Q0I6MXxBUzoxfEdDOjF8VUY6MXxDVjoxfEFZOjF8R1M6MXxTVDoxfERNOjF8Q1o6MXxDWDoxfFJNOjF8VE06MXxSRzoxfFhHOjF8RFU6MXxRRDoxfFBHOjF8T0c6MXxEQToxfFFYOjF8UEw6MXxPTDoxfFJTOjF8UlE6MXxQUjoxfFBPOjF8TFM6MXxMTzoxfFNEOjF8TlA6MXxDRTI6MXxOTToxfFJWMjoxfERQOjEiLCJ1c2VybmFtZSI6ImlqcmhkbWluIiwibmVuIjoiU2VydmljZXxBZG1pbiIsIm5hciI6Itiz2LHZgdizfNin2K_ZhdmGIiwibWVtYmVyaWQiOiIyMjEiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiIxIiwic2NvcGUiOlsiYmJmZmFwaSIsImVucSIsInVhbSJdLCJhbXIiOlsiMjQ1NzQsIGlqcmhkbWluIl19.SbgSjRN5ocNnqGdUxBAQzIKQ06UPcbfD8jwGiAg6cDwT4Xwly2bnt2lW5F7TPKO-HB6BWd7k3R1-fRmw_QbgN_DOYcHR40sZYAOCZUMh_GR90ri7bfDNIQMPEQhsR7RAlZwZdRi_0q5D3Xl00lfWkHdsDaou8oSKYskKv5pmiOlnxLmfVyFpFAGKxplhkT-bkgpe_xBVRtbRHhRXSfVLlmVt51BxqfHqwSPpJ8LEsP0-0p2XPF_zS0_Nt-xGP1d8hEcUNzyUNT0W-ru_ouQYjOMU-lzZmJYkmMJVro4U4R9xpchSijAnwJ-Cm5LL8arNAaR5ICIIjiFVmeNu5pdb_w\",\"opstatus_getSalaryByMobile\":0,\"totalSalary\":\"{pvtSalary=0, govSalary=0}\",\"tbl_Salary_Cert\":[{\"id\":\"257\",\"message\":\"\",\"Mobile\":\"966505589169\",\"isSuccess\":\"true\"}],\"opstatus_SalaryCertificateModel\":8004,\"opstatus\":1582,\"opstatus_SalaryCertificateCreate\":0,\"status\":\"Success\",\"httpStatusCode\":200,\"isSuccess\":true,\"errmsg_SalaryCertificateModel\":\"Error occurred while invoking SimahSalaryCert for post processor mora.com.mock.SimahSalaryCertPostProcessor.\"}","apihost":"SimahSalaryOrch : SimahSalaryCert","Application_id":"","channelDevice":"Mobile","ipAddress":"172.18.32.49","id":"6062526b-c269-49c8-ba32-544b8f26262a","request_payload":"{\"employerTypeId\":\"1\",\"Product\":\"TAWARRUQ\",\"ENQUIRY_REFERENCE\":\"18340\",\"nationalID\":\"1849677624\",\"applicationID\":\"M2009774\",\"Mobile\":\"966505589169\"}"}],"opstatus":0,"httpStatusCode":0}
+[app.services][ERROR][2022-10-05T18:40:51.842+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.ijarah.services.ScoringEngine:invoke:138]:ERROR invoke :: java.lang.NullPointerException
+[app.services][DEBUG][2022-10-05T18:40:51.842+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DatasourcePayloadLogger:log:11]:Datasource Payload response for Service : scoringEngine
+[app.services][DEBUG][2022-10-05T18:40:51.843+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DatasourcePayloadLogger:log:11]:Datasource Payload response : {"dbpErrCode":"000_000","opstatus":0,"dbpErrMsg":"Input params are not valid","status":"Failure","httpStatusCode":0}
+[app.services][DEBUG][2022-10-05T18:40:51.843+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DevicePayloadLogger:log:11]:Device Payload Response Headers : X-Kony-Service-Message: null
+Pragma: no-cache
+X-Kony-Service-Opstatus: 0
+Cache-Control: no-store, no-cache, must-revalidate
+X-Kony-RequestId: 03f64c99-8839-4588-a1a2-6d7640817925
+Content-Type: text/plain
+
+[app.services][DEBUG][2022-10-05T18:40:51.844+03:00]:[03f64c99-8839-4588-a1a2-6d7640817925]:[]:[TENANTENVID=7073ead5-e272-4b7c-9aeb-0cdfe963bf08,svc=ScoringEngine,op=scoringEngine]:[https-jsse-nio-8443-exec-14]:[com.konylabs.middleware.config.DevicePayloadLogger:log:11]:Device Payload Response Body : {"dbpErrCode":"000_000","opstatus":0,"dbpErrMsg":"Input params are not valid","status":"Failure","httpStatusCode":0}

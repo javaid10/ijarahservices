@@ -1,0 +1,17 @@
+D:\MoraFinance\WorkspaceMora\IjarahServices\src\main\java\com\ijarah\utils\interfaces\AbstractHelperMethods.java
+D:\MoraFinance\WorkspaceMora\IjarahServices\src\main\java\com\ijarah\utils\DBPServiceInvocationWrapper.java
+D:\MoraFinance\WorkspaceMora\IjarahServices\src\main\java\com\ijarah\utils\FabricHelperMethods.java
+D:\MoraFinance\WorkspaceMora\IjarahServices\src\main\java\com\ijarah\utils\constants\OperationIDConstants.java
+D:\MoraFinance\WorkspaceMora\IjarahServices\src\main\java\com\ijarah\utils\constants\ServiceIDConstants.java
+D:\MoraFinance\WorkspaceMora\IjarahServices\src\main\java\com\ijarah\utils\enums\IjarahErrors.java
+D:\MoraFinance\WorkspaceMora\IjarahServices\src\main\java\com\ijarah\utils\enums\EnvironmentConfig.java
+D:\MoraFinance\WorkspaceMora\IjarahServices\src\main\java\com\ijarah\services\ScoringEngine.java
+D:\MoraFinance\WorkspaceMora\IjarahServices\src\main\java\com\ijarah\utils\interfaces\ScoringEngineMethods.java
+D:\MoraFinance\WorkspaceMora\IjarahServices\src\main\java\com\ijarah\services\AlQaidaList.java
+D:\MoraFinance\WorkspaceMora\IjarahServices\src\main\java\com\ijarah\services\TalibanList.java
+D:\MoraFinance\WorkspaceMora\IjarahServices\src\main\java\com\ijarah\utils\URLProvider.java
+D:\MoraFinance\WorkspaceMora\IjarahServices\src\main\java\com\ijarah\utils\IjarahHelperMethods.java
+D:\MoraFinance\WorkspaceMora\IjarahServices\src\main\java\com\ijarah\utils\interfaces\AbstractInvocationWrapper.java
+D:\MoraFinance\WorkspaceMora\IjarahServices\src\main\java\com\ijarah\utils\ServiceCaller.java
+D:\MoraFinance\WorkspaceMora\IjarahServices\src\main\java\com\ijarah\services\CreateLoan.java
+D:\MoraFinance\WorkspaceMora\IjarahServices\src\main\java\com\ijarah\utils\enums\StatusEnum.java

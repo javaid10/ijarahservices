@@ -1,0 +1,17 @@
+com\ijarah\services\AlQaidaList.class
+com\ijarah\services\CreateLoan.class
+com\ijarah\utils\ServiceCaller.class
+com\ijarah\utils\interfaces\ScoringEngineMethods.class
+com\ijarah\utils\constants\OperationIDConstants.class
+com\ijarah\utils\IjarahHelperMethods.class
+com\ijarah\services\TalibanList.class
+com\ijarah\utils\enums\EnvironmentConfig.class
+com\ijarah\utils\URLProvider.class
+com\ijarah\utils\constants\ServiceIDConstants.class
+com\ijarah\utils\DBPServiceInvocationWrapper.class
+com\ijarah\utils\interfaces\AbstractHelperMethods.class
+com\ijarah\utils\enums\StatusEnum.class
+com\ijarah\utils\FabricHelperMethods.class
+com\ijarah\utils\enums\IjarahErrors.class
+com\ijarah\services\ScoringEngine.class
+com\ijarah\utils\interfaces\AbstractInvocationWrapper.class
