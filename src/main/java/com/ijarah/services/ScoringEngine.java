@@ -144,9 +144,12 @@ public class ScoringEngine implements JavaService2 {
                     dataControllerRequest);
 
             // DB INTEGRATION SERVICES CALLS
-            Result updateCustomerResult = updateCustomerApplicationData(createRequestForUpdateCustomerApplicationDataService(
+            result = updateCustomerApplicationData(createRequestForUpdateCustomerApplicationDataService(
                     getCustomerApplicationData, getScoreCardS2, getScoreCardS3), dataControllerRequest);
-            result = createResultObject()
+//            result = createResultObject(updateCustomerResult);
+//            JSONObject updateResult = new JSONObject(ResultToJSON.convert(updateCustomerResult));
+//            result.addParam("ResponseCode", "sucess");
+//        result.addParam("Message", ErrorCode.ERR_60000.getErrorMessage());
         }
 		} catch (Exception ex) {
 			LOG.error("ERROR invoke :: " + ex);
