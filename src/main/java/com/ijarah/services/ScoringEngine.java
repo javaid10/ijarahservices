@@ -146,6 +146,7 @@ public class ScoringEngine implements JavaService2 {
             // DB INTEGRATION SERVICES CALLS
             Result updateCustomerResult = updateCustomerApplicationData(createRequestForUpdateCustomerApplicationDataService(
                     getCustomerApplicationData, getScoreCardS2, getScoreCardS3), dataControllerRequest);
+            result = createResultObject()
         }
 		} catch (Exception ex) {
 			LOG.error("ERROR invoke :: " + ex);
@@ -265,19 +266,30 @@ public class ScoringEngine implements JavaService2 {
         }
         return inputParams;
     }
+
     private String calculateAPR(String rate) {
-        String apr ="";
-      
-        String adminFees="";
-       
+        String apr = "";
+        try {
+           
+            double doubleRate = Double.valueOf(rate);
+            double rateFees = 1.15 + doubleRate;
+            double monthlyRate = rateFees / 12;
+            LOG.error("Calculated monthl rate=====>"+monthlyRate);
+            double aprD = (Math.pow(1 + monthlyRate, 12)) - 1;
+            apr = Double.toString(Math.ceil(aprD));
+            LOG.error("Calculated final apr=====>"+apr); 
+        }catch(Exception e) {
+            LOG.error("Error in APR caluclation===>"+e);
+        }
         
         return apr;
     }
+
     private Map<String, String> createRequestForUpdateCustomerApplicationDataService(Result getCustomerApplicationData,
             Result getScoreCardS2, Result getScoreCardS3) {
         Map<String, String> inputParams = new HashMap<>();
         String knockoutStatus = "";
-        String applicationStatus ="";
+        String applicationStatus = "";
 //        try {
 
 //        LOG.error("With helper methods get data =======>>>>>"+HelperMethods.getFieldValue(getCustomerApplicationData, "scoredCardId"));
@@ -290,14 +302,14 @@ public class ScoringEngine implements JavaService2 {
         JSONObject sc3 = new JSONObject(ResultToJSON.convert(getScoreCardS3));
         int catVal = sc3.optInt("applicationCategory");
         if (catVal > 0) {
-             knockoutStatus = "PASS";
-             applicationStatus ="SID_PRO_ACTIVE";
+            knockoutStatus = "PASS";
+            applicationStatus = "SID_PRO_ACTIVE";
         } else {
-             knockoutStatus = "FAIL";
-             applicationStatus ="SID_SUSPENDED";
+            knockoutStatus = "FAIL";
+            applicationStatus = "SID_SUSPENDED";
         }
 
-            String approx = calculateAPR(sc3.optString("loanRate"));
+        String approx = calculateAPR(sc3.optString("loanRate"));
         inputParams.put("isknockoutTnC", HelperMethods.getFieldValue(getCustomerApplicationData, "isknockoutTnC"));
         inputParams.put("lastmodifiedts",
                 IjarahHelperMethods.getDate(LocalDateTime.now(), DATE_FORMAT_WITH_SECONDS_MS));
@@ -319,10 +331,10 @@ public class ScoringEngine implements JavaService2 {
         // inputParams.put("loanAmount",
         // HelperMethods.getFieldValue(getCustomerApplicationData, "loanAmount"));
         inputParams.put("isknockouts1", HelperMethods.getFieldValue(getCustomerApplicationData, "isknockouts1"));
-        inputParams.put("approx", HelperMethods.getFieldValue(getCustomerApplicationData, "approx"));
+        inputParams.put("approx", HelperMethods.getFieldValue(getCustomerApplicationData,approx!="" ? approx :sc3.optString("loanRate") ));
 
         inputParams.put("loanAmountCap", sc3.optString("loanAmountCap"));
-        inputParams.put("loanRate",sc3.optString("loanRate"));
+        inputParams.put("loanRate", sc3.optString("loanRate"));
 //        } catch (Exception ex) {
 //            LOG.error("ERROR createRequestForUpdateCustomerApplicationDataService :: " + ex);
 //        }
