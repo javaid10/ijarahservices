@@ -45,7 +45,7 @@ public class AlQaidaList implements JavaService2 {
                 createOrUpdateAlQaidaList(createInputParamsAlQaidaList(INDIVIDUALS.getRecord(index)), dataControllerRequest);
             }
         } catch (Exception ex) {
-            LOG.error("ERROR preProcess :: " + ex);
+            LOG.error("ERROR preProcess see:: " + ex);
         }
         return result;
     }
