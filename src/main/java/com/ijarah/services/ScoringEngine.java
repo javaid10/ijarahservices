@@ -551,14 +551,14 @@ public class ScoringEngine implements JavaService2 {
                         double calculatedDeductions = 0;
                         if (NATIONALITY.equalsIgnoreCase("SAU")) {
                             double minimumAmount = 0.1
-                                    * (Integer.parseInt(getSalaryCertificate.getParamValueByName("basicSalary"))
+                                    * (Integer.parseInt(getSalaryCertificate.getParamValueByName("basicWage"))
                                     + Integer
                                     .parseInt(getSalaryCertificate
                                             .getParamValueByName("housingAllowance")));
                             calculatedDeductions = Math.min(minimumAmount, 4500);
                         }
                         MONTHLY_NET_SALARY = String
-                                .valueOf((Integer.parseInt(getSalaryCertificate.getParamValueByName("basicSalary"))
+                                .valueOf((Integer.parseInt(getSalaryCertificate.getParamValueByName("basicWage"))
                                         + Integer.parseInt(getSalaryCertificate.getParamValueByName("housingAllowance"))
                                         + Integer.parseInt(getSalaryCertificate.getParamValueByName("otherAllowance")))
                                         - calculatedDeductions);
@@ -900,14 +900,16 @@ public class ScoringEngine implements JavaService2 {
 
     private void calculateManagingSeasonalAndTemporaryLiftInSalary(Result getSalaryCertificate) {
         try {
-            double basicSalary = Double.parseDouble(getSalaryCertificate.getParamValueByName("basicSalary"));
+            double basicSalary = 0;
             double OtherAllowance = 0;
             MANAGING_SEASONAL_AND_TEMPORARY_LIFT_IN_SALARY = "1";
             switch (EMPLOYER_TYPE_ID) {
                 case "1": // Govt
+                    basicSalary = Double.parseDouble(getSalaryCertificate.getParamValueByName("basicSalary"));
                     OtherAllowance = Integer.parseInt(getSalaryCertificate.getParamValueByName("totalAllownces"));
                     break;
                 case "3": // Private
+                    basicSalary = Double.parseDouble(getSalaryCertificate.getParamValueByName("basicWage"));
                     OtherAllowance = Integer.parseInt(getSalaryCertificate.getParamValueByName("otherAllowance"));
                     basicSalary += Integer.parseInt(getSalaryCertificate.getParamValueByName("housingAllowance"));
                     break;

@@ -57,7 +57,7 @@ public class SanadCreation implements JavaService2 {
             extractValuesFromAccessTokenService(getAccessTokenServiceResult);
 
             Result getCreateSingleSanadServiceResult = callCreateSingleSanadService(createRequestForCreateSingleSanadService(), dataControllerRequest);
-            extractValuesFromCreateSingleSanadService(getAccessTokenServiceResult);
+            extractValuesFromCreateSingleSanadService(getCreateSingleSanadServiceResult);
         }
 
         return null;
