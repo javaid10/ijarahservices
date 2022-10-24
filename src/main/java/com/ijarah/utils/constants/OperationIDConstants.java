@@ -10,6 +10,7 @@ public class OperationIDConstants {
     public static final String CUSTOMER_GET_OPERATION_ID = "customer_get";
     public static final String CUSTOMER_APPLICATION_UPDATE_OPERATION_ID = "tbl_customerapplication_update";
     public static final String CUSTOMER_ADDRESS_CREATE_OPERATION_ID = "address_create";
+    public static final String EMPLOYER_DETAILS_CREATE_OPERATION_ID = "employer_details_create";
     public static final String CONSUMER_ENQUIRY_OPERATION_ID = "ConusmerEnquiry";
     public static final String SIMAH_SALARY_CERT_OPERATION_ID = "getSalaryCertificate";
     public static final String GET_CITIZEN_ADDRESS_INFO_OPERATION_ID = "getCitizenAddressInfo";
@@ -30,10 +31,14 @@ public class OperationIDConstants {
     public static final String AL_QAIDA_LIST_CREATE_OPERATION_ID = "alqaidalist_create";
     public static final String ACTIVATE_CUSTOMER_OPERATION_ID = "ActivateCustomer";
     public static final String LOAN_CREATION_OPERATION_ID = "LoanCreation";
-    public static final String TRANSFER_ORDER_OPERATION_ID = "LoanCreation";
+    public static final String TRANSFER_ORDER_OPERATION_ID = "TransferOrder";
     public static final String SALE_ORDER_PUSH_METHOD_OPERATION_ID = "SaleOrder_PushMethod";
     public static final String GET_ACCESS_TOKEN_OPERATION_ID = "GetAccessToken";
     public static final String CREATE_SINGLE_SANAD_OPERATION_ID = "CreateSingleSanad";
+
+    public static final String NAFAITH_SANAD_CREATE_OPERATION_ID = "nafaith_create";
+    public static final String T24_CUSTOMER_ADDRESS_UPDATE_OPERATION_ID = "T24CustomerAddressUpdate";
+    public static final String CUSTOMER_EMPLOYEE_DETAILS_OPERATION_ID = "CustomerEmployeeDetails";
 }
 
 

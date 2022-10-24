@@ -2,6 +2,7 @@ package com.ijarah.services;
 
 import com.google.common.primitives.Chars;
 import com.google.gson.Gson;
+import com.ijarah.Model.NationalAddressModel.*;
 import com.ijarah.Model.ScorecardS3.ScoreCardS3;
 import com.ijarah.Model.consumerEnquiryModel.*;
 import com.ijarah.Model.consumerEnquiryModel.RESPONSEItem;
@@ -21,7 +22,6 @@ import org.apache.log4j.Logger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -57,9 +57,9 @@ public class ScoringEngine implements JavaService2 {
     String EMPLOYER_TYPE_ID = "1";
     String EMPLOYMENT_STATUS = "";
 
-    String[] MORTGAGE_PRODUCT = {"AMTG", "AQAR", "EMTG", "IMTG", "MMTG", "MSKN", "MTG", "OMTG", "RMSKN", "RMTG",
-            "SMTG", "TMTG"};
+    String[] MORTGAGE_PRODUCT = {"AMTG", "AQAR", "EMTG", "IMTG", "MMTG", "MSKN", "MTG", "OMTG", "RMSKN", "RMTG", "SMTG", "TMTG"};
     String[] CREDIT_CARD_PRODUCT = {"CDC", "CHC", "CRC", "LCRC"};
+    String[] EMPLOYER_NAME_FOR_PENSIONERS = {"المؤسسة العامة للتأمينات الإجتماعية -متقاعدين", "المؤسسة العامة للتقاعد -متقاعدين"};
     String[] NON_FINANCIAL_PRODUCTS = {"MBL", "LND", "DAT", "NET"};
     char[] CURRENT_DELINQUENCY_VALUES = {'0', 'C', 'D', 'N'};
 
@@ -96,10 +96,10 @@ public class ScoringEngine implements JavaService2 {
     private double MAX_EMI = 0;
     private double CUSTOMER_GLOBAL_DTI = 0.0;
     private double CUSTOMER_INTERNAL_DTI = 0.0;
+    private String PARTY_ID = "";
 
     @Override
-    public Object invoke(String s, Object[] objects, DataControllerRequest dataControllerRequest,
-                         DataControllerResponse dataControllerResponse) throws Exception {
+    public Object invoke(String s, Object[] objects, DataControllerRequest dataControllerRequest, DataControllerResponse dataControllerResponse) throws Exception {
 
         inputParams = HelperMethods.getInputParamMap(objects);
         Result result = StatusEnum.error.setStatus();
@@ -123,9 +123,14 @@ public class ScoringEngine implements JavaService2 {
 
             Result getNationalAddress = getNationalAddress(inputParams, dataControllerRequest);
             createCustomerAddress(createRequestForCreateCustomerAddressService(getNationalAddress), dataControllerRequest);
+            createT24CustomerAddressUpdate(createRequestForT24CustomerAddressUpdateService(getNationalAddress), dataControllerRequest);
+
+
+            createEmployerDetails(createRequestForCreateEmployerDetailsService(getSalaryCertificate), dataControllerRequest);
+            createT24CustomerEmployeeDetails(createRequestForT24CustomerEmployeeDetailsService(getSalaryCertificate), dataControllerRequest);
 
             // CALCULATION OF SCORING ENGINES
-            calculatePensioner();
+            calculatePensioner(getSalaryCertificate);
             calculateCurrentLengthOfService(getSalaryCertificate);
             getEmployerName(getSalaryCertificate);
             calculateManagingSeasonalAndTemporaryLiftInSalary(getSalaryCertificate);
@@ -133,26 +138,20 @@ public class ScoringEngine implements JavaService2 {
             calculateSalaryWithoutAllowances(getSalaryCertificate);
 
             // 3RD PARTY INTEGRATION SERVICES CALLS
-            Result getScoreCardS2 = calculateScoreCardS2(createRequestForScoreCardS2Service(getSalaryCertificate),
-                    dataControllerRequest);
-            if (getScoreCardS2.hasParamByName("applicationCategory")
-                    && !IjarahHelperMethods.isBlank(getScoreCardS2.getParamValueByName("applicationCategory"))) {
+            Result getScoreCardS2 = calculateScoreCardS2(createRequestForScoreCardS2Service(getSalaryCertificate), dataControllerRequest);
+            if (getScoreCardS2.hasParamByName("applicationCategory") && !IjarahHelperMethods.isBlank(getScoreCardS2.getParamValueByName("applicationCategory"))) {
 
-                if (getScoreCardS2.getParamValueByName("applicationCategory").equals("0")) {
+                if (("0").equalsIgnoreCase(getScoreCardS2.getParamValueByName("applicationCategory"))) {
 
                     // DB INTEGRATION SERVICES CALLS
-                    result = updateCustomerApplicationData(createRequestForUpdateCustomerApplicationDataServiceS2(
-                            getCustomerApplicationData, getScoreCardS2), dataControllerRequest);
+                    result = updateCustomerApplicationData(createRequestForUpdateCustomerApplicationDataServiceS2(getCustomerApplicationData, getScoreCardS2), dataControllerRequest);
 
                     return result;
                 }
             }
-            Result getConsumerEnquiry = getSIMAHConsumerEnquiry(
-                    createRequestForConsumerEnquiryService(inputParams, getCustomerData, getSalaryCertificate),
-                    dataControllerRequest);
+            Result getConsumerEnquiry = getSIMAHConsumerEnquiry(createRequestForConsumerEnquiryService(inputParams, getCustomerData, getSalaryCertificate), dataControllerRequest);
             Gson gson = new Gson();
-            ConsumerEnquiry consumerEnquiry = gson.fromJson(ResultToJSON.convert(getConsumerEnquiry),
-                    ConsumerEnquiry.class);
+            ConsumerEnquiry consumerEnquiry = gson.fromJson(ResultToJSON.convert(getConsumerEnquiry), ConsumerEnquiry.class);
 
             extractValuesFromConsumerEnquiryResponse(consumerEnquiry);
 
@@ -177,6 +176,87 @@ public class ScoringEngine implements JavaService2 {
             result = updateCustomerApplicationData(createRequestForUpdateCustomerApplicationDataService(getCustomerApplicationData, getScoreCardS2, getScoreCardS3), dataControllerRequest);
         }
         return result;
+    }
+
+    private Result createT24CustomerAddressUpdate(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
+        Result result = StatusEnum.error.setStatus();
+        try {
+            Result T24CustomerAddress = ServiceCaller.internal(MORA_T24_SERVICE_ID, T24_CUSTOMER_ADDRESS_UPDATE_OPERATION_ID, inputParams, null, dataControllerRequest);
+            String inputRequest = (new ObjectMapper()).writeValueAsString(inputParams);
+            String outputResponse = ResultToJSON.convert(T24CustomerAddress);
+            auditLogData(dataControllerRequest, inputRequest, outputResponse, MORA_T24_SERVICE_ID + " : " + T24_CUSTOMER_ADDRESS_UPDATE_OPERATION_ID);
+            StatusEnum.success.setStatus(T24CustomerAddress);
+            return T24CustomerAddress;
+        } catch (Exception ex) {
+            LOG.error("ERROR createT24CustomerAddressUpdate :: " + ex);
+        }
+        return result;
+    }
+
+
+    private Result createT24CustomerEmployeeDetails(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
+        Result result = StatusEnum.error.setStatus();
+        try {
+            Result T24CustomerEmployeeDetails = ServiceCaller.internal(MORA_T24_SERVICE_ID, CUSTOMER_EMPLOYEE_DETAILS_OPERATION_ID, inputParams, null, dataControllerRequest);
+            String inputRequest = (new ObjectMapper()).writeValueAsString(inputParams);
+            String outputResponse = ResultToJSON.convert(T24CustomerEmployeeDetails);
+            auditLogData(dataControllerRequest, inputRequest, outputResponse, MORA_T24_SERVICE_ID + " : " + CUSTOMER_EMPLOYEE_DETAILS_OPERATION_ID);
+            StatusEnum.success.setStatus(T24CustomerEmployeeDetails);
+            return T24CustomerEmployeeDetails;
+        } catch (Exception ex) {
+            LOG.error("ERROR createT24CustomerEmployeeDetails :: " + ex);
+        }
+        return result;
+    }
+
+    private Map<String, String> createRequestForT24CustomerAddressUpdateService(Result getNationalAddress) {
+        Map<String, String> inputParams = new HashMap<>();
+        inputParams.put("partyId", PARTY_ID);
+        inputParams.put("country", "SAU");
+
+        Gson gson = new Gson();
+        NationalAddress nationalAddress = gson.fromJson(ResultToJSON.convert(getNationalAddress), NationalAddress.class);
+        if (nationalAddress != null && nationalAddress.getCitizenAddressInfoResult() != null && nationalAddress.getCitizenAddressInfoResult().getAddressListList() != null) {
+
+            AddressListList addressList = nationalAddress.getCitizenAddressInfoResult().getAddressListList();
+            inputParams.put("street", addressList.getStreetName());
+            inputParams.put("address", addressList.getDistrict() + " " + addressList.getUnitNumber());
+            inputParams.put("addressCity", addressList.getCity());
+        } else {
+            inputParams.put("street", "-");
+            inputParams.put("address", "-");
+            inputParams.put("addressCity", "-");
+        }
+        return inputParams;
+    }
+
+
+    private Map<String, String> createRequestForT24CustomerEmployeeDetailsService(Result getSalaryCertificate) {
+
+        Map<String, String> inputParams = new HashMap<>();
+        inputParams.put("partyId", PARTY_ID);
+        inputParams.put("salaryCurrency", "SAR");
+
+        switch (EMPLOYER_TYPE_ID) {
+            case "1":
+                inputParams.put("employStatus", "Employed");
+                inputParams.put("occupation", "-");
+                inputParams.put("employJobTitle", getSalaryCertificate.getParamValueByName("employeeJobTitle"));
+                inputParams.put("employerName", getSalaryCertificate.getParamValueByName("agencyName"));
+                inputParams.put("employStartDate", getSalaryCertificate.getParamValueByName("agencyEmploymentDate"));
+                inputParams.put("salaryAmount", getSalaryCertificate.getParamValueByName("netSalary"));
+                break;
+            case "3":
+                inputParams.put("employStatus", getSalaryCertificate.getParamValueByName("employmentStatus"));
+                inputParams.put("occupation", "-");
+                inputParams.put("employJobTitle", "-");
+                inputParams.put("employerName", getSalaryCertificate.getParamValueByName("employerName"));
+                inputParams.put("employStartDate", getSalaryCertificate.getParamValueByName("dateOfJoining"));
+                inputParams.put("salaryAmount", getSalaryCertificate.getParamValueByName("basicWage"));
+                break;
+        }
+
+        return inputParams;
     }
 
     private void extractValuesFromConsumerEnquiryResponse(ConsumerEnquiry consumerEnquiry) {
@@ -235,48 +315,151 @@ public class ScoringEngine implements JavaService2 {
 
     private Map<String, String> createRequestForCreateCustomerAddressService(Result getNationalAddress) {
         Map<String, String> inputParams = new HashMap<>();
-        String currentDateTime = getDate(LocalDateTime.now(), DATE_FORMAT_WITH_SECONDS_MS);
+
+        //String currentDateTime = getDate(LocalDateTime.now(), DATE_FORMAT_WITH_SECONDS_MS);
+
         inputParams.put("Region_id", "SAU");
-        inputParams.put("City_id", getNationalAddress.getParamValueByName("city"));
-        inputParams.put("addressLine1", getNationalAddress.getParamValueByName("district"));
-        inputParams.put("addressLine2", getNationalAddress.getParamValueByName("streetName"));
-        inputParams.put("addressLine3", getNationalAddress.getParamValueByName("unitNumber"));
-        inputParams.put("zipCode", getNationalAddress.getParamValueByName("postCode"));
-        inputParams.put("latitude", getNationalAddress.getParamValueByName("locationCoordinates"));
-        inputParams.put("logitude", getNationalAddress.getParamValueByName("locationCoordinates"));
-        inputParams.put("isPreferredAddress", "true");
-        inputParams.put("cityName", getNationalAddress.getParamValueByName("city"));
         inputParams.put("User_id", NATIONAL_ID);
         inputParams.put("country", "SAU");
         inputParams.put("type", "home");
         inputParams.put("state", "SAU");
         inputParams.put("createdby", "Admin");
         inputParams.put("modifiedby", "Admin");
+        inputParams.put("softdeleteflag", "0");
+        inputParams.put("isPreferredAddress", "true");
+        inputParams.put("id", generateUUID());
+
+
+        Gson gson = new Gson();
+        NationalAddress nationalAddress = gson.fromJson(ResultToJSON.convert(getNationalAddress), NationalAddress.class);
+        if (nationalAddress != null && nationalAddress.getCitizenAddressInfoResult() != null && nationalAddress.getCitizenAddressInfoResult().getAddressListList() != null) {
+
+            AddressListList addressList = nationalAddress.getCitizenAddressInfoResult().getAddressListList();
+            inputParams.put("City_id", addressList.getCity());
+            inputParams.put("cityName", addressList.getCity());
+            inputParams.put("addressLine1", addressList.getDistrict());
+            inputParams.put("addressLine2", addressList.getStreetName());
+            inputParams.put("addressLine3", String.valueOf(addressList.getUnitNumber()));
+            inputParams.put("zipCode", String.valueOf(addressList.getPostCode()));
+            inputParams.put("latitude", (addressList.getLocationCoordinates().split(" ")[0]).trim());
+            inputParams.put("logitude", (addressList.getLocationCoordinates().split(" ")[1]).trim());
+        } else {
+            inputParams.put("City_id", "-");
+            inputParams.put("cityName", "-");
+            inputParams.put("addressLine1", "-");
+            inputParams.put("addressLine2", "-");
+            inputParams.put("addressLine3", "-");
+            inputParams.put("zipCode", "-");
+            inputParams.put("latitude", "-");
+            inputParams.put("logitude", "-");
+        }
+
+/*
+        Record allRecords = getNationalAddress.getAllRecords().get(0);
+        Record citizenAddressInfoResult = allRecords.getRecordById("CitizenAddressInfoResult");
+
+
+
+        if (getNationalAddress.getRecordById("citizenAddressInfoResult") != null) {
+            if (!IjarahHelperMethods.isBlank(citizenAddressInfoResult.getParamValueByName("city"))) {
+                inputParams.put("City_id", citizenAddressInfoResult.getParamValueByName("city"));
+                inputParams.put("cityName", citizenAddressInfoResult.getParamValueByName("city"));
+            } else {
+                inputParams.put("City_id", "-");
+                inputParams.put("cityName", "-");
+            }
+            if (!IjarahHelperMethods.isBlank(citizenAddressInfoResult.getParamValueByName("district"))) {
+                inputParams.put("addressLine1", citizenAddressInfoResult.getParamValueByName("district"));
+            } else {
+                inputParams.put("addressLine1", "-");
+            }
+            if (!IjarahHelperMethods.isBlank(citizenAddressInfoResult.getParamValueByName("streetName"))) {
+                inputParams.put("addressLine2", citizenAddressInfoResult.getParamValueByName("streetName"));
+            } else {
+                inputParams.put("addressLine2", "-");
+            }
+            if (!IjarahHelperMethods.isBlank(citizenAddressInfoResult.getParamValueByName("unitNumber"))) {
+                inputParams.put("addressLine3", citizenAddressInfoResult.getParamValueByName("unitNumber"));
+            } else {
+                inputParams.put("addressLine3", "-");
+            }
+            if (!IjarahHelperMethods.isBlank(citizenAddressInfoResult.getParamValueByName("postCode"))) {
+                inputParams.put("zipCode", citizenAddressInfoResult.getParamValueByName("postCode"));
+            } else {
+                inputParams.put("zipCode", "-");
+            }
+            if (!IjarahHelperMethods.isBlank(citizenAddressInfoResult.getParamValueByName("locationCoordinates"))) {
+                inputParams.put("latitude", (citizenAddressInfoResult.getParamValueByName("locationCoordinates").split(" ")[0]).trim());
+                inputParams.put("logitude", (citizenAddressInfoResult.getParamValueByName("locationCoordinates").split(" ")[1]).trim());
+            } else {
+                inputParams.put("latitude", "-");
+                inputParams.put("logitude", "-");
+            }
+        }
+
         inputParams.put("createdts", currentDateTime);
         inputParams.put("lastmodifiedts", currentDateTime);
         inputParams.put("synctimestamp", currentDateTime);
-        inputParams.put("softdeleteflag", "0");
-        LOG.error("createRequestForCreateCustomerAddressService");
-        LOG.error(inputParams);
+
+         */
+
         return inputParams;
     }
 
-    private Map<String, String> createRequestForSIMAHSALARY(
-            Result getCustomerData, String empId, String nanId) {
+    //saif
+    private Map<String, String> createRequestForCreateEmployerDetailsService(Result getSalaryCertificate) {
+        Map<String, String> inputParams = new HashMap<>();
+
+        inputParams.put("nationalid", getSalaryCertificate.getParamValueByName("agencyCode"));
+
+        switch (EMPLOYER_TYPE_ID) {
+            case "1":
+                inputParams.put("agencycode", getSalaryCertificate.getParamValueByName("agencyCode"));
+                inputParams.put("accountnumber", getSalaryCertificate.getParamValueByName("accountNumber"));
+                inputParams.put("employeejobnumber", getSalaryCertificate.getParamValueByName("employeeJobNumber"));
+                inputParams.put("agencyname", getSalaryCertificate.getParamValueByName("agencyName"));
+                inputParams.put("govsalary", getSalaryCertificate.getParamValueByName("govSalary"));
+                inputParams.put("agencyemploymentdate", getSalaryCertificate.getParamValueByName("agencyEmploymentDate"));
+                inputParams.put("paymonth", getSalaryCertificate.getParamValueByName("payMonth"));
+                inputParams.put("employeenamear", getSalaryCertificate.getParamValueByName("employeeNameAr"));
+                inputParams.put("totalallownces", getSalaryCertificate.getParamValueByName("totalAllownces"));
+                inputParams.put("basicsalary", getSalaryCertificate.getParamValueByName("basicSalary"));
+                inputParams.put("netsalary", getSalaryCertificate.getParamValueByName("netSalary"));
+                inputParams.put("employeenameen", getSalaryCertificate.getParamValueByName("employeeNameEn"));
+                inputParams.put("employeejobtitle", getSalaryCertificate.getParamValueByName("employeeJobTitle"));
+                break;
+            case "3":
+                inputParams.put("agencycode", "-");
+                inputParams.put("accountnumber", "-");
+                inputParams.put("employeejobnumber", "-");
+                inputParams.put("agencyname", getSalaryCertificate.getParamValueByName("employerName"));
+                inputParams.put("govsalary", getSalaryCertificate.getParamValueByName("basicWage"));
+                inputParams.put("agencyemploymentdate", getSalaryCertificate.getParamValueByName("dateOfJoining"));
+                inputParams.put("paymonth", "-");
+                inputParams.put("employeenamear", "-");
+                inputParams.put("totalallownces", getSalaryCertificate.getParamValueByName("otherAllowance"));
+                inputParams.put("basicsalary", getSalaryCertificate.getParamValueByName("basicWage"));
+                inputParams.put("netsalary", getSalaryCertificate.getParamValueByName("basicWage"));
+                inputParams.put("employeenameen", getSalaryCertificate.getParamValueByName("fullName"));
+                inputParams.put("employeejobtitle", "-");
+                break;
+        }
+        return inputParams;
+    }
+
+    private Map<String, String> createRequestForSIMAHSALARY(Result getCustomerData, String empId, String nanId) {
         Map<String, String> inputParams = new HashMap<>();
         try {
             inputParams.put("employerTypeId", empId);
             inputParams.put("dateOfBirth", HelperMethods.getFieldValue(getCustomerData, "DateOfBirth"));
             inputParams.put("idNumber", nanId);
-            LOG.error("Nationalid for simah salary====" + NATIONAL_ID);
         } catch (Exception ex) {
             LOG.error("ERROR createRequestForSIMAHSALARY :: " + ex);
         }
         return inputParams;
     }
 
-    private Map<String, String> createRequestForConsumerEnquiryService(Map<String, String> globalInputParams,
-                                                                       Result getCustomerData, Result getSalaryCertificate) {
+    private Map<String, String> createRequestForConsumerEnquiryService(Map<String, String> globalInputParams, Result getCustomerData, Result getSalaryCertificate) {
         Map<String, String> inputParams = new HashMap<>();
         try {
 
@@ -299,12 +482,8 @@ public class ScoringEngine implements JavaService2 {
             inputParams.put("CDBM", dateOfBirth.split("/")[1]);
             inputParams.put("CDBY", dateOfBirth.split("/")[0]);
             LOG.error("InputParamse dateOfBirth====>" + inputParams.getOrDefault(expiryDate, dateOfBirth));
-            inputParams.put("CGND",
-                    HelperMethods.getFieldValue(getCustomerData, "Gender").equalsIgnoreCase("Male") ? "M" : "F");
-            inputParams.put("CMAR",
-                    HelperMethods.getFieldValue(getCustomerData, "MartialStatus_id").equalsIgnoreCase("SID_MARRIED")
-                            ? "M"
-                            : "S");
+            inputParams.put("CGND", HelperMethods.getFieldValue(getCustomerData, "Gender").equalsIgnoreCase("Male") ? "M" : "F");
+            inputParams.put("CMAR", HelperMethods.getFieldValue(getCustomerData, "MartialStatus_id").equalsIgnoreCase("SID_MARRIED") ? "M" : "S");
             inputParams.put("CNAT", getSalaryCertificate.getParamValueByName("nationality"));
             inputParams.put("CNAM", HelperMethods.getFieldValue(getCustomerData, "ArFullName").split(" ")[3]);
             inputParams.put("CNM1A", HelperMethods.getFieldValue(getCustomerData, "ArFullName").split(" ")[0]);
@@ -361,8 +540,7 @@ public class ScoringEngine implements JavaService2 {
         return apr;
     }
 
-    private Map<String, String> createRequestForUpdateCustomerApplicationDataServiceS2(Result getCustomerApplicationData,
-                                                                                       Result getScoreCardS2) {
+    private Map<String, String> createRequestForUpdateCustomerApplicationDataServiceS2(Result getCustomerApplicationData, Result getScoreCardS2) {
 
 
         Map<String, String> inputParams = new HashMap<>();
@@ -396,8 +574,7 @@ public class ScoringEngine implements JavaService2 {
         inputParams.put("csaApporval", "0");
         inputParams.put("sanadApproval", "0");
 
-        if (getScoreCardS2.hasParamByName("tenor")
-                && !IjarahHelperMethods.isBlank(getScoreCardS2.getParamValueByName("tenor"))) {
+        if (getScoreCardS2.hasParamByName("tenor") && !IjarahHelperMethods.isBlank(getScoreCardS2.getParamValueByName("tenor"))) {
             inputParams.put("tenorCore", getScoreCardS2.getParamValueByName("tenor"));
         } else {
             inputParams.put("tenorCore", "-");
@@ -407,8 +584,7 @@ public class ScoringEngine implements JavaService2 {
         return inputParams;
     }
 
-    private Map<String, String> createRequestForUpdateCustomerApplicationDataService(Result getCustomerApplicationData,
-                                                                                     Result getScoreCardS2, Result getScoreCardS3) {
+    private Map<String, String> createRequestForUpdateCustomerApplicationDataService(Result getCustomerApplicationData, Result getScoreCardS2, Result getScoreCardS3) {
         Map<String, String> inputParams = new HashMap<>();
         String knockoutStatus = "FAIL";
         String applicationStatus = "SID_SUSPENDED";
@@ -457,10 +633,14 @@ public class ScoringEngine implements JavaService2 {
         inputParams.put("applicationID", HelperMethods.getFieldValue(getCustomerApplicationData, "applicationID"));
         inputParams.put("createdby", HelperMethods.getFieldValue(getCustomerApplicationData, "createdby"));
         inputParams.put("modifiedby", HelperMethods.getFieldValue(getCustomerApplicationData, "modifiedby"));
+
         //inputParams.put("lastmodifiedts", IjarahHelperMethods.getDate(LocalDateTime.now(), DATE_FORMAT_WITH_SECONDS_MS));
+
         inputParams.put("isknockoutTnC", HelperMethods.getFieldValue(getCustomerApplicationData, "isknockoutTnC"));
-        inputParams.put("loanAmount", HelperMethods.getFieldValue(getCustomerApplicationData, "loanAmount"));
-        inputParams.put("tenor", TENOR);
+
+        //inputParams.put("loanAmount", HelperMethods.getFieldValue(getCustomerApplicationData, "loanAmount"));
+        //inputParams.put("tenor", TENOR);
+
         inputParams.put("approx", approx);
         inputParams.put("scoredCardId", HelperMethods.getFieldValue(getCustomerApplicationData, "scoredCardId"));
         inputParams.put("loanAmountCap", loanAmountCap);
@@ -472,7 +652,7 @@ public class ScoringEngine implements JavaService2 {
         if (!loanRate.equalsIgnoreCase("0")) {
 
             inputParams.put("loanAmountInf", calculateLoanAmountInf(Double.parseDouble(loanRate), Integer.parseInt(tenor)));
-            double amountOffer = Math.min(Math.min(Double.parseDouble(inputParams.get("loanAmountCap")), Double.parseDouble(inputParams.get("loanAmountInf"))), Double.parseDouble(inputParams.get("loanAmount").replaceAll(",", "")));
+            double amountOffer = Math.min(Math.min(Double.parseDouble(inputParams.get("loanAmountCap")), Double.parseDouble(inputParams.get("loanAmountInf"))), Double.parseDouble(HelperMethods.getFieldValue(getCustomerApplicationData, "loanAmount").replaceAll(",", "")));
             inputParams.put("monthlyRepay", calculateMonthlyRepay(amountOffer, Double.parseDouble(loanRate), Integer.parseInt(tenor)));
             inputParams.put("offerAmount", String.valueOf(amountOffer));
         } else {
@@ -484,21 +664,13 @@ public class ScoringEngine implements JavaService2 {
         inputParams.put("csaApporval", "0");
         inputParams.put("sanadApproval", "0");
 
-        LOG.error("createRequestForUpdateCustomerApplicationDataService :: " + inputParams);
         return inputParams;
     }
 
     private String calculateLoanAmountInf(double loanRate, int tenor) {
-        LOG.error("calculateLoanAmountInf");
         double totalPayableAmount = MAX_EMI * tenor;
         double totalProfitRate = (loanRate * tenor) / 12;
         double principalPlusProfitRate = totalProfitRate + 100;
-
-        LOG.error("MAX_EMI :: " + MAX_EMI);
-        LOG.error("tenor :: " + tenor);
-        LOG.error("totalPayableAmount :: " + totalPayableAmount);
-        LOG.error("totalProfitRate :: " + totalProfitRate);
-        LOG.error("principalPlusProfitRate :: " + principalPlusProfitRate);
 
         return String.valueOf(Math.floor((totalPayableAmount / principalPlusProfitRate) * 100));
     }
@@ -507,10 +679,22 @@ public class ScoringEngine implements JavaService2 {
         return String.valueOf((amountOffer + (amountOffer * loanRate * tenor / 12)) / tenor);
     }
 
-    private void calculatePensioner() {
+    private void calculatePensioner(Result getSalaryCertificate) {
         try {
-            if (Integer.parseInt(CUSTOMER_AGE) > 60) {
-                PENSIONER = "1";
+            switch (EMPLOYER_TYPE_ID) {
+                case "1":
+                    if (Arrays.asList(EMPLOYER_NAME_FOR_PENSIONERS).contains(getSalaryCertificate.getParamValueByName("agencyName"))) {
+                        PENSIONER = "1";
+                    }
+                    break;
+                case "3":
+                    if (Arrays.asList(EMPLOYER_NAME_FOR_PENSIONERS).contains(getSalaryCertificate.getParamValueByName("employerName"))) {
+                        PENSIONER = "1";
+                    }
+                    break;
+                default:
+                    PENSIONER = "0";
+                    break;
             }
         } catch (Exception ex) {
             LOG.error("ERROR calculatePensioner :: " + ex);
@@ -520,21 +704,26 @@ public class ScoringEngine implements JavaService2 {
     private void calculateMonthlyNetSalary(Result getSalaryCertificate) {
         try {
             NATIONALITY = getSalaryCertificate.getParamValueByName("nationality");
+            LOG.error("calculateMonthlyNetSalary EMPLOYER_TYPE_ID :: " + EMPLOYER_TYPE_ID);
             switch (EMPLOYER_TYPE_ID) {
                 case "1":
                     MONTHLY_NET_SALARY = getSalaryCertificate.getParamValueByName("netSalary");
                     break;
                 case "3":
+
                     EMPLOYMENT_STATUS = getSalaryCertificate.getParamValueByName("employmentStatus");
-                    if (EMPLOYMENT_STATUS.equalsIgnoreCase("Active")) {
+                    LOG.error("calculateMonthlyNetSalary EMPLOYMENT_STATUS 1:: " + EMPLOYMENT_STATUS);
+                    if (EMPLOYMENT_STATUS.equalsIgnoreCase("نشيط") || EMPLOYMENT_STATUS.equalsIgnoreCase("Active")) {
+                        LOG.error("calculateMonthlyNetSalary EMPLOYMENT_STATUS 2:: " + EMPLOYMENT_STATUS);
+
+
                         double calculatedDeductions = 0;
                         if (NATIONALITY.equalsIgnoreCase("SAU")) {
                             double minimumAmount = 0.1
-                                    * (Integer.parseInt(getSalaryCertificate.getParamValueByName("basicWage"))
-                                    + Integer
-                                    .parseInt(getSalaryCertificate
-                                            .getParamValueByName("housingAllowance")));
+                                    * (Integer.parseInt(getSalaryCertificate.getParamValueByName("basicWage")) + Integer
+                                    .parseInt(getSalaryCertificate.getParamValueByName("housingAllowance")));
                             calculatedDeductions = Math.min(minimumAmount, 4500);
+                            LOG.error("calculateMonthlyNetSalary calculatedDeductions :: " + calculatedDeductions);
                         }
                         MONTHLY_NET_SALARY = String
                                 .valueOf((Integer.parseInt(getSalaryCertificate.getParamValueByName("basicWage"))
@@ -542,8 +731,10 @@ public class ScoringEngine implements JavaService2 {
                                         + Integer.parseInt(getSalaryCertificate.getParamValueByName("otherAllowance")))
                                         - calculatedDeductions);
                     }
+                    LOG.error("calculateMonthlyNetSalary CAse 3 :: " + MONTHLY_NET_SALARY);
                     break;
                 default:
+                    LOG.error("DEFAULT calculateMonthlyNetSalary :: " + MONTHLY_NET_SALARY);
                     MONTHLY_NET_SALARY = "0";
                     break;
             }
@@ -557,20 +748,14 @@ public class ScoringEngine implements JavaService2 {
         try {
             switch (EMPLOYER_TYPE_ID) {
                 case "1":
-                    LocalDate agencyEmploymentDate = LocalDate.parse(
-                            getSalaryCertificate.getParamValueByName("agencyEmploymentDate"),
-                            DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                    LocalDate agencyEmploymentDate = LocalDate.parse(getSalaryCertificate.getParamValueByName("agencyEmploymentDate"), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
                     LocalDate currentDate = LocalDate.now();
-                    CURRENT_LENGTH_OF_SERVICE = String.valueOf(Math.toIntExact(
-                            ChronoUnit.MONTHS.between(YearMonth.from(agencyEmploymentDate),
-                                    YearMonth.from(currentDate))));
+                    CURRENT_LENGTH_OF_SERVICE = String.valueOf(Math.toIntExact(ChronoUnit.MONTHS.between(YearMonth.from(agencyEmploymentDate), YearMonth.from(currentDate))));
                     break;
                 case "3":
-                    LocalDate dateOfJoining = LocalDate.parse(getSalaryCertificate.getParamValueByName("dateOfJoining"),
-                            DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                    LocalDate dateOfJoining = LocalDate.parse(getSalaryCertificate.getParamValueByName("dateOfJoining"), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
                     LocalDate currentDateNow = LocalDate.now();
-                    CURRENT_LENGTH_OF_SERVICE = String.valueOf(Math.toIntExact(
-                            ChronoUnit.MONTHS.between(YearMonth.from(dateOfJoining), YearMonth.from(currentDateNow))));
+                    CURRENT_LENGTH_OF_SERVICE = String.valueOf(Math.toIntExact(ChronoUnit.MONTHS.between(YearMonth.from(dateOfJoining), YearMonth.from(currentDateNow))));
                     break;
                 default:
                     CURRENT_LENGTH_OF_SERVICE = "0";
@@ -832,11 +1017,28 @@ public class ScoringEngine implements JavaService2 {
     }
 
     private void getEmployerName(Result getSalaryCertificate) {
+
         try {
-            if (getSalaryCertificate.getParamValueByName("employeeNameEn") != null) {
-                EMPLOYER_NAME = IjarahHelperMethods
-                        .checkStringNull(getSalaryCertificate.getParamValueByName("employeeNameEn"));
+            switch (EMPLOYER_TYPE_ID) {
+                case "1":
+                    if (getSalaryCertificate.getParamValueByName("agencyName") != null) {
+                        EMPLOYER_NAME = getSalaryCertificate.getParamValueByName("agencyName");
+                    } else {
+                        EMPLOYER_NAME = "-";
+                    }
+                    break;
+                case "3":
+                    if (getSalaryCertificate.getParamValueByName("employerName") != null) {
+                        EMPLOYER_NAME = getSalaryCertificate.getParamValueByName("employerName");
+                    } else {
+                        EMPLOYER_NAME = "-";
+                    }
+                    break;
+                default:
+                    EMPLOYER_NAME = "-";
+                    break;
             }
+
             /*
              * int currentLengthOfService = Integer.parseInt(CURRENT_LENGTH_OF_SERVICE); if
              * (currentLengthOfService <= 3) { EMPLOYER_CATEGORISATION = "G"; } else if
@@ -905,12 +1107,10 @@ public class ScoringEngine implements JavaService2 {
         try {
             switch (EMPLOYER_TYPE_ID) {
                 case "1": // Govt
-                    SALARY_WITHOUT_ALLOWANCES = String.valueOf(Double.parseDouble(MONTHLY_NET_SALARY)
-                            - Double.parseDouble(getSalaryCertificate.getParamValueByName("totalAllownces")));
+                    SALARY_WITHOUT_ALLOWANCES = String.valueOf(Double.parseDouble(MONTHLY_NET_SALARY) - Double.parseDouble(getSalaryCertificate.getParamValueByName("totalAllownces")));
                     break;
                 case "3": // Private
-                    SALARY_WITHOUT_ALLOWANCES = String.valueOf(Double.parseDouble(MONTHLY_NET_SALARY)
-                            - Double.parseDouble(getSalaryCertificate.getParamValueByName("otherAllowance")));
+                    SALARY_WITHOUT_ALLOWANCES = String.valueOf(Double.parseDouble(MONTHLY_NET_SALARY) - Double.parseDouble(getSalaryCertificate.getParamValueByName("otherAllowance")));
                     break;
             }
         } catch (Exception ex) {
@@ -1001,8 +1201,6 @@ public class ScoringEngine implements JavaService2 {
             this.inputParams.put("ENQUIRY_REFERENCE", String.valueOf(generateRandomInt()));
             this.inputParams.put("employerTypeId", EMPLOYER_TYPE_ID);
 
-            LOG.error("natid====>>" + request.getParameter("NationalID"));
-
         } catch (Exception ex) {
             LOG.error("ERROR preProcess :: " + ex);
         }
@@ -1010,18 +1208,17 @@ public class ScoringEngine implements JavaService2 {
     }
 
     private Result getCustomerApplicationData(DataControllerRequest dataControllerRequest) {
-        Result getCustomerApplicationData = StatusEnum.error.setStatus();
+        Result result = StatusEnum.error.setStatus();
         try {
-            getCustomerApplicationData = StatusEnum.success.setStatus();
             Map<String, String> filter = new HashMap<>();
             filter.put(DBPUtilitiesConstants.FILTER, "applicationID" + DBPUtilitiesConstants.EQUAL + APPLICATION_ID);
-
-            getCustomerApplicationData.appendResult(ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID,
-                    CUSTOMER_APPLICATION_GET_OPERATION_ID, filter, null, dataControllerRequest));
+            Result getCustomerApplicationData = ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, CUSTOMER_APPLICATION_GET_OPERATION_ID, filter, null, dataControllerRequest);
+            StatusEnum.success.setStatus(getCustomerApplicationData);
+            return getCustomerApplicationData;
         } catch (Exception ex) {
             LOG.error("ERROR getCustomerApplicationData :: " + ex);
         }
-        return getCustomerApplicationData;
+        return result;
     }
 
     private void extractValuesFromCustomerApplication(Result getCustomerApplicationData) {
@@ -1032,7 +1229,6 @@ public class ScoringEngine implements JavaService2 {
             LOAN_AMOUNT = HelperMethods.getFieldValue(getCustomerApplicationData, "loanAmount");
             TENOR = HelperMethods.getFieldValue(getCustomerApplicationData, "tenor");
             CUSTOMER_ID = HelperMethods.getFieldValue(getCustomerApplicationData, "Customer_id");
-
         } catch (Exception ex) {
             LOG.error("ERROR extractValuesFromCustomerApplication :: " + ex);
         }
@@ -1041,11 +1237,11 @@ public class ScoringEngine implements JavaService2 {
     private Result getCustomerData(DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
         try {
-            Result getCustomerData = StatusEnum.success.setStatus();
             Map<String, String> filter = new HashMap<>();
             filter.put(DBPUtilitiesConstants.FILTER, "id" + DBPUtilitiesConstants.EQUAL + CUSTOMER_ID);
-            getCustomerData.appendResult(ServiceCaller.internalDB(DBXDB_SERVICES_SERVICE_ID, CUSTOMER_GET_OPERATION_ID,
-                    filter, null, dataControllerRequest));
+            Result getCustomerData = ServiceCaller.internalDB(DBXDB_SERVICES_SERVICE_ID, CUSTOMER_GET_OPERATION_ID, filter, null, dataControllerRequest);
+            StatusEnum.success.setStatus(getCustomerData);
+            PARTY_ID = HelperMethods.getFieldValue(getCustomerData, "partyId");
             return getCustomerData;
         } catch (Exception ex) {
             LOG.error("ERROR getCustomerData :: " + ex);
@@ -1053,17 +1249,14 @@ public class ScoringEngine implements JavaService2 {
         return result;
     }
 
-    private Result getSIMAHConsumerEnquiry(Map<String, String> inputParams,
-                                           DataControllerRequest dataControllerRequest) {
+    private Result getSIMAHConsumerEnquiry(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
         try {
-            Result getConsumerEnquiry = StatusEnum.success.setStatus();
-            getConsumerEnquiry.appendResult(ServiceCaller.internal(SIMAH_SERVICE_ID, CONSUMER_ENQUIRY_OPERATION_ID,
-                    inputParams, null, dataControllerRequest));
+            Result getConsumerEnquiry = ServiceCaller.internal(SIMAH_SERVICE_ID, CONSUMER_ENQUIRY_OPERATION_ID, inputParams, null, dataControllerRequest);
+            StatusEnum.success.setStatus(getConsumerEnquiry);
             String inputRequest = (new ObjectMapper()).writeValueAsString(inputParams);
             String outputResponse = ResultToJSON.convert(getConsumerEnquiry);
-            auditLogData(dataControllerRequest, inputRequest, outputResponse,
-                    SIMAH_SERVICE_ID + " : " + CONSUMER_ENQUIRY_OPERATION_ID);
+            auditLogData(dataControllerRequest, inputRequest, outputResponse, SIMAH_SERVICE_ID + " : " + CONSUMER_ENQUIRY_OPERATION_ID);
             return getConsumerEnquiry;
         } catch (Exception ex) {
             LOG.error("ERROR getSIMAHConsumerEnquiry :: " + ex);
@@ -1071,18 +1264,14 @@ public class ScoringEngine implements JavaService2 {
         return result;
     }
 
-    private Result getSIMAHSalaryCertificate(Map<String, String> inputParams,
-                                             DataControllerRequest dataControllerRequest) {
+    private Result getSIMAHSalaryCertificate(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
         try {
-            Result getSalaryCertificate = StatusEnum.success.setStatus();
-
-            getSalaryCertificate.appendResult(ServiceCaller.internal(SIMAH_SALARY_ORCH_SERVICE_ID,
-                    SIMAH_SALARY_CERT_OPERATION_ID, inputParams, null, dataControllerRequest));
+            Result getSalaryCertificate = ServiceCaller.internal(SIMAH_SALARY_ORCH_SERVICE_ID, SIMAH_SALARY_CERT_OPERATION_ID, inputParams, null, dataControllerRequest);
+            StatusEnum.success.setStatus(getSalaryCertificate);
             String inputRequest = (new ObjectMapper()).writeValueAsString(inputParams);
             String outputResponse = ResultToJSON.convert(getSalaryCertificate);
-            auditLogData(dataControllerRequest, inputRequest, outputResponse,
-                    SIMAH_SALARY_ORCH_SERVICE_ID + " : " + SIMAH_SALARY_CERT_OPERATION_ID);
+            auditLogData(dataControllerRequest, inputRequest, outputResponse, SIMAH_SALARY_ORCH_SERVICE_ID + " : " + SIMAH_SALARY_CERT_OPERATION_ID);
             return getSalaryCertificate;
         } catch (Exception ex) {
             LOG.error("ERROR getSIMAHSalaryCertificate :: " + ex);
@@ -1090,19 +1279,16 @@ public class ScoringEngine implements JavaService2 {
         return result;
     }
 
-    private Result getNationalAddress(Map<String, String> inputParams, DataControllerRequest
-            dataControllerRequest) {
+    private Result getNationalAddress(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
         try {
-            Result getNationalAddress = StatusEnum.success.setStatus();
             inputParams.put("nin", NATIONAL_ID);
             inputParams.put("dateOfBirth", DOB);
-            getNationalAddress.appendResult(ServiceCaller.internal(YAKEEN_SOAP_API_SERVICE_ID,
-                    GET_CITIZEN_ADDRESS_INFO_OPERATION_ID, inputParams, null, dataControllerRequest));
+            Result getNationalAddress = ServiceCaller.internal(YAKEEN_SOAP_API_SERVICE_ID, GET_CITIZEN_ADDRESS_INFO_OPERATION_ID, inputParams, null, dataControllerRequest);
+            StatusEnum.success.setStatus(getNationalAddress);
             String inputRequest = (new ObjectMapper()).writeValueAsString(inputParams);
             String outputResponse = ResultToJSON.convert(getNationalAddress);
-            auditLogData(dataControllerRequest, inputRequest, outputResponse,
-                    YAKEEN_SOAP_API_SERVICE_ID + " : " + GET_CITIZEN_ADDRESS_INFO_OPERATION_ID);
+            auditLogData(dataControllerRequest, inputRequest, outputResponse, YAKEEN_SOAP_API_SERVICE_ID + " : " + GET_CITIZEN_ADDRESS_INFO_OPERATION_ID);
             return getNationalAddress;
         } catch (Exception ex) {
             LOG.error("ERROR getNationalAddress :: " + ex);
@@ -1110,17 +1296,14 @@ public class ScoringEngine implements JavaService2 {
         return result;
     }
 
-    private Result calculateScoreCardS2(Map<String, String> inputParams, DataControllerRequest
-            dataControllerRequest) {
+    private Result calculateScoreCardS2(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
         try {
-            Result getScoreCardS2 = StatusEnum.success.setStatus();
-            getScoreCardS2.appendResult(ServiceCaller.internal(KNOCKOUT_SERVICE_ID, CALCULATE_SCORECARD_S2_OPERATION_ID,
-                    inputParams, null, dataControllerRequest));
+            Result getScoreCardS2 = ServiceCaller.internal(KNOCKOUT_SERVICE_ID, CALCULATE_SCORECARD_S2_OPERATION_ID, inputParams, null, dataControllerRequest);
             String inputRequest = (new ObjectMapper()).writeValueAsString(inputParams);
             String outputResponse = ResultToJSON.convert(getScoreCardS2);
-            auditLogData(dataControllerRequest, inputRequest, outputResponse,
-                    KNOCKOUT_SERVICE_ID + " : " + CALCULATE_SCORECARD_S2_OPERATION_ID);
+            auditLogData(dataControllerRequest, inputRequest, outputResponse, KNOCKOUT_SERVICE_ID + " : " + CALCULATE_SCORECARD_S2_OPERATION_ID);
+            StatusEnum.success.setStatus(getScoreCardS2);
             return getScoreCardS2;
         } catch (Exception ex) {
             LOG.error("ERROR calculateScoreCardS2 :: " + ex);
@@ -1128,17 +1311,14 @@ public class ScoringEngine implements JavaService2 {
         return result;
     }
 
-    private Result calculateScoreCardS3(Map<String, String> inputParams, DataControllerRequest
-            dataControllerRequest) {
+    private Result calculateScoreCardS3(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
         try {
-            Result getScoreCardS3 = StatusEnum.success.setStatus();
-            getScoreCardS3.appendResult(ServiceCaller.internal(KNOCKOUT_SERVICE_ID, CALCULATE_SCORECARD_S3_OPERATION_ID,
-                    inputParams, null, dataControllerRequest));
+            Result getScoreCardS3 = ServiceCaller.internal(KNOCKOUT_SERVICE_ID, CALCULATE_SCORECARD_S3_OPERATION_ID, inputParams, null, dataControllerRequest);
             String inputRequest = (new ObjectMapper()).writeValueAsString(inputParams);
             String outputResponse = ResultToJSON.convert(getScoreCardS3);
-            auditLogData(dataControllerRequest, inputRequest, outputResponse,
-                    KNOCKOUT_SERVICE_ID + " : " + CALCULATE_SCORECARD_S3_OPERATION_ID);
+            auditLogData(dataControllerRequest, inputRequest, outputResponse, KNOCKOUT_SERVICE_ID + " : " + CALCULATE_SCORECARD_S3_OPERATION_ID);
+            StatusEnum.success.setStatus(getScoreCardS3);
             return getScoreCardS3;
         } catch (Exception ex) {
             LOG.error("ERROR calculateScoreCardS3 :: " + ex);
@@ -1146,21 +1326,25 @@ public class ScoringEngine implements JavaService2 {
         return result;
     }
 
-    private void createCustomerAddress(Map<String, String> inputParams, DataControllerRequest
-            dataControllerRequest) {
+    private void createCustomerAddress(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
         try {
-            ServiceCaller.internalDB(DBXDB_SERVICES_SERVICE_ID, CUSTOMER_ADDRESS_CREATE_OPERATION_ID, inputParams, null,
-                    dataControllerRequest);
+            ServiceCaller.internalDB(DBXDB_SERVICES_SERVICE_ID, CUSTOMER_ADDRESS_CREATE_OPERATION_ID, inputParams, null, dataControllerRequest);
         } catch (Exception ex) {
             LOG.error("ERROR createCustomerAddress :: " + ex);
         }
     }
 
-    private Result updateCustomerApplicationData(Map<String, String> inputParams,
-                                                 DataControllerRequest dataControllerRequest) {
+    private void createEmployerDetails(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
+        try {
+            ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, EMPLOYER_DETAILS_CREATE_OPERATION_ID, inputParams, null, dataControllerRequest);
+        } catch (Exception ex) {
+            LOG.error("ERROR createEmployerDetails :: " + ex);
+        }
+    }
+
+    private Result updateCustomerApplicationData(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
         Result updateCustomerApplicationData = StatusEnum.success.setStatus();
-        updateCustomerApplicationData.appendResult(ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID,
-                CUSTOMER_APPLICATION_UPDATE_OPERATION_ID, inputParams, null, dataControllerRequest));
+        updateCustomerApplicationData.appendResult(ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, CUSTOMER_APPLICATION_UPDATE_OPERATION_ID, inputParams, null, dataControllerRequest));
 
         if (inputParams.get("knockoutStatus").equalsIgnoreCase("FAIL") || inputParams.get("applicationStatus").equalsIgnoreCase("SID_SUSPENDED")) {
             updateCustomerApplicationData = StatusEnum.error.setStatus();

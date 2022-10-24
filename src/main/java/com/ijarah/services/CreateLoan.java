@@ -34,6 +34,7 @@ public class CreateLoan implements JavaService2 {
     private Dataset CUSTOMERS_APPLICATION_DATA = new Dataset();
     private String PARTY_ID = "";
     private String FIXED_AMOUNT_VALUE = "100";
+
     private Dataset NAFAES_DATA = new Dataset();
     private String REFERENCE_NUMBER = "";
     private String ACCESS_TOKEN = "";
@@ -42,33 +43,46 @@ public class CreateLoan implements JavaService2 {
     public Object invoke(String s, Object[] objects, DataControllerRequest dataControllerRequest, DataControllerResponse dataControllerResponse) throws Exception {
         inputParams = HelperMethods.getInputParamMap(objects);
         Result result = StatusEnum.error.setStatus();
-        IjarahErrors.ERR_PREPROCESS_INVALID_INPUT_PARAMS_001.setErrorCode(result);
+        IjarahErrors.ERR_CREATE_LOAN_002.setErrorCode(result);
 
         try {
-            if (preProcess(inputParams)) {
-                Result getCustomerApplicationData = getCustomerApplicationData(dataControllerRequest);
-                Result successResult = StatusEnum.success.setStatus();
-                if (HelperMethods.hasRecords(getCustomerApplicationData) && IjarahHelperMethods.hasSuccessCode(getCustomerApplicationData)) {
-                    extractValuesFromCustomerApplication(getCustomerApplicationData);
-                    for (int index = 0; index < CUSTOMERS_APPLICATION_DATA.getAllRecords().size(); index++) {
-                        Result getCustomerData = getPartyIDFromCustomerTable(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("Customer_id"), dataControllerRequest);
-                        if (IjarahHelperMethods.hasSuccessCode(getCustomerData) && !IjarahHelperMethods.isBlank(PARTY_ID)) {
-                            Result activateCustomer = activateCustomer(createInputParamsForActivateCustomerService(), dataControllerRequest);
-                            if (IjarahHelperMethods.hasSuccessCode(activateCustomer)) {
-                                Result createLoanResult = createLoan(createInputParamsForCreateLoanService(index), dataControllerRequest);
-                                if (IjarahHelperMethods.hasSuccessCode(createLoanResult)) {
-                                    Result getNafaesData = getNafaesData(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("nationalId"), dataControllerRequest);
-                                    if (IjarahHelperMethods.hasSuccessCode(getNafaesData) && HelperMethods.hasRecords(getNafaesData)) {
-                                        extractValuesFromNafaes(getNafaesData);
-                                        Result transferOrder = callTransferOrder(dataControllerRequest);
-                                        Result saleOrder = callSaleOrder(dataControllerRequest);
+            Result getCustomerApplicationData = getCustomerApplicationData(dataControllerRequest);
+            Result successResult = StatusEnum.success.setStatus();
+            successResult.addParam("Message", "Loan Creation Successfully Completed");
+            if (HelperMethods.hasRecords(getCustomerApplicationData) && IjarahHelperMethods.hasSuccessCode(getCustomerApplicationData)) {
+                extractValuesFromCustomerApplication(getCustomerApplicationData);
+                for (int index = 0; index < CUSTOMERS_APPLICATION_DATA.getAllRecords().size(); index++) {
+                    Result getCustomerData = getPartyIDFromCustomerTable(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("Customer_id"), dataControllerRequest);
+                    if (IjarahHelperMethods.hasSuccessCode(getCustomerData) && !IjarahHelperMethods.isBlank(PARTY_ID)) {
+                        Result activateCustomer = activateCustomer(createInputParamsForActivateCustomerService(), dataControllerRequest);
+                        if (IjarahHelperMethods.hasSuccessCode(activateCustomer)) {
+                            Result createLoanResult = createLoan(createInputParamsForCreateLoanService(index), dataControllerRequest);
+                            if (IjarahHelperMethods.hasSuccessCode(createLoanResult)) {
+                                Result getNafaesData = getNafaesData(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("nationalId"), dataControllerRequest);
+                                if (IjarahHelperMethods.hasSuccessCode(getNafaesData) && HelperMethods.hasRecords(getNafaesData)) {
+                                    extractValuesFromNafaes(getNafaesData);
+                                    Result transferOrder = callTransferOrder(dataControllerRequest);
+                                    Result saleOrder = callSaleOrder(dataControllerRequest);
+                                    if (IjarahHelperMethods.hasSuccessCode(transferOrder) && IjarahHelperMethods.hasSuccessCode(saleOrder)) {
+                                        return successResult;
+                                    } else {
+                                        IjarahErrors.ERR_TRANSFER_ORDER_OR_SALE_ORDER_008.setErrorCode(result);
                                     }
+                                } else {
+                                    IjarahErrors.ERR_NAFAES_DATA_NOT_FOUND_007.setErrorCode(result);
                                 }
+                            } else {
+                                IjarahErrors.ERR_LOAN_CREATION_FAILED_006.setErrorCode(result);
                             }
+                        } else {
+                            IjarahErrors.ERR_ACTIVATE_CUSTOMER_FAILED_005.setErrorCode(result);
                         }
+                    } else {
+                        IjarahErrors.ERR_NO_CUSTOMER_RECORD_FOUND_004.setErrorCode(result);
                     }
                 }
-                return successResult;
+            } else {
+                IjarahErrors.ERR_CREATE_LOAN_003.setErrorCode(result);
             }
         } catch (Exception ex) {
             LOG.error("ERROR invoke :: " + ex);
@@ -82,11 +96,14 @@ public class CreateLoan implements JavaService2 {
             Map<String, String> inputParam = new HashMap<>();
             inputParam.put("accessToken", ACCESS_TOKEN);
             inputParam.put("referenceNo", REFERENCE_NUMBER);
-            Result transferOrderResult = StatusEnum.success.setStatus();
-            transferOrderResult.appendResult(ServiceCaller.internal(NAFAES_REST_API_SERVICE_ID, TRANSFER_ORDER_OPERATION_ID, inputParams, null, dataControllerRequest));
+            Result transferOrderResult = ServiceCaller.internal(NAFAES_REST_API_SERVICE_ID, TRANSFER_ORDER_OPERATION_ID, inputParams, null, dataControllerRequest);
             String inputRequest = (new ObjectMapper()).writeValueAsString(inputParam);
             String outputResponse = ResultToJSON.convert(transferOrderResult);
             auditLogData(dataControllerRequest, inputRequest, outputResponse, NAFAES_REST_API_SERVICE_ID + " : " + TRANSFER_ORDER_OPERATION_ID);
+            if (IjarahHelperMethods.hasSuccessStatus(transferOrderResult)) {
+                StatusEnum.success.setStatus(transferOrderResult);
+                return transferOrderResult;
+            }
         } catch (Exception ex) {
             LOG.error("ERROR callTransferOrder :: " + ex);
         }
@@ -99,11 +116,14 @@ public class CreateLoan implements JavaService2 {
             Map<String, String> inputParam = new HashMap<>();
             inputParam.put("accessToken", ACCESS_TOKEN);
             inputParam.put("referenceNo", REFERENCE_NUMBER);
-            Result saleOrderResult = StatusEnum.success.setStatus();
-            saleOrderResult.appendResult(ServiceCaller.internal(NAFAES_REST_API_SERVICE_ID, SALE_ORDER_PUSH_METHOD_OPERATION_ID, inputParams, null, dataControllerRequest));
+            Result saleOrderResult = ServiceCaller.internal(NAFAES_REST_API_SERVICE_ID, SALE_ORDER_PUSH_METHOD_OPERATION_ID, inputParams, null, dataControllerRequest);
             String inputRequest = (new ObjectMapper()).writeValueAsString(inputParam);
             String outputResponse = ResultToJSON.convert(saleOrderResult);
             auditLogData(dataControllerRequest, inputRequest, outputResponse, NAFAES_REST_API_SERVICE_ID + " : " + SALE_ORDER_PUSH_METHOD_OPERATION_ID);
+            if (IjarahHelperMethods.hasSuccessStatus(saleOrderResult)) {
+                StatusEnum.success.setStatus(saleOrderResult);
+                return saleOrderResult;
+            }
         } catch (Exception ex) {
             LOG.error("ERROR callSaleOrder :: " + ex);
         }
@@ -113,12 +133,12 @@ public class CreateLoan implements JavaService2 {
     private Result getNafaesData(String nationalId, DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
         try {
-            Result getNafaesData = StatusEnum.success.setStatus();
             Map<String, String> inputParam = new HashMap<>();
             inputParam.put(DBPUtilitiesConstants.FILTER, "nationalid"
                     + DBPUtilitiesConstants.EQUAL
                     + nationalId);
-            getNafaesData.appendResult(ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, NAFAES_GET_OPERATION_ID, inputParam, null, dataControllerRequest));
+            Result getNafaesData = ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, NAFAES_GET_OPERATION_ID, inputParam, null, dataControllerRequest);
+            StatusEnum.success.setStatus(getNafaesData);
             return getNafaesData;
         } catch (Exception ex) {
             LOG.error("ERROR getNafaesData :: " + ex);
@@ -131,9 +151,9 @@ public class CreateLoan implements JavaService2 {
         try {
             inputParams.put("partyId", PARTY_ID);
             inputParams.put("fixedAmount", FIXED_AMOUNT_VALUE);
-            inputParams.put("amount", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("loanAmount"));
+            inputParams.put("amount", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("loanAmount").replace(",", ""));
             inputParams.put("fixed", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("approx"));
-            inputParams.put("term", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("tenor"));
+            inputParams.put("term", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("tenor") + "M");
         } catch (Exception ex) {
             LOG.error("ERROR createInputParamsForCreateLoanService :: " + ex);
         }
@@ -143,11 +163,14 @@ public class CreateLoan implements JavaService2 {
     private Result createLoan(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
         try {
-            Result getCreateLoanResult = StatusEnum.success.setStatus();
-            getCreateLoanResult.appendResult(ServiceCaller.internal(MORA_T24_SERVICE_ID, LOAN_CREATION_OPERATION_ID, inputParams, null, dataControllerRequest));
+            Result getCreateLoanResult = ServiceCaller.internal(MORA_T24_SERVICE_ID, LOAN_CREATION_OPERATION_ID, inputParams, null, dataControllerRequest);
             String inputRequest = (new ObjectMapper()).writeValueAsString(inputParams);
             String outputResponse = ResultToJSON.convert(getCreateLoanResult);
             auditLogData(dataControllerRequest, inputRequest, outputResponse, MORA_T24_SERVICE_ID + " : " + LOAN_CREATION_OPERATION_ID);
+            if (IjarahHelperMethods.hasSuccessStatus(getCreateLoanResult)) {
+                StatusEnum.success.setStatus(getCreateLoanResult);
+                return getCreateLoanResult;
+            }
         } catch (Exception ex) {
             LOG.error("ERROR createLoan :: " + ex);
         }
@@ -157,11 +180,14 @@ public class CreateLoan implements JavaService2 {
     private Result activateCustomer(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
         try {
-            Result getActivateCustomerResult = StatusEnum.success.setStatus();
-            getActivateCustomerResult.appendResult(ServiceCaller.internal(MORA_T24_SERVICE_ID, ACTIVATE_CUSTOMER_OPERATION_ID, inputParams, null, dataControllerRequest));
+            Result getActivateCustomerResult = ServiceCaller.internal(MORA_T24_SERVICE_ID, ACTIVATE_CUSTOMER_OPERATION_ID, inputParams, null, dataControllerRequest);
             String inputRequest = (new ObjectMapper()).writeValueAsString(inputParams);
             String outputResponse = ResultToJSON.convert(getActivateCustomerResult);
             auditLogData(dataControllerRequest, inputRequest, outputResponse, MORA_T24_SERVICE_ID + " : " + ACTIVATE_CUSTOMER_OPERATION_ID);
+            if (IjarahHelperMethods.hasSuccessStatus(getActivateCustomerResult)) {
+                StatusEnum.success.setStatus(getActivateCustomerResult);
+                return getActivateCustomerResult;
+            }
         } catch (Exception ex) {
             LOG.error("ERROR activateCustomer :: " + ex);
         }
@@ -181,13 +207,13 @@ public class CreateLoan implements JavaService2 {
     private Result getPartyIDFromCustomerTable(String customer_id, DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
         try {
-            Result getCustomerData = StatusEnum.success.setStatus();
             Map<String, String> inputParam = new HashMap<>();
             inputParam.put(DBPUtilitiesConstants.FILTER, "id"
                     + DBPUtilitiesConstants.EQUAL
                     + customer_id);
-            getCustomerData.appendResult(ServiceCaller.internalDB(DBXDB_SERVICES_SERVICE_ID, CUSTOMER_GET_OPERATION_ID, inputParam, null, dataControllerRequest));
+            Result getCustomerData = ServiceCaller.internalDB(DBXDB_SERVICES_SERVICE_ID, CUSTOMER_GET_OPERATION_ID, inputParam, null, dataControllerRequest);
             PARTY_ID = HelperMethods.getFieldValue(getCustomerData, "partyId");
+            StatusEnum.success.setStatus(getCustomerData);
             return getCustomerData;
         } catch (Exception ex) {
             LOG.error("ERROR getPartyIDFromCustomerTable :: " + ex);
@@ -207,7 +233,6 @@ public class CreateLoan implements JavaService2 {
     private Result getCustomerApplicationData(DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
         try {
-            Result getCustomerApplicationData = StatusEnum.success.setStatus();
             Map<String, String> filter = new HashMap<>();
             filter.put(DBPUtilitiesConstants.FILTER, APPLICATION_STATUS
                     + DBPUtilitiesConstants.EQUAL
@@ -220,7 +245,8 @@ public class CreateLoan implements JavaService2 {
                     + SANAD_APPROVAL
                     + DBPUtilitiesConstants.EQUAL
                     + DBPUtilitiesConstants.BOOLEAN_STRING_TRUE);
-            getCustomerApplicationData.appendResult(ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, CUSTOMER_APPLICATION_GET_OPERATION_ID, filter, null, dataControllerRequest));
+            Result getCustomerApplicationData = ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, CUSTOMER_APPLICATION_GET_OPERATION_ID, filter, null, dataControllerRequest);
+            StatusEnum.success.setStatus(getCustomerApplicationData);
             return getCustomerApplicationData;
         } catch (Exception ex) {
             LOG.error("ERROR getCustomerApplicationData :: " + ex);

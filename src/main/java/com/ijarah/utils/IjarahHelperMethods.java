@@ -256,6 +256,10 @@ public class IjarahHelperMethods {
         return "200".equals(toCheck.getParamValueByName("httpStatusCode"));
     }
 
+    public static boolean hasSuccessStatus(Result toCheck) {
+        return "success".equals(toCheck.getParamValueByName("status"));
+    }
+
     public static boolean hasSuccessCode(JsonObject toCheck) {
         return toCheck.has("httpStatusCode") &&
                 !toCheck.get("httpStatusCode").isJsonNull() &&

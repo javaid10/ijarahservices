@@ -11,6 +11,19 @@ public enum IjarahErrors {
     ERR_PRE_LOGIN_001("001_001", "Unable to validate user."),
 
     ERR_PREPROCESS_INVALID_INPUT_PARAMS_001("000_000", "Input params are not valid"),
+
+    ERR_CREATE_LOAN_002("002", "Create loan Service failed"),
+    ERR_CREATE_LOAN_003("003", "No customers found for loan creation"),
+    ERR_NO_CUSTOMER_RECORD_FOUND_004("004", "No Customer Record Found"),
+    ERR_ACTIVATE_CUSTOMER_FAILED_005("005", "Customer Activation Failed"),
+    ERR_LOAN_CREATION_FAILED_006("006", "Loan Creation Failed"),
+    ERR_NAFAES_DATA_NOT_FOUND_007("007", "No Nafaes Data found for Customer"),
+    ERR_TRANSFER_ORDER_OR_SALE_ORDER_008("008", "Transfer Order OR Sale Order Got Failed"),
+    ERR_CUSTOMER_APPLICATION_DATA_NOT_FOUND_009("009", "No Customer Application Record Found"),
+    ERR_CUSTOMER_COMMUNICATION_DATA_NOT_FOUND_010("010", "No Customer Communication Record Found"),
+    ERR_GET_ACCESS_TOKEN_FAILED_011("011", "Get Access Token Service Failed"),
+    ERR_SINGLE_SANAD_CREATION_FAILED_012("012", "Single Sanad Creation Service Failed"),
+    ERR_CREATE_NAFAITH_RECORD_FAILED_013("013", "Create Nafaith Record Failed"),
     ERR_660028("660028", "Knockout Failed, Application has Declined");
 
     public static final String ERROR_CODE_KEY = "dbpErrCode";
