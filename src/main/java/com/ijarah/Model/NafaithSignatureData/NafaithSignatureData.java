@@ -9,7 +9,7 @@ public class NafaithSignatureData{
 	private String debtorPhoneNumber;
 
 	@SerializedName("total_value")
-	private int totalValue;
+	private double totalValue;
 
 	@SerializedName("sanad")
 	private List<SanadItem> sanad;
@@ -46,11 +46,11 @@ public class NafaithSignatureData{
 		return debtorPhoneNumber;
 	}
 
-	public void setTotalValue(int totalValue){
+	public void setTotalValue(double totalValue){
 		this.totalValue = totalValue;
 	}
 
-	public int getTotalValue(){
+	public double getTotalValue(){
 		return totalValue;
 	}
 

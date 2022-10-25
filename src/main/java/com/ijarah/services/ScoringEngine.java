@@ -121,6 +121,7 @@ public class ScoringEngine implements JavaService2 {
                 getSalaryCertificate = getSIMAHSalaryCertificate(createRequestForSIMAHSALARY(getCustomerData, EMPLOYER_TYPE_ID, NATIONAL_ID), dataControllerRequest);
             }
 
+
             Result getNationalAddress = getNationalAddress(inputParams, dataControllerRequest);
             createCustomerAddress(createRequestForCreateCustomerAddressService(getNationalAddress), dataControllerRequest);
             createT24CustomerAddressUpdate(createRequestForT24CustomerAddressUpdateService(getNationalAddress), dataControllerRequest);
@@ -128,6 +129,7 @@ public class ScoringEngine implements JavaService2 {
 
             createEmployerDetails(createRequestForCreateEmployerDetailsService(getSalaryCertificate), dataControllerRequest);
             createT24CustomerEmployeeDetails(createRequestForT24CustomerEmployeeDetailsService(getSalaryCertificate), dataControllerRequest);
+
 
             // CALCULATION OF SCORING ENGINES
             calculatePensioner(getSalaryCertificate);
@@ -139,6 +141,8 @@ public class ScoringEngine implements JavaService2 {
 
             // 3RD PARTY INTEGRATION SERVICES CALLS
             Result getScoreCardS2 = calculateScoreCardS2(createRequestForScoreCardS2Service(getSalaryCertificate), dataControllerRequest);
+            //TODO
+            // Add status check for S2
             if (getScoreCardS2.hasParamByName("applicationCategory") && !IjarahHelperMethods.isBlank(getScoreCardS2.getParamValueByName("applicationCategory"))) {
 
                 if (("0").equalsIgnoreCase(getScoreCardS2.getParamValueByName("applicationCategory"))) {
@@ -169,9 +173,7 @@ public class ScoringEngine implements JavaService2 {
             calculateNewToIndustry();
 
             Result getScoreCardS3 = calculateScoreCardS3(createRequestForScoreCardS3Service(getConsumerEnquiry), dataControllerRequest);
-
             calculateMaxEmi();
-
             // DB INTEGRATION SERVICES CALLS
             result = updateCustomerApplicationData(createRequestForUpdateCustomerApplicationDataService(getCustomerApplicationData, getScoreCardS2, getScoreCardS3), dataControllerRequest);
         }
@@ -198,9 +200,11 @@ public class ScoringEngine implements JavaService2 {
         Result result = StatusEnum.error.setStatus();
         try {
             Result T24CustomerEmployeeDetails = ServiceCaller.internal(MORA_T24_SERVICE_ID, CUSTOMER_EMPLOYEE_DETAILS_OPERATION_ID, inputParams, null, dataControllerRequest);
+
             String inputRequest = (new ObjectMapper()).writeValueAsString(inputParams);
             String outputResponse = ResultToJSON.convert(T24CustomerEmployeeDetails);
             auditLogData(dataControllerRequest, inputRequest, outputResponse, MORA_T24_SERVICE_ID + " : " + CUSTOMER_EMPLOYEE_DETAILS_OPERATION_ID);
+
             StatusEnum.success.setStatus(T24CustomerEmployeeDetails);
             return T24CustomerEmployeeDetails;
         } catch (Exception ex) {
@@ -212,7 +216,7 @@ public class ScoringEngine implements JavaService2 {
     private Map<String, String> createRequestForT24CustomerAddressUpdateService(Result getNationalAddress) {
         Map<String, String> inputParams = new HashMap<>();
         inputParams.put("partyId", PARTY_ID);
-        inputParams.put("country", "SAU");
+        inputParams.put("country", "SA");
 
         Gson gson = new Gson();
         NationalAddress nationalAddress = gson.fromJson(ResultToJSON.convert(getNationalAddress), NationalAddress.class);
@@ -235,24 +239,31 @@ public class ScoringEngine implements JavaService2 {
 
         Map<String, String> inputParams = new HashMap<>();
         inputParams.put("partyId", PARTY_ID);
+
+        LOG.error("partyId ::" + PARTY_ID);
+
         inputParams.put("salaryCurrency", "SAR");
 
         switch (EMPLOYER_TYPE_ID) {
             case "1":
-                inputParams.put("employStatus", "Employed");
-                inputParams.put("occupation", "-");
-                inputParams.put("employJobTitle", getSalaryCertificate.getParamValueByName("employeeJobTitle"));
-                inputParams.put("employerName", getSalaryCertificate.getParamValueByName("agencyName"));
+                inputParams.put("employStatus", "EMPLOYED");
+                inputParams.put("occupation", "occupation");
+                inputParams.put("jobTitleMfb", getSalaryCertificate.getParamValueByName("employeeJobTitle"));
+                //inputParams.put("employerName", getSalaryCertificate.getParamValueByName("agencyName"));
+                inputParams.put("employerName", "Agency Name");
                 inputParams.put("employStartDate", getSalaryCertificate.getParamValueByName("agencyEmploymentDate"));
-                inputParams.put("salaryAmount", getSalaryCertificate.getParamValueByName("netSalary"));
+                inputParams.put("salaryMfb", getSalaryCertificate.getParamValueByName("netSalary"));
+                inputParams.put("basicWageMfb", "0");
                 break;
             case "3":
                 inputParams.put("employStatus", getSalaryCertificate.getParamValueByName("employmentStatus"));
-                inputParams.put("occupation", "-");
-                inputParams.put("employJobTitle", "-");
-                inputParams.put("employerName", getSalaryCertificate.getParamValueByName("employerName"));
+                inputParams.put("occupation", "occupation");
+                inputParams.put("jobTitleMfb", "jobTitleMfb");
+                //inputParams.put("employerName", getSalaryCertificate.getParamValueByName("employerName"));
+                inputParams.put("employerName", "Employer Name");
                 inputParams.put("employStartDate", getSalaryCertificate.getParamValueByName("dateOfJoining"));
-                inputParams.put("salaryAmount", getSalaryCertificate.getParamValueByName("basicWage"));
+                inputParams.put("salaryMfb", getSalaryCertificate.getParamValueByName("basicWage"));
+                inputParams.put("basicWageMfb", getSalaryCertificate.getParamValueByName("basicWage"));
                 break;
         }
 
@@ -299,6 +310,7 @@ public class ScoringEngine implements JavaService2 {
             if (CONSUMER.getBOUNCEDCHECKS() != null && CONSUMER.getBOUNCEDCHECKS().size() > 0) {
                 BOUNCEDCHECKSItem BOUNCED_CHECKS = CONSUMER.getBOUNCEDCHECKS().get(0);
                 if (BOUNCED_CHECKS.getBOUNCEDCHECK() != null && BOUNCED_CHECKS.getBOUNCEDCHECK().size() > 0) {
+                    LOG.error("BOUNCED_CHECK DATA :: " + BOUNCED_CHECKS.getBOUNCEDCHECK().get(0).getBCSETTLDDATE());
                     BOUNCED_CHECK = BOUNCED_CHECKS.getBOUNCEDCHECK();
                 }
             }
@@ -307,6 +319,7 @@ public class ScoringEngine implements JavaService2 {
             if (CONSUMER.getJUDGEMENTS() != null && CONSUMER.getJUDGEMENTS().size() > 0) {
                 JUDGEMENTSItem JUDGEMENTS = CONSUMER.getJUDGEMENTS().get(0);
                 if (JUDGEMENTS.getJUDGEMENT() != null && JUDGEMENTS.getJUDGEMENT().size() > 0) {
+                    LOG.error("BOUNCED_CHECK DATA :: " + JUDGEMENTS.getJUDGEMENT().get(0).getEJSETTLEDATE());
                     JUDGEMENT = JUDGEMENTS.getJUDGEMENT();
                 }
             }
@@ -410,18 +423,19 @@ public class ScoringEngine implements JavaService2 {
     private Map<String, String> createRequestForCreateEmployerDetailsService(Result getSalaryCertificate) {
         Map<String, String> inputParams = new HashMap<>();
 
-        inputParams.put("nationalid", getSalaryCertificate.getParamValueByName("agencyCode"));
+        inputParams.put("id", generateUUID());
+        inputParams.put("nationalid", NATIONAL_ID);
 
         switch (EMPLOYER_TYPE_ID) {
             case "1":
                 inputParams.put("agencycode", getSalaryCertificate.getParamValueByName("agencyCode"));
                 inputParams.put("accountnumber", getSalaryCertificate.getParamValueByName("accountNumber"));
                 inputParams.put("employeejobnumber", getSalaryCertificate.getParamValueByName("employeeJobNumber"));
-                inputParams.put("agencyname", getSalaryCertificate.getParamValueByName("agencyName"));
+                inputParams.put("agencyname", "-");
                 inputParams.put("govsalary", getSalaryCertificate.getParamValueByName("govSalary"));
                 inputParams.put("agencyemploymentdate", getSalaryCertificate.getParamValueByName("agencyEmploymentDate"));
                 inputParams.put("paymonth", getSalaryCertificate.getParamValueByName("payMonth"));
-                inputParams.put("employeenamear", getSalaryCertificate.getParamValueByName("employeeNameAr"));
+                inputParams.put("employeenamear", "-");
                 inputParams.put("totalallownces", getSalaryCertificate.getParamValueByName("totalAllownces"));
                 inputParams.put("basicsalary", getSalaryCertificate.getParamValueByName("basicSalary"));
                 inputParams.put("netsalary", getSalaryCertificate.getParamValueByName("netSalary"));
@@ -620,7 +634,9 @@ public class ScoringEngine implements JavaService2 {
             }
         }
 
-
+        //TODO
+        //Remove static value and add employee name
+        loanAmountCap = "20000";
         inputParams.put("id", HelperMethods.getFieldValue(getCustomerApplicationData, "id"));
         inputParams.put("Customer_id", HelperMethods.getFieldValue(getCustomerApplicationData, "Customer_id"));
         inputParams.put("mobile", HelperMethods.getFieldValue(getCustomerApplicationData, "mobile"));
@@ -676,7 +692,7 @@ public class ScoringEngine implements JavaService2 {
     }
 
     private String calculateMonthlyRepay(double amountOffer, double loanRate, int tenor) {
-        return String.valueOf((amountOffer + (amountOffer * loanRate * tenor / 12)) / tenor);
+        return String.valueOf(Math.floor((amountOffer + (amountOffer * (loanRate/100) * tenor / 12)) / tenor));
     }
 
     private void calculatePensioner(Result getSalaryCertificate) {
@@ -718,18 +734,12 @@ public class ScoringEngine implements JavaService2 {
 
 
                         double calculatedDeductions = 0;
-                        if (NATIONALITY.equalsIgnoreCase("SAU")) {
-                            double minimumAmount = 0.1
-                                    * (Integer.parseInt(getSalaryCertificate.getParamValueByName("basicWage")) + Integer
-                                    .parseInt(getSalaryCertificate.getParamValueByName("housingAllowance")));
+                        if (NATIONALITY.equalsIgnoreCase("SAU") || NATIONALITY.equalsIgnoreCase("SA")) {
+                            double minimumAmount = 0.1 * (Integer.parseInt(getSalaryCertificate.getParamValueByName("basicWage")) + Integer.parseInt(getSalaryCertificate.getParamValueByName("housingAllowance")));
                             calculatedDeductions = Math.min(minimumAmount, 4500);
                             LOG.error("calculateMonthlyNetSalary calculatedDeductions :: " + calculatedDeductions);
                         }
-                        MONTHLY_NET_SALARY = String
-                                .valueOf((Integer.parseInt(getSalaryCertificate.getParamValueByName("basicWage"))
-                                        + Integer.parseInt(getSalaryCertificate.getParamValueByName("housingAllowance"))
-                                        + Integer.parseInt(getSalaryCertificate.getParamValueByName("otherAllowance")))
-                                        - calculatedDeductions);
+                        MONTHLY_NET_SALARY = String.valueOf((Integer.parseInt(getSalaryCertificate.getParamValueByName("basicWage")) + Integer.parseInt(getSalaryCertificate.getParamValueByName("housingAllowance")) + Integer.parseInt(getSalaryCertificate.getParamValueByName("otherAllowance"))) - calculatedDeductions);
                     }
                     LOG.error("calculateMonthlyNetSalary CAse 3 :: " + MONTHLY_NET_SALARY);
                     break;
@@ -985,10 +995,13 @@ public class ScoringEngine implements JavaService2 {
     }
 
     private void calculateBouncedCheque() {
-
+        LOG.error("calculateBouncedCheque");
         if (BOUNCED_CHECK != null && BOUNCED_CHECK.size() > 0) {
+            LOG.error("calculateBouncedCheque 1st IF");
             BOUNCEDCHECKItem bounced_cheque = BOUNCED_CHECK.get(0);
             if (bounced_cheque.getBCSETTLDDATE() != null) {
+                LOG.error("calculateBouncedCheque 2nd IF");
+                LOG.error("calculateBouncedCheque 2nd IF :: " + bounced_cheque.getBCSETTLDDATE());
                 if (IjarahHelperMethods.isBlank(bounced_cheque.getBCSETTLDDATE())) {
                     BOUNCED_CHEQUE = "SB";
                 } else {
@@ -998,14 +1011,16 @@ public class ScoringEngine implements JavaService2 {
                 BOUNCED_CHEQUE = "NB";
             }
         }
+        LOG.error("calculateBouncedCheque END :: " + BOUNCED_CHEQUE);
     }
 
     private void calculateCourtJudgement() {
-
+        LOG.error("calculateCourtJudgement");
         if (JUDGEMENT != null && JUDGEMENT.size() > 0) {
             JUDGEMENTItem judgement = JUDGEMENT.get(0);
             if (judgement.getEJSETTLEDATE() != null) {
                 if (IjarahHelperMethods.isBlank(judgement.getEJSETTLEDATE())) {
+                    LOG.error("calculateCourtJudgement END getEJSETTLEDATE is BLANK");
                     COURT_JUDGEMENT = "SJ";
                 } else {
                     COURT_JUDGEMENT = "UJ";
@@ -1014,6 +1029,7 @@ public class ScoringEngine implements JavaService2 {
                 COURT_JUDGEMENT = "NJ";
             }
         }
+        LOG.error("calculateCourtJudgement END :: " + COURT_JUDGEMENT);
     }
 
     private void getEmployerName(Result getSalaryCertificate) {
@@ -1303,7 +1319,6 @@ public class ScoringEngine implements JavaService2 {
             String inputRequest = (new ObjectMapper()).writeValueAsString(inputParams);
             String outputResponse = ResultToJSON.convert(getScoreCardS2);
             auditLogData(dataControllerRequest, inputRequest, outputResponse, KNOCKOUT_SERVICE_ID + " : " + CALCULATE_SCORECARD_S2_OPERATION_ID);
-            StatusEnum.success.setStatus(getScoreCardS2);
             return getScoreCardS2;
         } catch (Exception ex) {
             LOG.error("ERROR calculateScoreCardS2 :: " + ex);
@@ -1318,7 +1333,6 @@ public class ScoringEngine implements JavaService2 {
             String inputRequest = (new ObjectMapper()).writeValueAsString(inputParams);
             String outputResponse = ResultToJSON.convert(getScoreCardS3);
             auditLogData(dataControllerRequest, inputRequest, outputResponse, KNOCKOUT_SERVICE_ID + " : " + CALCULATE_SCORECARD_S3_OPERATION_ID);
-            StatusEnum.success.setStatus(getScoreCardS3);
             return getScoreCardS3;
         } catch (Exception ex) {
             LOG.error("ERROR calculateScoreCardS3 :: " + ex);

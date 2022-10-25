@@ -1,9 +1,11 @@
 package com.ijarah.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.ijarah.Model.NafaithSignatureData.Debtor;
 import com.ijarah.Model.NafaithSignatureData.NafaithSignatureData;
 import com.ijarah.Model.NafaithSignatureData.SanadItem;
+import com.ijarah.Model.SanadResponseModel.SingleSanadResponse;
 import com.ijarah.utils.IjarahHelperMethods;
 import com.ijarah.utils.ServiceCaller;
 import com.ijarah.utils.enums.IjarahErrors;
@@ -68,8 +70,7 @@ public class SanadCreation implements JavaService2 {
 
                         if (IjarahHelperMethods.hasSuccessCode(getCreateSingleSanadServiceResult) && HelperMethods.hasRecords(getCreateSingleSanadServiceResult)) {
 
-                            extractValuesFromCreateSingleSanadService(getCreateSingleSanadServiceResult);
-                            Result createNafaithSanadData = createNafaithSanadData(createRequestForCreateNafaithService(), dataControllerRequest);
+                            Result createNafaithSanadData = createNafaithSanadData(createRequestForCreateRecordForSanadService(getCreateSingleSanadServiceResult), dataControllerRequest);
 
                             if (IjarahHelperMethods.hasSuccessCode(createNafaithSanadData) && HelperMethods.hasRecords(createNafaithSanadData)) {
                                 StatusEnum.success.setStatus(result);
@@ -121,6 +122,11 @@ public class SanadCreation implements JavaService2 {
 
                     APPLICATION_ID = HelperMethods.getFieldValue(getCustomerApplicationData, "applicationID");
                     LOAN_AMOUNT = HelperMethods.getFieldValue(getCustomerApplicationData, "loanAmount");
+                    CUSTOMER_ID = HelperMethods.getFieldValue(getCustomerApplicationData, "Customer_id");
+                    LOG.error("APPLICATION_ID :: " + APPLICATION_ID);
+                    LOG.error("LOAN_AMOUNT :: " + LOAN_AMOUNT);
+                    LOG.error("CUSTOMER_ID :: " + CUSTOMER_ID);
+
                 }
             }
         } catch (Exception ex) {
@@ -138,7 +144,7 @@ public class SanadCreation implements JavaService2 {
                     + DBPUtilitiesConstants.AND
                     + "Type_id"
                     + DBPUtilitiesConstants.EQUAL
-                    + "COMM_TYPE_PHONE");
+                    + DBPUtilitiesConstants.COMM_TYPE_PHONE);
             Result getCustomerCommunicationData = ServiceCaller.internalDB(DBXDB_SERVICES_SERVICE_ID,
                     CUSTOMER_COMMUNICATION_GET_OPERATION_ID, filter, null, dataControllerRequest);
             StatusEnum.success.setStatus(getCustomerCommunicationData);
@@ -245,24 +251,23 @@ public class SanadCreation implements JavaService2 {
             NafaithSignatureData nafaithSignatureData = new NafaithSignatureData();
 
             Debtor debtor = new Debtor();
-            debtor.setNationalId("1000473387");
+            debtor.setNationalId(NATIONAL_ID);
 
             nafaithSignatureData.setDebtor(debtor);
-            nafaithSignatureData.setCityOfIssuance("Riyadh");
+            nafaithSignatureData.setCityOfIssuance("1");
             nafaithSignatureData.setCityOfPayment("Riyadh");
-            nafaithSignatureData.setDebtorPhoneNumber("0546258295");
-            nafaithSignatureData.setTotalValue(1000);
+            nafaithSignatureData.setDebtorPhoneNumber(PHONE_NUMBER);
+            nafaithSignatureData.setTotalValue(Double.parseDouble(LOAN_AMOUNT));
             nafaithSignatureData.setCurrency("SAR");
-            nafaithSignatureData.setMaxApproveDuration(14400);
-            nafaithSignatureData.setReferenceId("1");
+            nafaithSignatureData.setMaxApproveDuration(1320);
+            nafaithSignatureData.setReferenceId(APPLICATION_ID);
             nafaithSignatureData.setCountryOfIssuance("SA");
             nafaithSignatureData.setCountryOfPayment("SA");
 
             SanadItem sanadItem = new SanadItem();
-            sanadItem.setDueDate("2020-12-28");
             sanadItem.setDueType("upon request");
-            sanadItem.setTotalValue(1000);
-            sanadItem.setReferenceId("sanad1");
+            sanadItem.setTotalValue(Double.parseDouble(LOAN_AMOUNT));
+            sanadItem.setReferenceId(APPLICATION_ID);
 
             List<SanadItem> sanadItemList = new ArrayList<>();
             sanadItemList.add(sanadItem);
@@ -294,13 +299,37 @@ public class SanadCreation implements JavaService2 {
         return "";
     }
 
-    private void extractValuesFromCreateSingleSanadService(Result getAccessTokenServiceResult) {
-        // create a table "nafaith_sanad"
-        // and call that service
-    }
-
-    private Map<String, String> createRequestForCreateNafaithService() {
+    private Map<String, String> createRequestForCreateRecordForSanadService(Result getAccessTokenServiceResult) {
         Map<String, String> inputParams = new HashMap<>();
+        try {
+            Gson gson = new Gson();
+            SingleSanadResponse singleSanadResponse = gson.fromJson(ResultToJSON.convert(getAccessTokenServiceResult), SingleSanadResponse.class);
+
+            inputParams.put("id", singleSanadResponse.getId());
+            inputParams.put("debtor_phone_number", singleSanadResponse.getDebtorPhoneNumber());
+            inputParams.put("total_value", singleSanadResponse.getTotalValue());
+            inputParams.put("sanad_number", singleSanadResponse.getSanad().get(0).getNumber());
+            inputParams.put("application_id", singleSanadResponse.getReferenceId());
+            inputParams.put("due_type", singleSanadResponse.getSanad().get(0).getDueType());
+            inputParams.put("status", singleSanadResponse.getSanad().get(0).getStatus());
+            inputParams.put("code", String.valueOf(singleSanadResponse.getCode()));
+            inputParams.put("type", singleSanadResponse.getType());
+            inputParams.put("debtor_national_id", singleSanadResponse.getDebtor().getNationalId());
+            inputParams.put("debtor_first_name", singleSanadResponse.getDebtor().getFirstName());
+            inputParams.put("debtor_second_name", singleSanadResponse.getDebtor().getSecondName());
+            inputParams.put("debtor_third_name", singleSanadResponse.getDebtor().getThirdName());
+            inputParams.put("debtor_last_name", singleSanadResponse.getDebtor().getLastName());
+            inputParams.put("currency", singleSanadResponse.getCurrency());
+            inputParams.put("creditor_national_id", singleSanadResponse.getCreditor().getNationalId());
+            inputParams.put("creditor_first_name", singleSanadResponse.getCreditor().getFirstName());
+            inputParams.put("creditor_second_name", singleSanadResponse.getCreditor().getSecondName());
+            inputParams.put("creditor_third_name", singleSanadResponse.getCreditor().getThirdName());
+            inputParams.put("creditor_last_name", singleSanadResponse.getCreditor().getLastName());
+            inputParams.put("creditor_phone_number", singleSanadResponse.getCreditor().getPhoneNumber());
+
+        } catch (Exception ex) {
+            LOG.error("ERROR createRequestForCreateRecordForSanadService :: " + ex);
+        }
         return inputParams;
     }
 

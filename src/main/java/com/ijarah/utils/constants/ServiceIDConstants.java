@@ -18,5 +18,5 @@ public class ServiceIDConstants {
     public static final String SC_SANCTIONS_SERVICE_ID = "SCSanctions";
     public static final String MORA_T24_SERVICE_ID = "MoraT24Service";
     public static final String NAFAES_REST_API_SERVICE_ID = "NafaesRestAPI";
-    public static final String SANAD_CREATION_SERVICE_ID = "SanadCreationService";
+    public static final String SANAD_CREATION_SERVICE_ID = "SanadCreation";
 }

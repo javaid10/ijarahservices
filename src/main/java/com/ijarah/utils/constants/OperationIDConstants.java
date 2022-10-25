@@ -10,7 +10,7 @@ public class OperationIDConstants {
     public static final String CUSTOMER_GET_OPERATION_ID = "customer_get";
     public static final String CUSTOMER_APPLICATION_UPDATE_OPERATION_ID = "tbl_customerapplication_update";
     public static final String CUSTOMER_ADDRESS_CREATE_OPERATION_ID = "address_create";
-    public static final String EMPLOYER_DETAILS_CREATE_OPERATION_ID = "employer_details_create";
+    public static final String EMPLOYER_DETAILS_CREATE_OPERATION_ID = "employerdetails_create";
     public static final String CONSUMER_ENQUIRY_OPERATION_ID = "ConusmerEnquiry";
     public static final String SIMAH_SALARY_CERT_OPERATION_ID = "getSalaryCertificate";
     public static final String GET_CITIZEN_ADDRESS_INFO_OPERATION_ID = "getCitizenAddressInfo";
