@@ -109,6 +109,20 @@
             <systemPath>${pom.basedir}/lib/Event-Dispatcher.jar</systemPath>
             <version>${version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons.io</groupId>
+            <artifactId>commons-io</artifactId>
+            <scope>system</scope>
+            <systemPath>${pom.basedir}/lib/commons-io-2.4.jar</systemPath>
+            <version>${version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.emdha.esign</groupId>
+            <artifactId>eSignEMDHA</artifactId>
+            <scope>system</scope>
+            <systemPath>${pom.basedir}/lib/eSignEMDHA.jar</systemPath>
+            <version>${version}</version>
+        </dependency>
         <!-- Local Maven Repositories End -->
 
 

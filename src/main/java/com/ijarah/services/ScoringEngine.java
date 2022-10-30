@@ -117,6 +117,7 @@ public class ScoringEngine implements JavaService2 {
 
             Result getSalaryCertificate = getSIMAHSalaryCertificate(createRequestForSIMAHSALARY(getCustomerData, EMPLOYER_TYPE_ID, NATIONAL_ID), dataControllerRequest);
             if (IjarahHelperMethods.isBlank(getSalaryCertificate.getParamValueByName("payMonth"))) {
+                LOG.error("PRIVATE EMPLOYEE");
                 EMPLOYER_TYPE_ID = "3";
                 getSalaryCertificate = getSIMAHSalaryCertificate(createRequestForSIMAHSALARY(getCustomerData, EMPLOYER_TYPE_ID, NATIONAL_ID), dataControllerRequest);
             }
@@ -195,7 +196,6 @@ public class ScoringEngine implements JavaService2 {
         return result;
     }
 
-
     private Result createT24CustomerEmployeeDetails(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
         try {
@@ -234,7 +234,6 @@ public class ScoringEngine implements JavaService2 {
         return inputParams;
     }
 
-
     private Map<String, String> createRequestForT24CustomerEmployeeDetailsService(Result getSalaryCertificate) {
 
         Map<String, String> inputParams = new HashMap<>();
@@ -256,7 +255,7 @@ public class ScoringEngine implements JavaService2 {
                 inputParams.put("basicWageMfb", "0");
                 break;
             case "3":
-                inputParams.put("employStatus", getSalaryCertificate.getParamValueByName("employmentStatus"));
+                inputParams.put("employStatus", "EMPLOYED");
                 inputParams.put("occupation", "occupation");
                 inputParams.put("jobTitleMfb", "jobTitleMfb");
                 //inputParams.put("employerName", getSalaryCertificate.getParamValueByName("employerName"));
@@ -266,7 +265,6 @@ public class ScoringEngine implements JavaService2 {
                 inputParams.put("basicWageMfb", getSalaryCertificate.getParamValueByName("basicWage"));
                 break;
         }
-
         return inputParams;
     }
 
@@ -684,15 +682,20 @@ public class ScoringEngine implements JavaService2 {
     }
 
     private String calculateLoanAmountInf(double loanRate, int tenor) {
+
+        /*
         double totalPayableAmount = MAX_EMI * tenor;
         double totalProfitRate = (loanRate * tenor) / 12;
         double principalPlusProfitRate = totalProfitRate + 100;
-
         return String.valueOf(Math.floor((totalPayableAmount / principalPlusProfitRate) * 100));
+         */
+
+        double loanAmount = MAX_EMI * (1 - (1 / Math.pow((1 + loanRate / 12), tenor))) / (loanRate / 12);
+        return String.valueOf((Math.floor(loanAmount / 10000)) * 1000);
     }
 
     private String calculateMonthlyRepay(double amountOffer, double loanRate, int tenor) {
-        return String.valueOf(Math.floor((amountOffer + (amountOffer * (loanRate/100) * tenor / 12)) / tenor));
+        return String.valueOf(Math.floor((amountOffer + (amountOffer * (loanRate / 100) * tenor / 12)) / tenor));
     }
 
     private void calculatePensioner(Result getSalaryCertificate) {

@@ -56,35 +56,27 @@ public class SanadCreation implements JavaService2 {
             if (IjarahHelperMethods.hasSuccessCode(getCustomerApplicationData) && HelperMethods.hasRecords(getCustomerApplicationData)) {
 
                 extractValuesFromCustomerApplicationData(getCustomerApplicationData);
-                Result getCustomerCommunicationData = getCustomerCommunicationData(dataControllerRequest);
+                Result getAccessTokenServiceResult = callAccessTokenCreationService(createRequestForAccessTokenCreationService(), dataControllerRequest);
 
-                if (IjarahHelperMethods.hasSuccessCode(getCustomerCommunicationData) && HelperMethods.hasRecords(getCustomerCommunicationData)) {
+                if (IjarahHelperMethods.hasSuccessCode(getAccessTokenServiceResult) && HelperMethods.hasRecords(getAccessTokenServiceResult)) {
 
-                    extractValuesFromCustomerCommunicationData(getCustomerCommunicationData);
-                    Result getAccessTokenServiceResult = callAccessTokenCreationService(createRequestForAccessTokenCreationService(), dataControllerRequest);
+                    extractValuesFromAccessTokenService(getAccessTokenServiceResult);
+                    Result getCreateSingleSanadServiceResult = callCreateSingleSanadService(createRequestForCreateSingleSanadService(), dataControllerRequest);
 
-                    if (IjarahHelperMethods.hasSuccessCode(getAccessTokenServiceResult) && HelperMethods.hasRecords(getAccessTokenServiceResult)) {
+                    if (IjarahHelperMethods.hasSuccessCode(getCreateSingleSanadServiceResult) && HelperMethods.hasRecords(getCreateSingleSanadServiceResult)) {
 
-                        extractValuesFromAccessTokenService(getAccessTokenServiceResult);
-                        Result getCreateSingleSanadServiceResult = callCreateSingleSanadService(createRequestForCreateSingleSanadService(), dataControllerRequest);
+                        Result createNafaithSanadData = createNafaithSanadData(createRequestForCreateRecordForSanadService(getCreateSingleSanadServiceResult), dataControllerRequest);
 
-                        if (IjarahHelperMethods.hasSuccessCode(getCreateSingleSanadServiceResult) && HelperMethods.hasRecords(getCreateSingleSanadServiceResult)) {
-
-                            Result createNafaithSanadData = createNafaithSanadData(createRequestForCreateRecordForSanadService(getCreateSingleSanadServiceResult), dataControllerRequest);
-
-                            if (IjarahHelperMethods.hasSuccessCode(createNafaithSanadData) && HelperMethods.hasRecords(createNafaithSanadData)) {
-                                StatusEnum.success.setStatus(result);
-                            } else {
-                                IjarahErrors.ERR_CREATE_NAFAITH_RECORD_FAILED_013.setErrorCode(result);
-                            }
+                        if (IjarahHelperMethods.hasSuccessCode(createNafaithSanadData) && HelperMethods.hasRecords(createNafaithSanadData)) {
+                            StatusEnum.success.setStatus(result);
                         } else {
-                            IjarahErrors.ERR_SINGLE_SANAD_CREATION_FAILED_012.setErrorCode(result);
+                            IjarahErrors.ERR_CREATE_NAFAITH_RECORD_FAILED_013.setErrorCode(result);
                         }
                     } else {
-                        IjarahErrors.ERR_GET_ACCESS_TOKEN_FAILED_011.setErrorCode(result);
+                        IjarahErrors.ERR_SINGLE_SANAD_CREATION_FAILED_012.setErrorCode(result);
                     }
                 } else {
-                    IjarahErrors.ERR_CUSTOMER_COMMUNICATION_DATA_NOT_FOUND_010.setErrorCode(result);
+                    IjarahErrors.ERR_GET_ACCESS_TOKEN_FAILED_011.setErrorCode(result);
                 }
             } else {
                 IjarahErrors.ERR_CUSTOMER_APPLICATION_DATA_NOT_FOUND_009.setErrorCode(result);
@@ -95,7 +87,7 @@ public class SanadCreation implements JavaService2 {
 
     private boolean preProcess(Map<String, String> inputParams) {
         LOG.error("preProcess");
-        NATIONAL_ID = inputParams.get("national_id");
+        NATIONAL_ID = inputParams.get("nationalId");
         return !this.inputParams.isEmpty();
     }
 
@@ -123,6 +115,7 @@ public class SanadCreation implements JavaService2 {
                     APPLICATION_ID = HelperMethods.getFieldValue(getCustomerApplicationData, "applicationID");
                     LOAN_AMOUNT = HelperMethods.getFieldValue(getCustomerApplicationData, "loanAmount");
                     CUSTOMER_ID = HelperMethods.getFieldValue(getCustomerApplicationData, "Customer_id");
+                    PHONE_NUMBER = HelperMethods.getFieldValue(getCustomerApplicationData, "mobile");
                     LOG.error("APPLICATION_ID :: " + APPLICATION_ID);
                     LOG.error("LOAN_AMOUNT :: " + LOAN_AMOUNT);
                     LOG.error("CUSTOMER_ID :: " + CUSTOMER_ID);
