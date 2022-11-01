@@ -1,6 +1,9 @@
 package com.ijarah.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.ijarah.Model.NafaesDBResponse;
+import com.ijarah.Model.consumerEnquiryModel.ConsumerEnquiry;
 import com.ijarah.utils.IjarahHelperMethods;
 import com.ijarah.utils.ServiceCaller;
 import com.ijarah.utils.enums.IjarahErrors;
@@ -96,7 +99,9 @@ public class CreateLoan implements JavaService2 {
             Map<String, String> inputParam = new HashMap<>();
             inputParam.put("accessToken", ACCESS_TOKEN);
             inputParam.put("referenceNo", REFERENCE_NUMBER);
-            Result transferOrderResult = ServiceCaller.internal(NAFAES_REST_API_SERVICE_ID, TRANSFER_ORDER_OPERATION_ID, inputParams, null, dataControllerRequest);
+            inputParam.put("orderType", "TO");
+            inputParam.put("lng", "2");
+            Result transferOrderResult = ServiceCaller.internal(NAFAES_REST_API_SERVICE_ID, TRANSFER_ORDER_OPERATION_ID, inputParam, null, dataControllerRequest);
             String inputRequest = (new ObjectMapper()).writeValueAsString(inputParam);
             String outputResponse = ResultToJSON.convert(transferOrderResult);
             auditLogData(dataControllerRequest, inputRequest, outputResponse, NAFAES_REST_API_SERVICE_ID + " : " + TRANSFER_ORDER_OPERATION_ID);
@@ -116,7 +121,9 @@ public class CreateLoan implements JavaService2 {
             Map<String, String> inputParam = new HashMap<>();
             inputParam.put("accessToken", ACCESS_TOKEN);
             inputParam.put("referenceNo", REFERENCE_NUMBER);
-            Result saleOrderResult = ServiceCaller.internal(NAFAES_REST_API_SERVICE_ID, SALE_ORDER_PUSH_METHOD_OPERATION_ID, inputParams, null, dataControllerRequest);
+            inputParam.put("orderType", "SO");
+            inputParam.put("lng", "2");
+            Result saleOrderResult = ServiceCaller.internal(NAFAES_REST_API_SERVICE_ID, SALE_ORDER_PUSH_METHOD_OPERATION_ID, inputParam, null, dataControllerRequest);
             String inputRequest = (new ObjectMapper()).writeValueAsString(inputParam);
             String outputResponse = ResultToJSON.convert(saleOrderResult);
             auditLogData(dataControllerRequest, inputRequest, outputResponse, NAFAES_REST_API_SERVICE_ID + " : " + SALE_ORDER_PUSH_METHOD_OPERATION_ID);
@@ -151,8 +158,10 @@ public class CreateLoan implements JavaService2 {
         try {
             inputParams.put("partyId", PARTY_ID);
             inputParams.put("fixedAmount", FIXED_AMOUNT_VALUE);
+            //TODO
+            //change loanAmount to offerAmount
             inputParams.put("amount", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("loanAmount").replace(",", ""));
-            inputParams.put("fixed", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("approx"));
+            inputParams.put("fixed", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("loanRate"));
             inputParams.put("term", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("tenor") + "M");
         } catch (Exception ex) {
             LOG.error("ERROR createInputParamsForCreateLoanService :: " + ex);
@@ -265,6 +274,9 @@ public class CreateLoan implements JavaService2 {
 
     private void extractValuesFromNafaes(Result getNafaesData) {
         try {
+            Gson gson = new Gson();
+            NafaesDBResponse nafaesDBResponse = gson.fromJson(ResultToJSON.convert(getNafaesData), NafaesDBResponse.class);
+            nafaesDBResponse.getNafaes().get(0).getAccessToken();
             ACCESS_TOKEN = getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("accessToken");
             REFERENCE_NUMBER = getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("referencenumber");
         } catch (Exception ex) {

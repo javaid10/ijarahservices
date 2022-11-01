@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName;
 public class SanadItem{
 
 	@SerializedName("total_value")
-	private double totalValue;
+	private int totalValue;
 
 	@SerializedName("reference_id")
 	private String referenceId;
@@ -16,7 +16,7 @@ public class SanadItem{
 	@SerializedName("due_type")
 	private String dueType;
 
-	public void setTotalValue(double totalValue){
+	public void setTotalValue(int totalValue){
 		this.totalValue = totalValue;
 	}
 

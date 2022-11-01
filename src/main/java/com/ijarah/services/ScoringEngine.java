@@ -52,7 +52,7 @@ public class ScoringEngine implements JavaService2 {
     String NEW_TO_INDUSTRY = "";
     String SALARY_WITHOUT_ALLOWANCES = "0";
     String INSIDE_KSA = "";
-    String NATIONALITY = "";
+    String NATIONALITY = "SA";
 
     String EMPLOYER_TYPE_ID = "1";
     String EMPLOYMENT_STATUS = "";
@@ -101,6 +101,7 @@ public class ScoringEngine implements JavaService2 {
     @Override
     public Object invoke(String s, Object[] objects, DataControllerRequest dataControllerRequest, DataControllerResponse dataControllerResponse) throws Exception {
 
+        EMPLOYER_TYPE_ID = "1";
         inputParams = HelperMethods.getInputParamMap(objects);
         Result result = StatusEnum.error.setStatus();
         IjarahErrors.ERR_PREPROCESS_INVALID_INPUT_PARAMS_001.setErrorCode(result);
@@ -115,22 +116,23 @@ public class ScoringEngine implements JavaService2 {
 
             // 3RD PARTY INTEGRATION SERVICES CALLS
 
+            EMPLOYER_TYPE_ID = "1";
             Result getSalaryCertificate = getSIMAHSalaryCertificate(createRequestForSIMAHSALARY(getCustomerData, EMPLOYER_TYPE_ID, NATIONAL_ID), dataControllerRequest);
             if (IjarahHelperMethods.isBlank(getSalaryCertificate.getParamValueByName("payMonth"))) {
                 LOG.error("PRIVATE EMPLOYEE");
                 EMPLOYER_TYPE_ID = "3";
                 getSalaryCertificate = getSIMAHSalaryCertificate(createRequestForSIMAHSALARY(getCustomerData, EMPLOYER_TYPE_ID, NATIONAL_ID), dataControllerRequest);
+            } else {
+                EMPLOYER_TYPE_ID = "1";
             }
 
+            //Result getNationalAddress = getNationalAddress(inputParams, dataControllerRequest);
 
-            Result getNationalAddress = getNationalAddress(inputParams, dataControllerRequest);
-            createCustomerAddress(createRequestForCreateCustomerAddressService(getNationalAddress), dataControllerRequest);
-            createT24CustomerAddressUpdate(createRequestForT24CustomerAddressUpdateService(getNationalAddress), dataControllerRequest);
+            //createCustomerAddress(createRequestForCreateCustomerAddressService(getNationalAddress), dataControllerRequest);
+            //createT24CustomerAddressUpdate(createRequestForT24CustomerAddressUpdateService(getNationalAddress), dataControllerRequest);
 
-
-            createEmployerDetails(createRequestForCreateEmployerDetailsService(getSalaryCertificate), dataControllerRequest);
-            createT24CustomerEmployeeDetails(createRequestForT24CustomerEmployeeDetailsService(getSalaryCertificate), dataControllerRequest);
-
+            //createEmployerDetails(createRequestForCreateEmployerDetailsService(getSalaryCertificate), dataControllerRequest);
+            //createT24CustomerEmployeeDetails(createRequestForT24CustomerEmployeeDetailsService(getSalaryCertificate), dataControllerRequest);
 
             // CALCULATION OF SCORING ENGINES
             calculatePensioner(getSalaryCertificate);
@@ -444,7 +446,7 @@ public class ScoringEngine implements JavaService2 {
                 inputParams.put("agencycode", "-");
                 inputParams.put("accountnumber", "-");
                 inputParams.put("employeejobnumber", "-");
-                inputParams.put("agencyname", getSalaryCertificate.getParamValueByName("employerName"));
+                inputParams.put("agencyname", "-");
                 inputParams.put("govsalary", getSalaryCertificate.getParamValueByName("basicWage"));
                 inputParams.put("agencyemploymentdate", getSalaryCertificate.getParamValueByName("dateOfJoining"));
                 inputParams.put("paymonth", "-");
@@ -452,7 +454,8 @@ public class ScoringEngine implements JavaService2 {
                 inputParams.put("totalallownces", getSalaryCertificate.getParamValueByName("otherAllowance"));
                 inputParams.put("basicsalary", getSalaryCertificate.getParamValueByName("basicWage"));
                 inputParams.put("netsalary", getSalaryCertificate.getParamValueByName("basicWage"));
-                inputParams.put("employeenameen", getSalaryCertificate.getParamValueByName("fullName"));
+                //inputParams.put("employeenameen", getSalaryCertificate.getParamValueByName("fullName"));
+                inputParams.put("employeenameen", "-");
                 inputParams.put("employeejobtitle", "-");
                 break;
         }
@@ -667,6 +670,7 @@ public class ScoringEngine implements JavaService2 {
 
             inputParams.put("loanAmountInf", calculateLoanAmountInf(Double.parseDouble(loanRate), Integer.parseInt(tenor)));
             double amountOffer = Math.min(Math.min(Double.parseDouble(inputParams.get("loanAmountCap")), Double.parseDouble(inputParams.get("loanAmountInf"))), Double.parseDouble(HelperMethods.getFieldValue(getCustomerApplicationData, "loanAmount").replaceAll(",", "")));
+            //double amountOffer = Math.min(Double.parseDouble(inputParams.get("loanAmountCap")), Double.parseDouble(HelperMethods.getFieldValue(getCustomerApplicationData, "loanAmount").replaceAll(",", "")));
             inputParams.put("monthlyRepay", calculateMonthlyRepay(amountOffer, Double.parseDouble(loanRate), Integer.parseInt(tenor)));
             inputParams.put("offerAmount", String.valueOf(amountOffer));
         } else {
@@ -689,9 +693,17 @@ public class ScoringEngine implements JavaService2 {
         double principalPlusProfitRate = totalProfitRate + 100;
         return String.valueOf(Math.floor((totalPayableAmount / principalPlusProfitRate) * 100));
          */
-
+        loanRate /=  100;
         double loanAmount = MAX_EMI * (1 - (1 / Math.pow((1 + loanRate / 12), tenor))) / (loanRate / 12);
-        return String.valueOf((Math.floor(loanAmount / 10000)) * 1000);
+        String calculateLoanAmountInfVal = String.valueOf((Math.floor(loanAmount / 10000)) * 1000);
+
+        LOG.error("calculateLoanAmountInf MAX_EMI :: " + MAX_EMI);
+        LOG.error("calculateLoanAmountInf loanRate :: " + loanRate);
+        LOG.error("calculateLoanAmountInf tenor :: " + tenor);
+        LOG.error("calculateLoanAmountInf loanAmount :: " + loanAmount);
+        LOG.error("calculateLoanAmountInf calculateLoanAmountInfVal :: " + calculateLoanAmountInfVal);
+
+        return calculateLoanAmountInfVal;
     }
 
     private String calculateMonthlyRepay(double amountOffer, double loanRate, int tenor) {
@@ -722,7 +734,7 @@ public class ScoringEngine implements JavaService2 {
 
     private void calculateMonthlyNetSalary(Result getSalaryCertificate) {
         try {
-            NATIONALITY = getSalaryCertificate.getParamValueByName("nationality");
+            //NATIONALITY = getSalaryCertificate.getParamValueByName("nationality");
             LOG.error("calculateMonthlyNetSalary EMPLOYER_TYPE_ID :: " + EMPLOYER_TYPE_ID);
             switch (EMPLOYER_TYPE_ID) {
                 case "1":
@@ -734,7 +746,6 @@ public class ScoringEngine implements JavaService2 {
                     LOG.error("calculateMonthlyNetSalary EMPLOYMENT_STATUS 1:: " + EMPLOYMENT_STATUS);
                     if (EMPLOYMENT_STATUS.equalsIgnoreCase("نشيط") || EMPLOYMENT_STATUS.equalsIgnoreCase("Active")) {
                         LOG.error("calculateMonthlyNetSalary EMPLOYMENT_STATUS 2:: " + EMPLOYMENT_STATUS);
-
 
                         double calculatedDeductions = 0;
                         if (NATIONALITY.equalsIgnoreCase("SAU") || NATIONALITY.equalsIgnoreCase("SA")) {
@@ -759,6 +770,7 @@ public class ScoringEngine implements JavaService2 {
 
     private void calculateCurrentLengthOfService(Result getSalaryCertificate) {
         try {
+            LOG.error("calculateCurrentLengthOfService EMPLOYER_TYPE_ID :: " + EMPLOYER_TYPE_ID);
             switch (EMPLOYER_TYPE_ID) {
                 case "1":
                     LocalDate agencyEmploymentDate = LocalDate.parse(getSalaryCertificate.getParamValueByName("agencyEmploymentDate"), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
@@ -786,16 +798,16 @@ public class ScoringEngine implements JavaService2 {
                     String productType = ci_detail.getCIPRD();
                     String status = ci_detail.getCISTATUS();
                     if (Arrays.asList(MORTGAGE_PRODUCT).contains(productType) && status.equalsIgnoreCase("A")) {
-                        if (Integer.parseInt(MONTHLY_NET_SALARY) < 3000) {
+                        if (Double.parseDouble(MONTHLY_NET_SALARY) < 3000) {
                             MAX_GLOBAL_DTI = 65;
-                        } else if (Integer.parseInt(MONTHLY_NET_SALARY) < 14999) {
+                        } else if (Double.parseDouble(MONTHLY_NET_SALARY) < 14999) {
                             MAX_GLOBAL_DTI = 65;
                         }
                         break;
                     } else {
-                        if (Integer.parseInt(MONTHLY_NET_SALARY) < 3000) {
+                        if (Double.parseDouble(MONTHLY_NET_SALARY) < 3000) {
                             MAX_GLOBAL_DTI = 65;
-                        } else if (Integer.parseInt(MONTHLY_NET_SALARY) < 14999) {
+                        } else if (Double.parseDouble(MONTHLY_NET_SALARY) < 14999) {
                             MAX_GLOBAL_DTI = 65;
                         }
                         break;
@@ -812,16 +824,16 @@ public class ScoringEngine implements JavaService2 {
                     String productType = ci_detail.getCIPRD();
                     String status = ci_detail.getCISTATUS();
                     if (Arrays.asList(MORTGAGE_PRODUCT).contains(productType) && status.equalsIgnoreCase("A")) {
-                        if (Integer.parseInt(MONTHLY_NET_SALARY) < 3000) {
+                        if (Double.parseDouble(MONTHLY_NET_SALARY) < 3000) {
                             MAX_INTERNAL_DTI = 25;
-                        } else if (Integer.parseInt(MONTHLY_NET_SALARY) < 14999) {
+                        } else if (Double.parseDouble(MONTHLY_NET_SALARY) < 14999) {
                             MAX_INTERNAL_DTI = 30;
                         }
                         break;
                     } else {
-                        if (Integer.parseInt(MONTHLY_NET_SALARY) < 3000) {
+                        if (Double.parseDouble(MONTHLY_NET_SALARY) < 3000) {
                             MAX_INTERNAL_DTI = 25;
-                        } else if (Integer.parseInt(MONTHLY_NET_SALARY) < 14999) {
+                        } else if (Double.parseDouble(MONTHLY_NET_SALARY) < 14999) {
                             MAX_INTERNAL_DTI = 30;
                         }
                         break;
@@ -833,7 +845,7 @@ public class ScoringEngine implements JavaService2 {
 
     private void calculateMaxEmi() {
         int final_max_allowable_dti = Math.min(calculateMaxOverallAllowedDTI(), calculateMaxInternalAllowedDTI());
-        MAX_EMI = Integer.parseInt(MONTHLY_NET_SALARY) * final_max_allowable_dti;
+        MAX_EMI = Double.parseDouble(MONTHLY_NET_SALARY) * final_max_allowable_dti;
         MAX_EMI = MAX_EMI / 100;
     }
 
@@ -877,7 +889,7 @@ public class ScoringEngine implements JavaService2 {
                     }
                 }
             }
-            CUSTOMER_GLOBAL_DTI = (totalDebtServicing / Integer.parseInt(MONTHLY_NET_SALARY)) * 100;
+            CUSTOMER_GLOBAL_DTI = (totalDebtServicing / Double.parseDouble(MONTHLY_NET_SALARY)) * 100;
             if (CUSTOMER_GLOBAL_DTI >= MAX_GLOBAL_DTI) {
                 GLOBAL_DTI = "0";
             }
@@ -916,7 +928,7 @@ public class ScoringEngine implements JavaService2 {
                     }
                 }
             }
-            CUSTOMER_INTERNAL_DTI = (totalDebtServicing / Integer.parseInt(MONTHLY_NET_SALARY)) * 100;
+            CUSTOMER_INTERNAL_DTI = (totalDebtServicing / Double.parseDouble(MONTHLY_NET_SALARY)) * 100;
             if (CUSTOMER_INTERNAL_DTI >= MAX_INTERNAL_DTI) {
                 INTERNAL_DTI = "0";
             }
@@ -1088,9 +1100,9 @@ public class ScoringEngine implements JavaService2 {
 
     private void calculateMaxLoanAmountCapping() {
         try {
-            if (NEW_TO_INDUSTRY.equalsIgnoreCase("Y") && Integer.parseInt(MONTHLY_NET_SALARY) < 4500) {
+            if (NEW_TO_INDUSTRY.equalsIgnoreCase("Y") && Double.parseDouble(MONTHLY_NET_SALARY) < 4500) {
                 MAX_LOAN_AMOUNT_CAPPING = "100000";
-            } else if (NEW_TO_INDUSTRY.equalsIgnoreCase("N") && Integer.parseInt(MONTHLY_NET_SALARY) < 7500) {
+            } else if (NEW_TO_INDUSTRY.equalsIgnoreCase("N") && Double.parseDouble(MONTHLY_NET_SALARY) < 7500) {
                 MAX_LOAN_AMOUNT_CAPPING = "200000";
             }
         } catch (Exception ex) {

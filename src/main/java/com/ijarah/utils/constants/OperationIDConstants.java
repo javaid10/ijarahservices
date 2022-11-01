@@ -7,6 +7,8 @@ public class OperationIDConstants {
 
     public static final String SAMPLE_OPERATION_ID = "https://www.google.com";
     public static final String CUSTOMER_APPLICATION_GET_OPERATION_ID = "tbl_customerapplication_get";
+
+    public static final String CUSTOMER_APPLICATION_SP_GET_OPERATION_ID = "sp_tbl_customer_application_get";
     public static final String CUSTOMER_GET_OPERATION_ID = "customer_get";
     public static final String CUSTOMER_APPLICATION_UPDATE_OPERATION_ID = "tbl_customerapplication_update";
     public static final String CUSTOMER_ADDRESS_CREATE_OPERATION_ID = "address_create";
