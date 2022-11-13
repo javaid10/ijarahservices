@@ -1,6 +1,7 @@
 package com.ijarah.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ijarah.utils.IjarahHelperMethods;
 import com.ijarah.utils.ServiceCaller;
 import com.ijarah.utils.enums.IjarahErrors;
 import com.ijarah.utils.enums.StatusEnum;
@@ -39,11 +40,14 @@ public class AlQaidaList implements JavaService2 {
         IjarahErrors.ERR_PREPROCESS_INVALID_INPUT_PARAMS_001.setErrorCode(result);
 
         try {
+            Result successResult = new Result();
             Result getAlQaidaList = getAlQaidaList(inputParams, dataControllerRequest);
             extractDataFromAlQaidaList(getAlQaidaList);
             for (int index = 0; index < INDIVIDUALS.getAllRecords().size(); index++) {
                 createOrUpdateAlQaidaList(createInputParamsAlQaidaList(INDIVIDUALS.getRecord(index)), dataControllerRequest);
             }
+            StatusEnum.success.setStatus(successResult);
+            return successResult;
         } catch (Exception ex) {
             LOG.error("ERROR preProcess :: " + ex);
         }

@@ -10,6 +10,8 @@ public class OperationIDConstants {
 
     public static final String CUSTOMER_APPLICATION_SP_GET_OPERATION_ID = "sp_tbl_customer_application_get";
     public static final String CUSTOMER_GET_OPERATION_ID = "customer_get";
+    public static final String DOCUMENT_STORAGE_GET_OPERATION_ID = "document_storage_get";
+    public static final String DOCUMENT_STORAGE_UPDATE_OPERATION_ID = "document_storage_update";
     public static final String CUSTOMER_APPLICATION_UPDATE_OPERATION_ID = "tbl_customerapplication_update";
     public static final String CUSTOMER_ADDRESS_CREATE_OPERATION_ID = "address_create";
     public static final String EMPLOYER_DETAILS_CREATE_OPERATION_ID = "employerdetails_create";
@@ -41,6 +43,8 @@ public class OperationIDConstants {
     public static final String NAFAITH_SANAD_CREATE_OPERATION_ID = "nafaith_create";
     public static final String T24_CUSTOMER_ADDRESS_UPDATE_OPERATION_ID = "T24CustomerAddressUpdate";
     public static final String CUSTOMER_EMPLOYEE_DETAILS_OPERATION_ID = "CustomerEmployeeDetails";
+    public static final String LOAN_SIMULATION_ORCH_OPERATION_ID = "LoanSimulationOrch";
+    public static final String PAYMENT_SCHEDULE_OPERATION_ID = "PaymentScheduleOrch";
 }
 
 

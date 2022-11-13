@@ -24,6 +24,10 @@ public enum IjarahErrors {
     ERR_GET_ACCESS_TOKEN_FAILED_011("011", "Get Access Token Service Failed"),
     ERR_SINGLE_SANAD_CREATION_FAILED_012("012", "Single Sanad Creation Service Failed"),
     ERR_CREATE_NAFAITH_RECORD_FAILED_013("013", "Create Nafaith Record Failed"),
+    ERR_UPDATE_DOCUMENT_STORAGE_014("014", "Update Document Storage Record Failed"),
+    ERR_UNABLE_TO_SIGN_DOCUMENT_015("015", "Unable To Get Document Signed By Emdha"),
+    ERR_NO_DOCUMENT_FOUND_016("016", "No Document Found"),
+    ERR_NO_DOCUMENT_STORAGE_RECORD_FOUND_017("017", "No Document Record Found"),
     ERR_660028("660028", "Knockout Failed, Application has Declined");
 
     public static final String ERROR_CODE_KEY = "dbpErrCode";

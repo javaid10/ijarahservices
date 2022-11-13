@@ -1,6 +1,7 @@
 package com.ijarah.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ijarah.utils.IjarahHelperMethods;
 import com.ijarah.utils.ServiceCaller;
 import com.ijarah.utils.enums.IjarahErrors;
 import com.ijarah.utils.enums.StatusEnum;
@@ -38,11 +39,14 @@ public class TalibanList implements JavaService2 {
         IjarahErrors.ERR_PREPROCESS_INVALID_INPUT_PARAMS_001.setErrorCode(result);
 
         try {
+            Result successResult = new Result();
             Result getTalibanList = getTalibanList(inputParams, dataControllerRequest);
             extractDataFromTalibanList(getTalibanList);
             for (int index = 0; index < INDIVIDUALS.getAllRecords().size(); index++) {
                 createOrUpdateTalibanList(createInputParamsTalibanList(INDIVIDUALS.getRecord(index)), dataControllerRequest);
             }
+            StatusEnum.success.setStatus(successResult);
+            return successResult;
         } catch (Exception ex) {
             LOG.error("ERROR preProcess :: " + ex);
         }
@@ -62,12 +66,12 @@ public class TalibanList implements JavaService2 {
         String currentDateTime = getDate(LocalDateTime.now(), DATE_FORMAT_yyyy_MM_dd);
 
         try {
-            inputParams.put("dataid", individual.getParamValueByName("DATAID"));
-            inputParams.put("firstname", individual.getParamValueByName("FIRST_NAME"));
-            inputParams.put("secondname", individual.getParamValueByName("SECOND_NAME"));
-            inputParams.put("thirdname", individual.getParamValueByName("THIRD_NAME"));
-            inputParams.put("fourthname", individual.getParamValueByName("FOURTH_NAME"));
-            inputParams.put("listedon", individual.getParamValueByName("LISTED_ON"));
+            inputParams.put("dataid", individual.getParamValueByName("dataid"));
+            inputParams.put("firstname", individual.getParamValueByName("first_name"));
+            inputParams.put("secondname", individual.getParamValueByName("second_name"));
+            inputParams.put("thirdname", individual.getParamValueByName("third_name"));
+            inputParams.put("fourthname", individual.getParamValueByName("fourth_name"));
+            inputParams.put("listedon", individual.getParamValueByName("listed_on"));
             inputParams.put("createdts", currentDateTime);
             inputParams.put("lastmodifieddts", currentDateTime);
         } catch (Exception ex) {

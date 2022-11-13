@@ -1,4 +1,4 @@
-package com.ijarah.Model.NationalAddressModelTemp;
+package com.ijarah.Model.NationalAddressModelList;
 
 import com.google.gson.annotations.SerializedName;
 

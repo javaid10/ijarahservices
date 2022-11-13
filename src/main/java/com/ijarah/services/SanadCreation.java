@@ -131,7 +131,6 @@ public class SanadCreation implements JavaService2 {
                     .build();
 
             HttpPost request = new HttpPost(url);
-
             request.setHeader("Content-Type", "application/x-www-form-urlencoded");
             request.setHeader("Authorization",
                     "Basic  TFd2WEhFQjFvbGZPeDBJOGVOWElrQlNRSFI2bDBRQmlTR1hvdWVmYjpOSXZxYU92S0RVMFE4NkdnMG1jVEFlQmNPRThRSFlNREVWOHBzbzA0dWpiZVA4bEszTWpoaDM3VVpjQ0lVc0dNbUdxZW51NzJJVGpHU0xncnVuV1A4OGxvclZ0Y1plZE5aZVVYbHJ5Mll1SlF2ekt6ZW5malVIdmN5UjlvYjJXeA==");
@@ -142,7 +141,6 @@ public class SanadCreation implements JavaService2 {
             LOG.error("MockJavaService  postWithFormData exception= " + e.getMessage());
             return null;
         }
-
     }
     //////
 

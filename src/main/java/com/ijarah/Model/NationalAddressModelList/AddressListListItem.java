@@ -1,8 +1,8 @@
-package com.ijarah.Model.NationalAddressModelTemp;
+package com.ijarah.Model.NationalAddressModelList;
 
 import com.google.gson.annotations.SerializedName;
 
-public class AddressListList{
+public class AddressListListItem{
 
 	@SerializedName("streetName")
 	private String streetName;

@@ -33,7 +33,7 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>3.0.0</version>
                 <configuration>
-                    <finalName>ijarah-services-${version}</finalName>
+                    <finalName>ijarah-services-${project.version}</finalName>
                     <excludes>
                         <exclude>**/server/**</exclude>
                     </excludes>
@@ -49,14 +49,14 @@
             <artifactId>mfaservices-api</artifactId>
             <scope>system</scope>
             <systemPath>${pom.basedir}/lib/dbp-mfaservices.jar</systemPath>
-            <version>${version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.kony.servicemodel</groupId>
             <artifactId>servicemodel-api</artifactId>
             <scope>system</scope>
             <systemPath>${pom.basedir}/lib/servicemodel-9.2.1.0.jar</systemPath>
-            <version>${version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.kony.middleware</groupId>
@@ -70,14 +70,14 @@
             <artifactId>dbp-commonutilityservices</artifactId>
             <scope>system</scope>
             <systemPath>${pom.basedir}/lib/dbp-commonutilityservices.jar</systemPath>
-            <version>${version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.kony.adminconsole.commons</groupId>
             <artifactId>AdminConsoleCommons</artifactId>
             <scope>system</scope>
             <systemPath>${pom.basedir}/lib/AdminConsoleCommons.jar</systemPath>
-            <version>${version}</version>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -85,7 +85,7 @@
             <artifactId>AdminConsoleServices</artifactId>
             <scope>system</scope>
             <systemPath>${pom.basedir}/lib/AdminConsoleServices.jar</systemPath>
-            <version>${version}</version>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -93,35 +93,35 @@
             <artifactId>DBPFramework</artifactId>
             <scope>system</scope>
             <systemPath>${pom.basedir}/lib/DBPFramework.jar</systemPath>
-            <version>${version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.kony.dbputilities.mfa</groupId>
             <artifactId>dbp-mfaservices</artifactId>
             <scope>system</scope>
             <systemPath>${pom.basedir}/lib/dbp-mfaservices.jar</systemPath>
-            <version>${version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.kony.dbp</groupId>
             <artifactId>Event-Dispatcher</artifactId>
             <scope>system</scope>
             <systemPath>${pom.basedir}/lib/Event-Dispatcher.jar</systemPath>
-            <version>${version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons.io</groupId>
             <artifactId>commons-io</artifactId>
             <scope>system</scope>
             <systemPath>${pom.basedir}/lib/commons-io-2.4.jar</systemPath>
-            <version>${version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.emdha.esign</groupId>
             <artifactId>eSignEMDHA</artifactId>
             <scope>system</scope>
             <systemPath>${pom.basedir}/lib/eSignEMDHA.jar</systemPath>
-            <version>${version}</version>
+            <version>${project.version}</version>
         </dependency>
         <!-- Local Maven Repositories End -->
 
@@ -226,7 +226,6 @@
             <artifactId>commons-codec</artifactId>
             <version>1.15</version>
         </dependency>
-
         <!-- Global Maven Repositories End -->
     </dependencies>
 </project>
