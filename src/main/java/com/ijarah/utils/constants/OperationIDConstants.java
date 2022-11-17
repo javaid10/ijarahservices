@@ -9,6 +9,7 @@ public class OperationIDConstants {
     public static final String CUSTOMER_APPLICATION_GET_OPERATION_ID = "tbl_customerapplication_get";
 
     public static final String CUSTOMER_APPLICATION_SP_GET_OPERATION_ID = "sp_tbl_customer_application_get";
+    public static final String EMDHA_DETAILS_SP_GET_OPERATION_ID = "sp_get_details_for_emdha";
     public static final String CUSTOMER_GET_OPERATION_ID = "customer_get";
     public static final String DOCUMENT_STORAGE_GET_OPERATION_ID = "document_storage_get";
     public static final String DOCUMENT_STORAGE_UPDATE_OPERATION_ID = "document_storage_update";
@@ -45,6 +46,7 @@ public class OperationIDConstants {
     public static final String CUSTOMER_EMPLOYEE_DETAILS_OPERATION_ID = "CustomerEmployeeDetails";
     public static final String LOAN_SIMULATION_ORCH_OPERATION_ID = "LoanSimulationOrch";
     public static final String PAYMENT_SCHEDULE_OPERATION_ID = "PaymentScheduleOrch";
+    public static final String EMDHA_SIGN_OPERATION_ID = "EmdhaSign";
 }
 
 

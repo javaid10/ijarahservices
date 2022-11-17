@@ -11,6 +11,7 @@ public enum IjarahErrors {
     ERR_PRE_LOGIN_001("001_001", "Unable to validate user."),
 
     ERR_PREPROCESS_INVALID_INPUT_PARAMS_001("000_000", "Input params are not valid"),
+    ERR_PREPROCESS_INVALID_RESPONSE_PARAMS_001("000_000", "Response is not valid"),
 
     ERR_CREATE_LOAN_002("002", "Create loan Service failed"),
     ERR_CREATE_LOAN_003("003", "No customers found for loan creation"),

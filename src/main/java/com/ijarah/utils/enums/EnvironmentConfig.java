@@ -11,7 +11,8 @@ public enum EnvironmentConfig implements Serializable {
     SME_SCHEMA_NAME_IJARAH,
     SANAD_ACCESS_TOKEN_AUTHORIZATION,
 
-    SIGN_SECRET;
+    SIGN_SECRET,
+    RKA_NAME;
 
     EnvironmentConfig() {
     }

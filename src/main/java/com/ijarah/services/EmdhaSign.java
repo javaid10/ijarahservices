@@ -1,16 +1,17 @@
 package com.ijarah.services;
 
 import com.emdha.esign.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ijarah.utils.IjarahHelperMethods;
 import com.ijarah.utils.ServiceCaller;
 import com.ijarah.utils.enums.IjarahErrors;
 import com.ijarah.utils.enums.StatusEnum;
-import com.kony.dbputilities.util.DBPUtilitiesConstants;
 import com.kony.dbputilities.util.HelperMethods;
 import com.konylabs.middleware.common.JavaService2;
 import com.konylabs.middleware.controller.DataControllerRequest;
 import com.konylabs.middleware.controller.DataControllerResponse;
 import com.konylabs.middleware.dataobject.Result;
+import com.konylabs.middleware.dataobject.ResultToJSON;
 import esign.text.pdf.codec.Base64;
 import org.apache.log4j.Logger;
 
@@ -25,9 +26,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.ijarah.utils.ServiceCaller.auditLogData;
 import static com.ijarah.utils.constants.OperationIDConstants.*;
-import static com.ijarah.utils.constants.ServiceIDConstants.DBXDB_SERVICES_SERVICE_ID;
-import static com.ijarah.utils.constants.ServiceIDConstants.DB_MORA_SERVICES_SERVICE_ID;
+import static com.ijarah.utils.constants.ServiceIDConstants.*;
+import static com.ijarah.utils.enums.EnvironmentConfig.RKA_NAME;
 
 public class EmdhaSign implements JavaService2 {
 
@@ -40,6 +42,11 @@ public class EmdhaSign implements JavaService2 {
     String AR_FULL_NAME = "";
     private String APPLICATION_ID = "";
     private String DOCUMENT = "";
+    private String MOBILE = "";
+    private String EMAIL = "";
+    private String ADDRESS = "";
+    private String CITY = "";
+    private String DOCUMENT_ID = "";
 
     @Override
 
@@ -49,32 +56,28 @@ public class EmdhaSign implements JavaService2 {
         IjarahErrors.ERR_PREPROCESS_INVALID_INPUT_PARAMS_001.setErrorCode(result);
 
         if (preProcess(inputParams)) {
-            Result getCustomerData = getCustomerData(dataControllerRequest);
-            if (HelperMethods.hasRecords(getCustomerData)) {
-                Result getDocumentStorageData = getDocumentStorageData(dataControllerRequest);
-                if (HelperMethods.hasRecords(getDocumentStorageData)) {
-                    if (!IjarahHelperMethods.isBlank(DOCUMENT)) {
-                        DOCUMENT = DOCUMENT.substring(2, DOCUMENT.length() - 1);
-                        String signedDocument = emdhaInit();
-                        if (!(signedDocument == null)) {
-                            Result updateDocumentStorageData = updateDocumentStorageData(dataControllerRequest, signedDocument);
-                            if (HelperMethods.hasRecords(updateDocumentStorageData)) {
-                                StatusEnum.success.setStatus(updateDocumentStorageData);
-                                result = updateDocumentStorageData;
-                            } else {
-                                IjarahErrors.ERR_UPDATE_DOCUMENT_STORAGE_014.setErrorCode(result);
-                            }
+            Result emdhaCustomerDetails = getEmdhaCustomerDetails(dataControllerRequest);
+            if (HelperMethods.hasRecords(emdhaCustomerDetails)) {
+                if (validateEmdhaDetails(emdhaCustomerDetails)) {
+                    Result emdhaSignedDocument = getDocumentSignedByEmdha(createRequestForEmdhaService(dataControllerRequest), dataControllerRequest);
+                    if (HelperMethods.hasRecords(emdhaSignedDocument)) {
+                        Result getUpdateDocumentStorageData = updateDocumentStorageData(dataControllerRequest, "");
+                        if (IjarahHelperMethods.hasSuccessCode(getUpdateDocumentStorageData)) {
+                            Result successResult = StatusEnum.error.setStatus();
+                            StatusEnum.success.setStatus(successResult);
+                            successResult.addParam("Message", "Document has been signed by Emdha");
+                            return successResult;
                         } else {
-                            IjarahErrors.ERR_UNABLE_TO_SIGN_DOCUMENT_015.setErrorCode(result);
+                            IjarahErrors.ERR_UPDATE_DOCUMENT_STORAGE_014.setErrorCode(result);
                         }
                     } else {
-                        IjarahErrors.ERR_NO_DOCUMENT_FOUND_016.setErrorCode(result);
+                        IjarahErrors.ERR_UNABLE_TO_SIGN_DOCUMENT_015.setErrorCode(result);
                     }
                 } else {
-                    IjarahErrors.ERR_NO_DOCUMENT_STORAGE_RECORD_FOUND_017.setErrorCode(result);
+                    IjarahErrors.ERR_PREPROCESS_INVALID_RESPONSE_PARAMS_001.setErrorCode(result);
                 }
             } else {
-                IjarahErrors.ERR_NO_CUSTOMER_RECORD_FOUND_004.setErrorCode(result);
+                IjarahErrors.ERR_NO_DOCUMENT_STORAGE_RECORD_FOUND_017.setErrorCode(result);
             }
         }
         return result;
@@ -101,38 +104,71 @@ public class EmdhaSign implements JavaService2 {
         return false;
     }
 
-    private Result getCustomerData(DataControllerRequest dataControllerRequest) {
+    private Result getEmdhaCustomerDetails(DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
         try {
-            Map<String, String> filter = new HashMap<>();
-            filter.put(DBPUtilitiesConstants.FILTER, "UserName" + DBPUtilitiesConstants.EQUAL + NATIONAL_ID);
-            Result getCustomerData = ServiceCaller.internalDB(DBXDB_SERVICES_SERVICE_ID, CUSTOMER_GET_OPERATION_ID, filter, null, dataControllerRequest);
-            StatusEnum.success.setStatus(getCustomerData);
-            FULL_NAME = HelperMethods.getFieldValue(getCustomerData, "FullName");
-            AR_FULL_NAME = HelperMethods.getFieldValue(getCustomerData, "ArFullName");
-            APPLICATION_ID = HelperMethods.getFieldValue(getCustomerData, "currentAppId");
-            return getCustomerData;
+            Map<String, String> inputParam = new HashMap<>();
+            inputParam.put("nationalId", NATIONAL_ID);
+            return ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, EMDHA_DETAILS_SP_GET_OPERATION_ID, inputParam, null, dataControllerRequest);
         } catch (Exception ex) {
             LOG.error("ERROR getCustomerData :: " + ex);
         }
         return result;
     }
 
-    private Result getDocumentStorageData(DataControllerRequest dataControllerRequest) {
+    private boolean validateEmdhaDetails(Result emdhaCustomerDetails) {
+        if (IjarahHelperMethods.isBlank(HelperMethods.getFieldValue(emdhaCustomerDetails, "uuid"))) {
+            return false;
+        }
+        if (TYPE.equals("1")) {
+            if (IjarahHelperMethods.isBlank(HelperMethods.getFieldValue(emdhaCustomerDetails, "loan_contract"))) {
+                return false;
+            }
+            DOCUMENT = HelperMethods.getFieldValue(emdhaCustomerDetails, "loan_contract");
+        } else {
+            if (IjarahHelperMethods.isBlank(HelperMethods.getFieldValue(emdhaCustomerDetails, "promissory_note"))) {
+                return false;
+            }
+            DOCUMENT = HelperMethods.getFieldValue(emdhaCustomerDetails, "promissory_note");
+        }
+        APPLICATION_ID = HelperMethods.getFieldValue(emdhaCustomerDetails, "currentAppId");
+        FULL_NAME = HelperMethods.getFieldValue(emdhaCustomerDetails, "FullName");
+        AR_FULL_NAME = HelperMethods.getFieldValue(emdhaCustomerDetails, "ArFullName");
+        MOBILE = HelperMethods.getFieldValue(emdhaCustomerDetails, "mobile");
+        EMAIL = HelperMethods.getFieldValue(emdhaCustomerDetails, "Value");
+        ADDRESS = HelperMethods.getFieldValue(emdhaCustomerDetails, "addressLine1");
+        CITY = HelperMethods.getFieldValue(emdhaCustomerDetails, "City_id");
+        DOCUMENT = DOCUMENT.substring(2, DOCUMENT.length() - 1);
+        DOCUMENT_ID = HelperMethods.getFieldValue(emdhaCustomerDetails, "uuid");
+
+        return true;
+    }
+
+    private Map<String, String> createRequestForEmdhaService(DataControllerRequest dataControllerRequest) {
+        Map<String, String> inputParams = new HashMap<>();
+        inputParams.put("signedBy", FULL_NAME);
+        inputParams.put("arabicName", AR_FULL_NAME);
+        inputParams.put("mobile", MOBILE);
+        inputParams.put("email", EMAIL);
+        inputParams.put("address", ADDRESS);
+        inputParams.put("regionProvince", CITY);
+        inputParams.put("docBase64", DOCUMENT);
+        inputParams.put("rkaName", RKA_NAME.getValue(dataControllerRequest));
+        inputParams.put("kycId", NATIONAL_ID);
+        inputParams.put("country", DOCUMENT);
+        return inputParams;
+    }
+
+    private Result getDocumentSignedByEmdha(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
         try {
-            Map<String, String> filter = new HashMap<>();
-            filter.put(DBPUtilitiesConstants.FILTER, "application_id" + DBPUtilitiesConstants.EQUAL + APPLICATION_ID);
-            Result getDocumentStorageData = ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, DOCUMENT_STORAGE_GET_OPERATION_ID, filter, null, dataControllerRequest);
-            StatusEnum.success.setStatus(getDocumentStorageData);
-            if (TYPE.equals("1")) {
-                DOCUMENT = HelperMethods.getFieldValue(getDocumentStorageData, "loan_contract");
-            } else {
-                DOCUMENT = HelperMethods.getFieldValue(getDocumentStorageData, "promissory_note");
-            }
-            return getDocumentStorageData;
+            Result getEmdhaSignedDocument = ServiceCaller.internal(MS_DOCUMENT_MORA_SERVICE_ID, EMDHA_SIGN_OPERATION_ID, inputParams, null, dataControllerRequest);
+            String inputRequest = (new ObjectMapper()).writeValueAsString(inputParams);
+            String outputResponse = ResultToJSON.convert(getEmdhaSignedDocument);
+            auditLogData(dataControllerRequest, inputRequest, outputResponse, MS_DOCUMENT_MORA_SERVICE_ID + " : " + EMDHA_SIGN_OPERATION_ID);
+            return getEmdhaSignedDocument;
         } catch (Exception ex) {
-            LOG.error("ERROR getDocumentStorageData :: " + ex);
+            LOG.error("ERROR getDocumentSignedByEmdha :: " + ex);
         }
         return result;
     }
@@ -141,7 +177,7 @@ public class EmdhaSign implements JavaService2 {
         Result result = StatusEnum.error.setStatus();
         try {
             Map<String, String> inputParams = new HashMap<>();
-            inputParams.put("application_id", APPLICATION_ID);
+            inputParams.put("uuid", DOCUMENT_ID);
             if (TYPE.equals("1")) {
                 inputParams.put("loan_contract", signedDocument);
             } else {

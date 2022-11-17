@@ -20,4 +20,5 @@ public class ServiceIDConstants {
     public static final String NAFAES_REST_API_SERVICE_ID = "NafaesRestAPI";
     public static final String SANAD_CREATION_SERVICE_ID = "SanadCreation";
     public static final String LOAN_SIMULATION_SCHEDULE_PAYMENT_SERVICE_ID = "LoanSimulationSchedulePayment";
+    public static final String MS_DOCUMENT_MORA_SERVICE_ID = "MSDocumentMora";
 }

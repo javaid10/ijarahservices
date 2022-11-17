@@ -624,8 +624,11 @@ public class ScoringEngine implements JavaService2 {
                 }
             }
             if (scoreCardS3.getBody().getLoanRate() != null) {
-                approx = scoreCardS3.getBody().getLoanRate();
                 loanRate = scoreCardS3.getBody().getLoanRate();
+            }
+
+            if (scoreCardS3.getBody().getAprRate() != null) {
+                approx = scoreCardS3.getBody().getAprRate();
             }
 
             if (scoreCardS3.getBody().getLoanAmountCap() != null) {
