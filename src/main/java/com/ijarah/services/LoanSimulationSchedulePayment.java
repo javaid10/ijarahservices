@@ -35,6 +35,7 @@ public class LoanSimulationSchedulePayment implements JavaService2 {
                 Result loanSimulation = getLoanSimulation(inputParams, dataControllerRequest);
                 if (loanSimulation.hasParamByName("simulationId") && loanSimulation.hasParamByName("arrangementId")) {
                     if (!IjarahHelperMethods.isBlank(loanSimulation.getParamValueByName("simulationId")) && !IjarahHelperMethods.isBlank(loanSimulation.getParamValueByName("simulationId"))) {
+                        Thread.sleep(10000);
                         Map<String, String> inputParamGetPayment = new HashMap<>();
                         inputParamGetPayment.put("simulationId", loanSimulation.getParamValueByName("simulationId"));
                         inputParamGetPayment.put("arrangementId", loanSimulation.getParamValueByName("arrangementId"));

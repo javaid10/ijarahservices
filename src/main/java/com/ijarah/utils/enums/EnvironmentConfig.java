@@ -12,7 +12,8 @@ public enum EnvironmentConfig implements Serializable {
     SANAD_ACCESS_TOKEN_AUTHORIZATION,
 
     SIGN_SECRET,
-    RKA_NAME;
+    RKA_NAME,
+    APP_HASH_VALUE;
 
     EnvironmentConfig() {
     }

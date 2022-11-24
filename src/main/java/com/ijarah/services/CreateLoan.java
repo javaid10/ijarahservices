@@ -3,7 +3,6 @@ package com.ijarah.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.ijarah.Model.AccessToken.AccessTokenResponse;
-import com.ijarah.Model.SanadResponseModel.SingleSanadResponse;
 import com.ijarah.utils.IjarahHelperMethods;
 import com.ijarah.utils.ServiceCaller;
 import com.ijarah.utils.enums.IjarahErrors;
@@ -76,7 +75,7 @@ public class CreateLoan implements JavaService2 {
                             Result getNafaesData = getNafaesData(getCustomerData, dataControllerRequest);
                             if (IjarahHelperMethods.hasSuccessCode(getNafaesData) && HelperMethods.hasRecords(getNafaesData)) {
                                 extractValuesFromNafaes(getNafaesData);
-                                ACCESS_TOKEN = extractAccessToken();
+                                //ACCESS_TOKEN = extractAccessToken();
                                 Result transferOrder = callTransferOrder(dataControllerRequest);
                                 Result saleOrder = callSaleOrder(dataControllerRequest);
                                     /*
@@ -296,7 +295,7 @@ public class CreateLoan implements JavaService2 {
 
     private void extractValuesFromNafaes(Result getNafaesData) {
         try {
-            //ACCESS_TOKEN = getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("accessToken");
+            ACCESS_TOKEN = getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("accessToken");
             REFERENCE_NUMBER = getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("referencenumber");
         } catch (Exception ex) {
             LOG.error("ERROR extractValuesFromNafaes :: " + ex);

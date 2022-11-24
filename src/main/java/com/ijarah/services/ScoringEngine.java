@@ -25,6 +25,7 @@ import org.apache.log4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -473,12 +474,27 @@ public class ScoringEngine implements JavaService2 {
         Map<String, String> inputParams = new HashMap<>();
         try {
             inputParams.put("employerTypeId", empId);
-            inputParams.put("dateOfBirth", HelperMethods.getFieldValue(getCustomerData, "DateOfBirth"));
+            inputParams.put("dateOfBirth", dateFormatter(HelperMethods.getFieldValue(getCustomerData, "DateOfBirth"), "dd/MM/yyyy"));
+            DOB = dateFormatter(HelperMethods.getFieldValue(getCustomerData, "DateOfBirth"), "dd-MM-yyyy").substring(3);
             inputParams.put("idNumber", nanId);
         } catch (Exception ex) {
             LOG.error("ERROR createRequestForSIMAHSALARY :: " + ex);
         }
         return inputParams;
+    }
+
+    private static String dateFormatter(String dateN, String pattern) {
+        String convertDate = "";
+        String dateFormat = "yyyy-MM-dd";
+        SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
+        try {
+            Date dt = sdf.parse(dateN);
+            SimpleDateFormat sdf2 = new SimpleDateFormat(pattern);
+            convertDate = sdf2.format(dt);
+        } catch (Exception e) {
+            LOG.error("Date formatter in exception = " + e.getMessage());
+        }
+        return convertDate;
     }
 
     private Map<String, String> createRequestForConsumerEnquiryService(Map<String, String> globalInputParams, Result getCustomerData, Result getSalaryCertificate) {
@@ -642,7 +658,7 @@ public class ScoringEngine implements JavaService2 {
 
         //TODO
         //Remove static value and add employee name
-        loanAmountCap = "20000";
+        //loanAmountCap = "20000";
         inputParams.put("id", HelperMethods.getFieldValue(getCustomerApplicationData, "id"));
         inputParams.put("Customer_id", HelperMethods.getFieldValue(getCustomerApplicationData, "Customer_id"));
         inputParams.put("mobile", HelperMethods.getFieldValue(getCustomerApplicationData, "mobile"));
@@ -707,7 +723,7 @@ public class ScoringEngine implements JavaService2 {
          */
         loanRate /= 100;
         double loanAmount = MAX_EMI * (1 - (1 / Math.pow((1 + loanRate / 12), tenor))) / (loanRate / 12);
-        String calculateLoanAmountInfVal = String.valueOf((Math.floor(loanAmount / 10000)) * 1000);
+        String calculateLoanAmountInfVal = String.valueOf((Math.floor(loanAmount / 1000)) * 1000);
 
         LOG.error("calculateLoanAmountInf MAX_EMI :: " + MAX_EMI);
         LOG.error("calculateLoanAmountInf loanRate :: " + loanRate);
@@ -859,6 +875,8 @@ public class ScoringEngine implements JavaService2 {
         int final_max_allowable_dti = Math.min(calculateMaxOverallAllowedDTI(), calculateMaxInternalAllowedDTI());
         MAX_EMI = Double.parseDouble(MONTHLY_NET_SALARY) * final_max_allowable_dti;
         MAX_EMI = MAX_EMI / 100;
+        LOG.error("#Ghufran final_max_allowable_dti :: " + final_max_allowable_dti);
+        LOG.error("#Ghufran MAX_EMI :: " + MAX_EMI);
     }
 
     private int calculateMaxOverallAllowedDTI() {
@@ -901,7 +919,9 @@ public class ScoringEngine implements JavaService2 {
                     }
                 }
             }
+            LOG.error("#Ghufran totalDebtServicing :: " + totalDebtServicing);
             CUSTOMER_GLOBAL_DTI = (totalDebtServicing / Double.parseDouble(MONTHLY_NET_SALARY)) * 100;
+            LOG.error("#Ghufran CUSTOMER_GLOBAL_DTI :: " + CUSTOMER_GLOBAL_DTI);
             if (CUSTOMER_GLOBAL_DTI >= MAX_GLOBAL_DTI) {
                 GLOBAL_DTI = "0";
             }
