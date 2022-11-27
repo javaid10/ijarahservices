@@ -13,6 +13,9 @@ public class BodyItem{
 	@SerializedName("sadadNumber")
 	private String sadadNumber;
 
+	@SerializedName("sabbNumber")
+	private String sabbNumber;
+
 	@SerializedName("interestAmount")
 	private double interestAmount;
 
@@ -41,6 +44,10 @@ public class BodyItem{
 
 	public String getSadadNumber(){
 		return sadadNumber;
+	}
+
+	public String getSabbNumber(){
+		return sabbNumber;
 	}
 
 	public double getInterestAmount(){

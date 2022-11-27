@@ -8,6 +8,9 @@ public class PaymentScheduleResponse{
 	@SerializedName("opstatus")
 	private int opstatus;
 
+	@SerializedName("header")
+	private Header header;
+
 	@SerializedName("body")
 	private List<BodyItem> body;
 
@@ -16,6 +19,10 @@ public class PaymentScheduleResponse{
 
 	public int getOpstatus(){
 		return opstatus;
+	}
+
+	public Header getHeader(){
+		return header;
 	}
 
 	public List<BodyItem> getBody(){

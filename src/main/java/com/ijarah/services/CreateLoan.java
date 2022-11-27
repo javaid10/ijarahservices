@@ -147,7 +147,7 @@ public class CreateLoan implements JavaService2 {
         Result result = StatusEnum.error.setStatus();
         try {
             Map<String, String> inputParam = new HashMap<>();
-            inputParam.put("uuid", IjarahHelperMethods.generateUUID() + "-TO");
+            inputParam.put("uuid", IjarahHelperMethods.generateUUID() + "-TOR");
             inputParam.put("accessToken", ACCESS_TOKEN);
             inputParam.put("referenceNo", REFERENCE_NUMBER);
             inputParam.put("orderType", "TO");
@@ -349,7 +349,7 @@ public class CreateLoan implements JavaService2 {
 
     private void extractValuesFromNafaes(Result getNafaesData) {
         try {
-            //ACCESS_TOKEN = getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("accessToken");
+            ACCESS_TOKEN = getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("accessToken");
             REFERENCE_NUMBER = getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("referencenumber");
         } catch (Exception ex) {
             LOG.error("ERROR extractValuesFromNafaes :: " + ex);

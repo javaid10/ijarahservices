@@ -1,6 +1,8 @@
 package com.ijarah.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.ijarah.Model.PaymentSchedule.PaymentScheduleResponse;
 import com.ijarah.utils.IjarahHelperMethods;
 import com.ijarah.utils.ServiceCaller;
 import com.ijarah.utils.enums.IjarahErrors;
@@ -19,6 +21,7 @@ import java.util.Map;
 import static com.ijarah.utils.ServiceCaller.auditLogData;
 import static com.ijarah.utils.constants.OperationIDConstants.*;
 import static com.ijarah.utils.constants.ServiceIDConstants.LOAN_SIMULATION_SCHEDULE_PAYMENT_SERVICE_ID;
+import static com.ijarah.utils.enums.EnvironmentConfig.PAYMENT_SCHEDULE_SLEEP_VALUE;
 
 public class LoanSimulationSchedulePayment implements JavaService2 {
 
@@ -35,10 +38,12 @@ public class LoanSimulationSchedulePayment implements JavaService2 {
                 Result loanSimulation = getLoanSimulation(inputParams, dataControllerRequest);
                 if (loanSimulation.hasParamByName("simulationId") && loanSimulation.hasParamByName("arrangementId")) {
                     if (!IjarahHelperMethods.isBlank(loanSimulation.getParamValueByName("simulationId")) && !IjarahHelperMethods.isBlank(loanSimulation.getParamValueByName("simulationId"))) {
+                        Thread.sleep(Long.parseLong(PAYMENT_SCHEDULE_SLEEP_VALUE.getValue(dataControllerRequest)));
                         Map<String, String> inputParamGetPayment = new HashMap<>();
                         inputParamGetPayment.put("simulationId", loanSimulation.getParamValueByName("simulationId"));
                         inputParamGetPayment.put("arrangementId", loanSimulation.getParamValueByName("arrangementId"));
                         Result paymentSchedule = getPaymentSchedule(inputParamGetPayment, dataControllerRequest);
+                        //extractValuesFromPaymentScheduleResult(paymentSchedule);
                         loanSimulation.appendResult(paymentSchedule);
                         StatusEnum.success.setStatus(loanSimulation);
                         return loanSimulation;
@@ -49,6 +54,14 @@ public class LoanSimulationSchedulePayment implements JavaService2 {
         } catch (Exception ex) {
             LOG.error("ERROR invoke :: " + ex);
             return result;
+        }
+    }
+
+    private void extractValuesFromPaymentScheduleResult(Result paymentSchedule) {
+        Gson gson = new Gson();
+        PaymentScheduleResponse paymentScheduleResponse = gson.fromJson(ResultToJSON.convert(paymentSchedule), PaymentScheduleResponse.class);
+        if (paymentScheduleResponse.getHeader().getStatus().equalsIgnoreCase("success")) {
+
         }
     }
 
@@ -82,9 +95,9 @@ public class LoanSimulationSchedulePayment implements JavaService2 {
     private Result getPaymentSchedule(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
         try {
             Result getPaymentScheduleResult = ServiceCaller.internal(LOAN_SIMULATION_SCHEDULE_PAYMENT_SERVICE_ID, PAYMENT_SCHEDULE_OPERATION_ID, inputParams, null, dataControllerRequest);
-//            String inputRequest = (new ObjectMapper()).writeValueAsString(inputParams);
-//            String outputResponse = ResultToJSON.convert(getPaymentScheduleResult);
-//            auditLogData(dataControllerRequest, inputRequest, outputResponse, LOAN_SIMULATION_SCHEDULE_PAYMENT_SERVICE_ID + " : " + PAYMENT_SCHEDULE_OPERATION_ID);
+            //String inputRequest = (new ObjectMapper()).writeValueAsString(inputParams);
+            //String outputResponse = ResultToJSON.convert(getPaymentScheduleResult);
+            //auditLogData(dataControllerRequest, inputRequest, outputResponse, LOAN_SIMULATION_SCHEDULE_PAYMENT_SERVICE_ID + " : " + PAYMENT_SCHEDULE_OPERATION_ID);
             return getPaymentScheduleResult;
         } catch (Exception ex) {
             LOG.error("ERROR getPaymentSchedule :: " + ex);
