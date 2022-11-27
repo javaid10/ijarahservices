@@ -84,29 +84,29 @@ public class CreateLoan implements JavaService2 {
                 if (IjarahHelperMethods.hasSuccessCode(getCustomerData) && HelperMethods.hasRecords(getCustomerData)) {
                     Result activateCustomer = activateCustomer(createInputParamsForActivateCustomerService(getCustomerData), dataControllerRequest);
                     if (IjarahHelperMethods.hasSuccessCode(activateCustomer)) {
-                        // Result createLoanResult = createLoan(createInputParamsForCreateLoanService(index, getCustomerData), dataControllerRequest);
-                        if (true) { //(IjarahHelperMethods.hasSuccessCode(createLoanResult))
-                            // updateCustomerApplicationData(createInputParamsForCustomerApplicationService(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("id")), dataControllerRequest);
+                        Result createLoanResult = createLoan(createInputParamsForCreateLoanService(index, getCustomerData), dataControllerRequest);
+                        if (IjarahHelperMethods.hasSuccessCode(createLoanResult)) {
+                            updateCustomerApplicationData(createInputParamsForCustomerApplicationService(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("id")), dataControllerRequest);
                             Result getNafaesData = getNafaesData(getCustomerData, dataControllerRequest);
                             if (IjarahHelperMethods.hasSuccessCode(getNafaesData) && HelperMethods.hasRecords(getNafaesData)) {
                                 extractValuesFromNafaes(getNafaesData);
                                 ACCESS_TOKEN = getAccessToken();
-                                
+
                                 Result transferOrder = callTransferOrder(dataControllerRequest);
-                                LOG.debug("======> Transfer Order Result 1 " +ResultToJSON.convert(transferOrder));
-                                
+                                LOG.debug("======> Transfer Order Result 1 " + ResultToJSON.convert(transferOrder));
+
                                 String transferOrderStatus = transferOrder.getParamValueByName("status");
-                                
+
                                 if (StringUtils.equalsAnyIgnoreCase("success", transferOrderStatus)) {
-                                	
-                                	Result transferOrderresult = callTransferOrderResult(dataControllerRequest);
-                                	LOG.debug("======> Transfer Order Result 2 " +ResultToJSON.convert(transferOrderresult));
-                                	String transferOrderResult_Status = transferOrderresult.getParamValueByName("status");
-                                	
-                                	if (StringUtils.equalsAnyIgnoreCase("success", transferOrderResult_Status)) {
-                                		Result saleOrder = callSaleOrder(dataControllerRequest);
-                                		LOG.debug("======> Sale Order Result " +ResultToJSON.convert(saleOrder));
-                                	}
+
+                                    Result transferOrderresult = callTransferOrderResult(dataControllerRequest);
+                                    LOG.debug("======> Transfer Order Result 2 " + ResultToJSON.convert(transferOrderresult));
+                                    String transferOrderResult_Status = transferOrderresult.getParamValueByName("status");
+
+                                    if (StringUtils.equalsAnyIgnoreCase("success", transferOrderResult_Status)) {
+                                        Result saleOrder = callSaleOrder(dataControllerRequest);
+                                        LOG.debug("======> Sale Order Result " + ResultToJSON.convert(saleOrder));
+                                    }
                                 }
                                     /*
                                     if (IjarahHelperMethods.hasSuccessCode(transferOrder) && IjarahHelperMethods.hasSuccessCode(saleOrder)) {
@@ -142,7 +142,7 @@ public class CreateLoan implements JavaService2 {
         return inputParam;
     }
 
-    
+
     private Result callTransferOrderResult(DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
         try {
@@ -165,7 +165,7 @@ public class CreateLoan implements JavaService2 {
         }
         return result;
     }
-    
+
     private Result callTransferOrder(DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
         try {
@@ -237,6 +237,10 @@ public class CreateLoan implements JavaService2 {
             inputParams.put("amount", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("offerAmount").replace(",", ""));
             inputParams.put("fixed", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("loanRate"));
             inputParams.put("term", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("tenor") + "M");
+            inputParams.put("sabbNumber", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sabbNumber"));
+            inputParams.put("sadadNumber", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sadadNumber"));
+            inputParams.put("sanadRef", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sanadNumber"));
+            inputParams.put("infIoanRef", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("applicationID"));
         } catch (Exception ex) {
             LOG.error("ERROR createInputParamsForCreateLoanService :: " + ex);
         }
@@ -361,56 +365,53 @@ public class CreateLoan implements JavaService2 {
     }
 
     public static void main(String[] args) {
-    	getAccessToken();
-	}
-    
+        getAccessToken();
+    }
+
     /**
-	 * 
-	 * @param dataControllerRequest
-	 * @return
-	 */
-	private static String getAccessToken() {
-		LOG.debug("==========> Nafaes - excuteLogin - Begin");
-		String authToken = null;
+     * @return
+     */
+    private static String getAccessToken() {
+        LOG.debug("==========> Nafaes - excuteLogin - Begin");
+        String authToken = null;
 
-		String loginURL = "https://testapi.nafaes.com/oauth/token?grant_type=password&username=APINIG1102&client_id=IFCSUD2789";
-		LOG.debug("==========> Login URL  :: " + loginURL);
-		HashMap<String, String> paramsMap = new HashMap<>();
-		paramsMap.put("password", "<fq$h(59@3");
-		paramsMap.put("client_secret", "$69$is9@n>");
+        String loginURL = "https://testapi.nafaes.com/oauth/token?grant_type=password&username=APINIG1102&client_id=IFCSUD2789";
+        LOG.debug("==========> Login URL  :: " + loginURL);
+        HashMap<String, String> paramsMap = new HashMap<>();
+        paramsMap.put("password", "<fq$h(59@3");
+        paramsMap.put("client_secret", "$69$is9@n>");
 
-		HashMap<String, String> headersMap = new HashMap<String, String>();
+        HashMap<String, String> headersMap = new HashMap<String, String>();
 
-		String endPointResponse = HTTPOperations.hitPOSTServiceAndGetResponse(loginURL, paramsMap, null, headersMap);
-		JSONObject responseJson = getStringAsJSONObject(endPointResponse);
-		LOG.debug("==========> responseJson :: " + responseJson);
-		authToken = responseJson.getString("access_token");
-		LOG.debug("==========> authToken :: " + authToken);
-		LOG.debug("==========> Nafaes - excuteLogin - End");
-		return authToken;
-	}
-	
-	/**
-	 * Converts the given String into the JSONObject
-	 * 
-	 * @param jsonString
-	 * @return
-	 */
-	public static JSONObject getStringAsJSONObject(String jsonString){
-		JSONObject generatedJSONObject=new JSONObject();
-		if(StringUtils.isBlank(jsonString)) {
-			return null;
-		}
-		try{
-			generatedJSONObject=new JSONObject(jsonString);
-			return generatedJSONObject;
-		}
-		catch(JSONException e){
-			e.printStackTrace();
-			return null;
-		}
-	}
-    
+        String endPointResponse = HTTPOperations.hitPOSTServiceAndGetResponse(loginURL, paramsMap, null, headersMap);
+        JSONObject responseJson = getStringAsJSONObject(endPointResponse);
+        LOG.debug("==========> responseJson :: " + responseJson);
+        authToken = responseJson.getString("access_token");
+        LOG.debug("==========> authToken :: " + authToken);
+        LOG.debug("==========> Nafaes - excuteLogin - End");
+        return authToken;
+    }
+
+    /**
+     * Converts the given String into the JSONObject
+     *
+     * @param jsonString
+     * @return
+     */
+    public static JSONObject getStringAsJSONObject(String jsonString) {
+        JSONObject generatedJSONObject = new JSONObject();
+        if (StringUtils.isBlank(jsonString)) {
+            return null;
+        }
+        try {
+            generatedJSONObject = new JSONObject(jsonString);
+            return generatedJSONObject;
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public String extractAccessToken() {
         try {
             LOG.error("extractAccessToken 1");
