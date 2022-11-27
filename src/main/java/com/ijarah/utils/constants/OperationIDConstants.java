@@ -37,6 +37,7 @@ public class OperationIDConstants {
     public static final String ACTIVATE_CUSTOMER_OPERATION_ID = "ActivateCustomer";
     public static final String LOAN_CREATION_OPERATION_ID = "LoanCreation";
     public static final String TRANSFER_ORDER_OPERATION_ID = "TransferOrder";
+    public static final String TRANSFER_ORDER_RESULT_OPERATION_ID = "OrderResult_PollingMethod";
     public static final String SALE_ORDER_PUSH_METHOD_OPERATION_ID = "SaleOrder_PushMethod";
     public static final String GET_ACCESS_TOKEN_OPERATION_ID = "GetAccessToken";
     public static final String CREATE_SINGLE_SANAD_OPERATION_ID = "CreateSingleSanad";

@@ -1,9 +1,42 @@
 package com.ijarah.services;
 
+import static com.ijarah.utils.ServiceCaller.auditLogData;
+import static com.ijarah.utils.constants.OperationIDConstants.ACTIVATE_CUSTOMER_OPERATION_ID;
+import static com.ijarah.utils.constants.OperationIDConstants.CUSTOMER_APPLICATION_GET_OPERATION_ID;
+import static com.ijarah.utils.constants.OperationIDConstants.CUSTOMER_APPLICATION_UPDATE_OPERATION_ID;
+import static com.ijarah.utils.constants.OperationIDConstants.CUSTOMER_GET_OPERATION_ID;
+import static com.ijarah.utils.constants.OperationIDConstants.LOAN_CREATION_OPERATION_ID;
+import static com.ijarah.utils.constants.OperationIDConstants.NAFAES_GET_OPERATION_ID;
+import static com.ijarah.utils.constants.OperationIDConstants.SALE_ORDER_PUSH_METHOD_OPERATION_ID;
+import static com.ijarah.utils.constants.OperationIDConstants.TRANSFER_ORDER_OPERATION_ID;
+import static com.ijarah.utils.constants.OperationIDConstants.TRANSFER_ORDER_RESULT_OPERATION_ID;
+import static com.ijarah.utils.constants.ServiceIDConstants.DBXDB_SERVICES_SERVICE_ID;
+import static com.ijarah.utils.constants.ServiceIDConstants.DB_MORA_SERVICES_SERVICE_ID;
+import static com.ijarah.utils.constants.ServiceIDConstants.MORA_T24_SERVICE_ID;
+import static com.ijarah.utils.constants.ServiceIDConstants.NAFAES_REST_API_SERVICE_ID;
+
+import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLContextBuilder;
+import org.apache.http.conn.ssl.TrustAllStrategy;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.apache.log4j.Logger;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.ijarah.Model.AccessToken.AccessTokenResponse;
-import com.ijarah.Model.SanadResponseModel.SingleSanadResponse;
+import com.ijarah.utils.HTTPOperations;
 import com.ijarah.utils.IjarahHelperMethods;
 import com.ijarah.utils.ServiceCaller;
 import com.ijarah.utils.enums.IjarahErrors;
@@ -17,25 +50,6 @@ import com.konylabs.middleware.dataobject.Dataset;
 import com.konylabs.middleware.dataobject.JSONToResult;
 import com.konylabs.middleware.dataobject.Result;
 import com.konylabs.middleware.dataobject.ResultToJSON;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLContextBuilder;
-import org.apache.http.conn.ssl.TrustAllStrategy;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
-import org.apache.log4j.Logger;
-import org.json.JSONObject;
-
-import java.net.URLEncoder;
-import java.util.HashMap;
-import java.util.Map;
-
-import static com.ijarah.utils.ServiceCaller.auditLogData;
-import static com.ijarah.utils.constants.OperationIDConstants.*;
-import static com.ijarah.utils.constants.ServiceIDConstants.*;
 
 public class CreateLoan implements JavaService2 {
 
@@ -70,15 +84,30 @@ public class CreateLoan implements JavaService2 {
                 if (IjarahHelperMethods.hasSuccessCode(getCustomerData) && HelperMethods.hasRecords(getCustomerData)) {
                     Result activateCustomer = activateCustomer(createInputParamsForActivateCustomerService(getCustomerData), dataControllerRequest);
                     if (IjarahHelperMethods.hasSuccessCode(activateCustomer)) {
-                        Result createLoanResult = createLoan(createInputParamsForCreateLoanService(index, getCustomerData), dataControllerRequest);
-                        if (IjarahHelperMethods.hasSuccessCode(createLoanResult)) {
-                            updateCustomerApplicationData(createInputParamsForCustomerApplicationService(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("id")), dataControllerRequest);
+                        // Result createLoanResult = createLoan(createInputParamsForCreateLoanService(index, getCustomerData), dataControllerRequest);
+                        if (true) { //(IjarahHelperMethods.hasSuccessCode(createLoanResult))
+                            // updateCustomerApplicationData(createInputParamsForCustomerApplicationService(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("id")), dataControllerRequest);
                             Result getNafaesData = getNafaesData(getCustomerData, dataControllerRequest);
                             if (IjarahHelperMethods.hasSuccessCode(getNafaesData) && HelperMethods.hasRecords(getNafaesData)) {
                                 extractValuesFromNafaes(getNafaesData);
-                                ACCESS_TOKEN = extractAccessToken();
+                                ACCESS_TOKEN = getAccessToken();
+                                
                                 Result transferOrder = callTransferOrder(dataControllerRequest);
-                                Result saleOrder = callSaleOrder(dataControllerRequest);
+                                LOG.debug("======> Transfer Order Result 1 " +ResultToJSON.convert(transferOrder));
+                                
+                                String transferOrderStatus = transferOrder.getParamValueByName("status");
+                                
+                                if (StringUtils.equalsAnyIgnoreCase("success", transferOrderStatus)) {
+                                	
+                                	Result transferOrderresult = callTransferOrderResult(dataControllerRequest);
+                                	LOG.debug("======> Transfer Order Result 2 " +ResultToJSON.convert(transferOrderresult));
+                                	String transferOrderResult_Status = transferOrderresult.getParamValueByName("status");
+                                	
+                                	if (StringUtils.equalsAnyIgnoreCase("success", transferOrderResult_Status)) {
+                                		Result saleOrder = callSaleOrder(dataControllerRequest);
+                                		LOG.debug("======> Sale Order Result " +ResultToJSON.convert(saleOrder));
+                                	}
+                                }
                                     /*
                                     if (IjarahHelperMethods.hasSuccessCode(transferOrder) && IjarahHelperMethods.hasSuccessCode(saleOrder)) {
                                         updateCustomerApplicationData(createInputParamsForCustomerApplicationService(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("id")), dataControllerRequest);
@@ -113,6 +142,30 @@ public class CreateLoan implements JavaService2 {
         return inputParam;
     }
 
+    
+    private Result callTransferOrderResult(DataControllerRequest dataControllerRequest) {
+        Result result = StatusEnum.error.setStatus();
+        try {
+            Map<String, String> inputParam = new HashMap<>();
+            inputParam.put("uuid", IjarahHelperMethods.generateUUID() + "-TO");
+            inputParam.put("accessToken", ACCESS_TOKEN);
+            inputParam.put("referenceNo", REFERENCE_NUMBER);
+            inputParam.put("orderType", "TO");
+            inputParam.put("lng", "2");
+            Result transferOrderResult = ServiceCaller.internal(NAFAES_REST_API_SERVICE_ID, TRANSFER_ORDER_RESULT_OPERATION_ID, inputParam, null, dataControllerRequest);
+            String inputRequest = (new ObjectMapper()).writeValueAsString(inputParam);
+            String outputResponse = ResultToJSON.convert(transferOrderResult);
+            auditLogData(dataControllerRequest, inputRequest, outputResponse, NAFAES_REST_API_SERVICE_ID + " : " + TRANSFER_ORDER_RESULT_OPERATION_ID);
+            if (IjarahHelperMethods.hasSuccessStatus(transferOrderResult)) {
+                StatusEnum.success.setStatus(transferOrderResult);
+                return transferOrderResult;
+            }
+        } catch (Exception ex) {
+            LOG.error("ERROR callTransferOrder :: " + ex);
+        }
+        return result;
+    }
+    
     private Result callTransferOrder(DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
         try {
@@ -307,6 +360,57 @@ public class CreateLoan implements JavaService2 {
         ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, CUSTOMER_APPLICATION_UPDATE_OPERATION_ID, inputParams, null, dataControllerRequest);
     }
 
+    public static void main(String[] args) {
+    	getAccessToken();
+	}
+    
+    /**
+	 * 
+	 * @param dataControllerRequest
+	 * @return
+	 */
+	private static String getAccessToken() {
+		LOG.debug("==========> Nafaes - excuteLogin - Begin");
+		String authToken = null;
+
+		String loginURL = "https://testapi.nafaes.com/oauth/token?grant_type=password&username=APINIG1102&client_id=IFCSUD2789";
+		LOG.debug("==========> Login URL  :: " + loginURL);
+		HashMap<String, String> paramsMap = new HashMap<>();
+		paramsMap.put("password", "<fq$h(59@3");
+		paramsMap.put("client_secret", "$69$is9@n>");
+
+		HashMap<String, String> headersMap = new HashMap<String, String>();
+
+		String endPointResponse = HTTPOperations.hitPOSTServiceAndGetResponse(loginURL, paramsMap, null, headersMap);
+		JSONObject responseJson = getStringAsJSONObject(endPointResponse);
+		LOG.debug("==========> responseJson :: " + responseJson);
+		authToken = responseJson.getString("access_token");
+		LOG.debug("==========> authToken :: " + authToken);
+		LOG.debug("==========> Nafaes - excuteLogin - End");
+		return authToken;
+	}
+	
+	/**
+	 * Converts the given String into the JSONObject
+	 * 
+	 * @param jsonString
+	 * @return
+	 */
+	public static JSONObject getStringAsJSONObject(String jsonString){
+		JSONObject generatedJSONObject=new JSONObject();
+		if(StringUtils.isBlank(jsonString)) {
+			return null;
+		}
+		try{
+			generatedJSONObject=new JSONObject(jsonString);
+			return generatedJSONObject;
+		}
+		catch(JSONException e){
+			e.printStackTrace();
+			return null;
+		}
+	}
+    
     public String extractAccessToken() {
         try {
             LOG.error("extractAccessToken 1");
