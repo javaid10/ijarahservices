@@ -7,6 +7,8 @@ public class OperationIDConstants {
 
     public static final String SAMPLE_OPERATION_ID = "https://www.google.com";
     public static final String CUSTOMER_APPLICATION_GET_OPERATION_ID = "tbl_customerapplication_get";
+    public static final String MORTGAGE_PRODUCT_GET_OPERATION_ID = "mortgageproduct_get";
+    public static final String EMPLOYER_NAMES_FOR_PENSIONERS_GET_OPERATION_ID = "employernamesforpensioner_get";
 
     public static final String CUSTOMER_APPLICATION_SP_GET_OPERATION_ID = "sp_tbl_customer_application_get";
     public static final String EMDHA_DETAILS_SP_GET_OPERATION_ID = "sp_get_details_for_emdha";
@@ -14,8 +16,13 @@ public class OperationIDConstants {
     public static final String DOCUMENT_STORAGE_GET_OPERATION_ID = "document_storage_get";
     public static final String DOCUMENT_STORAGE_UPDATE_OPERATION_ID = "document_storage_update";
     public static final String CUSTOMER_APPLICATION_UPDATE_OPERATION_ID = "tbl_customerapplication_update";
-    public static final String CUSTOMER_ADDRESS_CREATE_OPERATION_ID = "address_create";
-    public static final String EMPLOYER_DETAILS_CREATE_OPERATION_ID = "employerdetails_create";
+
+    public static final String TBL_CUSTOMER_ADDRESS_GET_OPERATION_ID = "tbl_address_get";
+    public static final String TBL_CUSTOMER_ADDRESS_CREATE_OPERATION_ID = "tbl_address_create";
+    public static final String TBL_CUSTOMER_ADDRESS_UPDATE_OPERATION_ID = "tbl_address_update";
+    public static final String TBL_EMPLOYER_DETAILS_GET_OPERATION_ID = "tbl_employerdetails_get";
+    public static final String TBL_EMPLOYER_DETAILS_CREATE_OPERATION_ID = "tbl_employerdetails_create";
+    public static final String TBL_EMPLOYER_DETAILS_UPDATE_OPERATION_ID = "tbl_employerdetails_update";
     public static final String CONSUMER_ENQUIRY_OPERATION_ID = "ConusmerEnquiry";
     public static final String SIMAH_SALARY_CERT_OPERATION_ID = "getSalaryCertificate";
     public static final String GET_CITIZEN_ADDRESS_INFO_OPERATION_ID = "getCitizenAddressInfo";

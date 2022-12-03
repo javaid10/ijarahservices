@@ -232,14 +232,14 @@ public class CreateLoan implements JavaService2 {
     private Map<String, String> createInputParamsForCreateLoanService(int index, Result getCustomerData) {
         Map<String, String> inputParams = new HashMap<>();
         try {
-            inputParams.put("partyId", HelperMethods.getFieldValue(getCustomerData, "partyId"));
+            inputParams.put("partyId", StringUtils.isNotBlank(HelperMethods.getFieldValue(getCustomerData, "partyId")) ? HelperMethods.getFieldValue(getCustomerData, "partyId") : "");
             inputParams.put("fixedAmount", FIXED_AMOUNT_VALUE);
             inputParams.put("amount", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("offerAmount").replace(",", ""));
             inputParams.put("fixed", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("loanRate"));
             inputParams.put("term", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("tenor") + "M");
-            inputParams.put("sabbNumber", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sabbNumber"));
-            inputParams.put("sadadNumber", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sadadNumber"));
-            inputParams.put("sanadRef", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sanadNumber"));
+            inputParams.put("sabbNumber", StringUtils.isNotBlank(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sabbNumber")) ? CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sabbNumber") : "");
+            inputParams.put("sadadNumber", StringUtils.isNotBlank(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sadadNumber")) ? CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sadadNumber") : "");
+            inputParams.put("sanadRef", StringUtils.isNotBlank(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sanadNumber")) ? CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sanadNumber") : "");
             inputParams.put("infIoanRef", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("applicationID"));
         } catch (Exception ex) {
             LOG.error("ERROR createInputParamsForCreateLoanService :: " + ex);
