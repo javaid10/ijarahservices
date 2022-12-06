@@ -328,9 +328,9 @@ public class ScoringEngine implements JavaService2 {
                         + mainObj.optJSONObject("addressListList").optString("unitNumber"));
                 inputParams.put("addressCity", mainObj.optJSONObject("addressListList").optString("city"));
             } else {
-                inputParams.put("street", "-");
-                inputParams.put("address", "-");
-                inputParams.put("addressCity", "-");
+                inputParams.put("street", "streetValue");
+                inputParams.put("address", "addressValue");
+                inputParams.put("addressCity", "addressCityValue");
             }
 
             LOG.error("createRequestForT24CustomerAddressUpdateService Single Address " + inputParams);
@@ -346,9 +346,9 @@ public class ScoringEngine implements JavaService2 {
                 inputParams.put("addressCity",
                         mainObj.optJSONArray("addressListList").getJSONObject(0).optString("city"));
             } else {
-                inputParams.put("street", "-");
-                inputParams.put("address", "-");
-                inputParams.put("addressCity", "-");
+                inputParams.put("street", "streetValue");
+                inputParams.put("address", "addressValue");
+                inputParams.put("addressCity", "addressCityValue");
             }
             LOG.error("createRequestForCreateCustomerAddressService Multiple Address " + inputParams);
         }
@@ -629,19 +629,19 @@ public class ScoringEngine implements JavaService2 {
                 inputParams.put("employeejobtitle", getSalaryCertificate.getParamValueByName("employeeJobTitle"));
                 break;
             case "3":
-                inputParams.put("agencycode", "-");
-                inputParams.put("accountnumber", "-");
-                inputParams.put("employeejobnumber", "-");
+                inputParams.put("agencycode", "agencycodeValue");
+                inputParams.put("accountnumber", "accountnumberValue");
+                inputParams.put("employeejobnumber", "employeejobnumberValue");
                 inputParams.put("agencyname", getSalaryCertificate.getParamValueByName("employerName"));
                 inputParams.put("govsalary", getSalaryCertificate.getParamValueByName("basicWage"));
                 inputParams.put("agencyemploymentdate", getSalaryCertificate.getParamValueByName("dateOfJoining"));
-                inputParams.put("paymonth", "-");
-                inputParams.put("employeenamear", "-");
+                inputParams.put("paymonth", "paymonthValue");
+                inputParams.put("employeenamear", "employeenamearValue");
                 inputParams.put("totalallownces", getSalaryCertificate.getParamValueByName("otherAllowance"));
                 inputParams.put("basicsalary", getSalaryCertificate.getParamValueByName("basicWage"));
                 inputParams.put("netsalary", getSalaryCertificate.getParamValueByName("basicWage"));
                 inputParams.put("employeenameen", getSalaryCertificate.getParamValueByName("fullName"));
-                inputParams.put("employeejobtitle", "-");
+                inputParams.put("employeejobtitle", "employeejobtitleValue");
                 break;
         }
         return inputParams;
@@ -721,8 +721,8 @@ public class ScoringEngine implements JavaService2 {
             inputParams.put("CEML", "test@gmail.com");
             inputParams.put("CADR", "");
             inputParams.put("CAD1A", "1223");
-            inputParams.put("CAD7", "-" /* getNationalAddress.getParamValueByName("postCode") */);
-            inputParams.put("CAD8E", "-" /* getNationalAddress.getParamValueByName("city") */);
+            inputParams.put("CAD7", "CAD7Value" /* getNationalAddress.getParamValueByName("postCode") */);
+            inputParams.put("CAD8E", "CAD8EValue" /* getNationalAddress.getParamValueByName("city") */);
             inputParams.put("CAD9", "SAU");
             inputParams.put("CCN1", "M");
             inputParams.put("CCN2", "966");
@@ -1304,18 +1304,18 @@ public class ScoringEngine implements JavaService2 {
                     if (getSalaryCertificate.getParamValueByName("agencyName") != null) {
                         EMPLOYER_NAME = getSalaryCertificate.getParamValueByName("agencyName");
                     } else {
-                        EMPLOYER_NAME = "-";
+                        EMPLOYER_NAME = "EMPLOYER_NAME_VALUE";
                     }
                     break;
                 case "3":
                     if (getSalaryCertificate.getParamValueByName("employerName") != null) {
                         EMPLOYER_NAME = getSalaryCertificate.getParamValueByName("employerName");
                     } else {
-                        EMPLOYER_NAME = "-";
+                        EMPLOYER_NAME = "EMPLOYER_NAME_VALUE";
                     }
                     break;
                 default:
-                    EMPLOYER_NAME = "-";
+                    EMPLOYER_NAME = "EMPLOYER_NAME_VALUE";
                     break;
             }
 
