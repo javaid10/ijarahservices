@@ -29,7 +29,10 @@ public enum IjarahErrors {
     ERR_UNABLE_TO_SIGN_DOCUMENT_015("015", "Unable To Get Document Signed By Emdha"),
     ERR_NO_DOCUMENT_FOUND_016("016", "No Document Found"),
     ERR_NO_DOCUMENT_STORAGE_RECORD_FOUND_017("017", "No Document Record Found"),
-    ERR_660028("660028", "Knockout Failed, Application has Declined");
+    ERR_660028("660028", "Knockout Failed, Application has Declined"),
+    ERR_GET_VOUCHER_DETAILS_SERVICE_FAILED_018("018", "Get Voucher Details Service Failed."),
+    ERR_GET_USER_ID_FAILED_019("019", "Failed to fetch User ID from Session."),
+    ERR_GET_USER_ID_FAILED_020("020", "No voucher found");
 
     public static final String ERROR_CODE_KEY = "dbpErrCode";
     public static final String ERROR_MESSAGE_KEY = "dbpErrMsg";

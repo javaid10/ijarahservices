@@ -13,6 +13,7 @@ import com.ijarah.Model.ScorecardS3.ScoreCardS3;
 import com.ijarah.Model.consumerEnquiryModel.*;
 import com.ijarah.Model.consumerEnquiryModel.RESPONSEItem;
 
+import com.ijarah.Model.consumerEnquiryModelFinal.ConsumerEnquiryModelResponse;
 import com.ijarah.utils.IjarahHelperMethods;
 import com.ijarah.utils.ServiceCaller;
 import com.ijarah.utils.enums.IjarahErrors;
@@ -40,7 +41,6 @@ import static com.ijarah.utils.IjarahHelperMethods.*;
 import static com.ijarah.utils.ServiceCaller.auditLogData;
 import static com.ijarah.utils.constants.OperationIDConstants.*;
 import static com.ijarah.utils.constants.ServiceIDConstants.*;
-import static com.kony.adminconsole.commons.utils.InlineServiceExecutor.LOG;
 
 public class ScoringEngine implements JavaService2 {
 
@@ -108,6 +108,8 @@ public class ScoringEngine implements JavaService2 {
     private double CUSTOMER_INTERNAL_DTI = 0.0;
     private String PARTY_ID = "";
     private String SC_SCORE = "0";
+    private List<com.ijarah.Model.consumerEnquiryModelFinal.CIDETAILSItem> CI_DETAIL2;
+    private List<com.ijarah.Model.consumerEnquiryModelFinal.DEFAULTSItem> DEFAULT2;
 
     @Override
     public Object invoke(String s, Object[] objects, DataControllerRequest dataControllerRequest,
@@ -184,11 +186,8 @@ public class ScoringEngine implements JavaService2 {
                 Result getConsumerEnquiry = getSIMAHConsumerEnquiry(
                         createRequestForConsumerEnquiryService(inputParams, getCustomerData, getSalaryCertificate),
                         dataControllerRequest);
-                Gson gson = new Gson();
-                ConsumerEnquiry consumerEnquiry = gson.fromJson(ResultToJSON.convert(getConsumerEnquiry),
-                        ConsumerEnquiry.class);
 
-                extractValuesFromConsumerEnquiryResponse(consumerEnquiry);
+                extractValuesFromConsumerEnquiryResponse(getConsumerEnquiry);
                 initMortgageProductArray(dataControllerRequest);
                 calculateMaxGlobalDTI();
                 calculateMaxInternalDTI();
@@ -424,11 +423,16 @@ public class ScoringEngine implements JavaService2 {
         return inputParams;
     }
 
-    private void extractValuesFromConsumerEnquiryResponse(ConsumerEnquiry consumerEnquiry) {
+    private void extractValuesFromConsumerEnquiryResponse(Result getConsumerEnquiry) {
+
+        Gson gson = new Gson();
+        ConsumerEnquiry consumerEnquiry = gson.fromJson(ResultToJSON.convert(getConsumerEnquiry),
+                ConsumerEnquiry.class);
 
         CONSUMERItem CONSUMER = new CONSUMERItem();
         boolean isConsumer = false;
         if (consumerEnquiry.getDATA() != null && consumerEnquiry.getDATA().size() > 0) {
+            LOG.error("ConsumerEnquiryModelResponse OLD");
             DATAItem DATA = consumerEnquiry.getDATA().get(0);
             if (DATA.getRESPONSE() != null && DATA.getRESPONSE().size() > 0) {
                 RESPONSEItem RESPONSE = DATA.getRESPONSE().get(0);
@@ -484,6 +488,25 @@ public class ScoringEngine implements JavaService2 {
                 SCOREItem SCORE = CONSUMER.getSCORE().get(0);
                 if (SCORE.getSCSCORE() != null) {
                     SC_SCORE = SCORE.getSCSCORE();
+                }
+            }
+        } else {
+            Gson gson2 = new Gson();
+            ConsumerEnquiryModelResponse consumerEnquiryModelResponse = gson2.fromJson(ResultToJSON.convert(getConsumerEnquiry),
+                    ConsumerEnquiryModelResponse.class);
+
+            if (consumerEnquiryModelResponse != null) {
+                LOG.error("ConsumerEnquiryModelResponse FINAL");
+                if (consumerEnquiryModelResponse.getCIDETAILS() != null && consumerEnquiryModelResponse.getCIDETAILS().size() > 0) {
+                    CI_DETAIL2 = consumerEnquiryModelResponse.getCIDETAILS();
+                }
+                if (consumerEnquiryModelResponse.getSCORE() != null) {
+                    if (consumerEnquiryModelResponse.getSCORE().getSCSCORE() != null) {
+                        SC_SCORE = consumerEnquiryModelResponse.getSCORE().getSCSCORE();
+                    }
+                }
+                if (consumerEnquiryModelResponse.getDEFAULTS() != null && consumerEnquiryModelResponse.getDEFAULTS().size() > 0) {
+                    DEFAULT2 = consumerEnquiryModelResponse.getDEFAULTS();
                 }
             }
         }
@@ -1057,6 +1080,28 @@ public class ScoringEngine implements JavaService2 {
                         break;
                     }
                 }
+            } else {
+                if (CI_DETAIL2 != null && CI_DETAIL2.size() > 0) {
+                    for (com.ijarah.Model.consumerEnquiryModelFinal.CIDETAILSItem ci_detail : CI_DETAIL2) {
+                        String productType = ci_detail.getCIPRD();
+                        String status = ci_detail.getCISTATUS();
+                        if (Arrays.asList(MORTGAGE_PRODUCT).contains(productType) && status.equalsIgnoreCase("A")) {
+                            if (Double.parseDouble(MONTHLY_NET_SALARY) < 3000) {
+                                MAX_GLOBAL_DTI = 65;
+                            } else if (Double.parseDouble(MONTHLY_NET_SALARY) < 14999) {
+                                MAX_GLOBAL_DTI = 65;
+                            }
+                            break;
+                        } else {
+                            if (Double.parseDouble(MONTHLY_NET_SALARY) < 3000) {
+                                MAX_GLOBAL_DTI = 65;
+                            } else if (Double.parseDouble(MONTHLY_NET_SALARY) < 14999) {
+                                MAX_GLOBAL_DTI = 65;
+                            }
+                            break;
+                        }
+                    }
+                }
             }
         }
     }
@@ -1081,6 +1126,28 @@ public class ScoringEngine implements JavaService2 {
                             MAX_INTERNAL_DTI = 30;
                         }
                         break;
+                    }
+                }
+            } else {
+                if (CI_DETAIL2 != null && CI_DETAIL2.size() > 0) {
+                    for (com.ijarah.Model.consumerEnquiryModelFinal.CIDETAILSItem ci_detail : CI_DETAIL2) {
+                        String productType = ci_detail.getCIPRD();
+                        String status = ci_detail.getCISTATUS();
+                        if (Arrays.asList(MORTGAGE_PRODUCT).contains(productType) && status.equalsIgnoreCase("A")) {
+                            if (Double.parseDouble(MONTHLY_NET_SALARY) < 3000) {
+                                MAX_INTERNAL_DTI = 25;
+                            } else if (Double.parseDouble(MONTHLY_NET_SALARY) < 14999) {
+                                MAX_INTERNAL_DTI = 30;
+                            }
+                            break;
+                        } else {
+                            if (Double.parseDouble(MONTHLY_NET_SALARY) < 3000) {
+                                MAX_INTERNAL_DTI = 25;
+                            } else if (Double.parseDouble(MONTHLY_NET_SALARY) < 14999) {
+                                MAX_INTERNAL_DTI = 30;
+                            }
+                            break;
+                        }
                     }
                 }
             }
@@ -1141,6 +1208,43 @@ public class ScoringEngine implements JavaService2 {
             if (CUSTOMER_GLOBAL_DTI >= MAX_GLOBAL_DTI) {
                 GLOBAL_DTI = "0";
             }
+        } else {
+            if (CI_DETAIL2 != null && CI_DETAIL2.size() > 0) {
+                double totalDebtServicing = 0;
+                for (com.ijarah.Model.consumerEnquiryModelFinal.CIDETAILSItem ci_detail : CI_DETAIL2) {
+                    String productType = ci_detail.getCIPRD();
+
+                    String status = ci_detail.getCISTATUS();
+                    if (!Arrays.asList(NON_FINANCIAL_PRODUCTS).contains(productType) && status.equalsIgnoreCase("A")) {
+                        // Financial product
+                        String frequency = ci_detail.getCIFRQ();
+                        double installment = Double.parseDouble(ci_detail.getCIINSTL());
+                        String creditLimit = ci_detail.getCILIMIT();
+
+                        if (Arrays.asList(CREDIT_CARD_PRODUCT).contains(productType)) {
+                            totalDebtServicing += 0.05 * Double.parseDouble(creditLimit);
+                        } else {
+                            if (frequency.equalsIgnoreCase("M")) {
+                                totalDebtServicing += installment;
+                            } else if (frequency.equalsIgnoreCase("Q")) {
+                                totalDebtServicing += installment / 3;
+                            } else if (frequency.equalsIgnoreCase("H")) {
+                                totalDebtServicing += installment / 6;
+                            } else if (frequency.equalsIgnoreCase("Y")) {
+                                totalDebtServicing += installment / 12;
+                            } else {
+                                totalDebtServicing += installment;
+                            }
+                        }
+                    }
+                }
+                LOG.error("#Ghufran totalDebtServicing :: " + totalDebtServicing);
+                CUSTOMER_GLOBAL_DTI = (totalDebtServicing / Double.parseDouble(MONTHLY_NET_SALARY)) * 100;
+                LOG.error("#Ghufran CUSTOMER_GLOBAL_DTI :: " + CUSTOMER_GLOBAL_DTI);
+                if (CUSTOMER_GLOBAL_DTI >= MAX_GLOBAL_DTI) {
+                    GLOBAL_DTI = "0";
+                }
+            }
         }
     }
 
@@ -1181,6 +1285,43 @@ public class ScoringEngine implements JavaService2 {
             if (CUSTOMER_INTERNAL_DTI >= MAX_INTERNAL_DTI) {
                 INTERNAL_DTI = "0";
             }
+        } else {
+            if (CI_DETAIL2 != null && CI_DETAIL2.size() > 0) {
+                double totalDebtServicing = 0;
+                for (com.ijarah.Model.consumerEnquiryModelFinal.CIDETAILSItem ci_detail : CI_DETAIL2) {
+                    String productType = ci_detail.getCIPRD();
+                    String productCode = ci_detail.getCICRDTR();
+
+                    String status = ci_detail.getCISTATUS();
+                    if (!Arrays.asList(NON_FINANCIAL_PRODUCTS).contains(productType) && status.equalsIgnoreCase("A")
+                            && productCode.equalsIgnoreCase("IJRH")) {
+                        // Financial product
+                        String frequency = ci_detail.getCIFRQ();
+                        double installment = Double.parseDouble(ci_detail.getCIINSTL());
+                        String creditLimit = ci_detail.getCILIMIT();
+
+                        if (Arrays.asList(CREDIT_CARD_PRODUCT).contains(productType)) {
+                            totalDebtServicing += 0.05 * Integer.parseInt(creditLimit);
+                        } else {
+                            if (frequency.equalsIgnoreCase("M")) {
+                                totalDebtServicing += installment;
+                            } else if (frequency.equalsIgnoreCase("Q")) {
+                                totalDebtServicing += installment / 3;
+                            } else if (frequency.equalsIgnoreCase("H")) {
+                                totalDebtServicing += installment / 6;
+                            } else if (frequency.equalsIgnoreCase("Y")) {
+                                totalDebtServicing += installment / 12;
+                            } else {
+                                totalDebtServicing += installment;
+                            }
+                        }
+                    }
+                }
+                CUSTOMER_INTERNAL_DTI = (totalDebtServicing / Double.parseDouble(MONTHLY_NET_SALARY)) * 100;
+                if (CUSTOMER_INTERNAL_DTI >= MAX_INTERNAL_DTI) {
+                    INTERNAL_DTI = "0";
+                }
+            }
         }
     }
 
@@ -1201,6 +1342,26 @@ public class ScoringEngine implements JavaService2 {
                     }
                     if (firstMonthDelinquency == 'M') {
                         CURRENT_DELINQUENCY_T = "0";
+                    }
+                }
+            }
+        } else {
+            if (CI_DETAIL2 != null && CI_DETAIL2.size() > 0) {
+                for (com.ijarah.Model.consumerEnquiryModelFinal.CIDETAILSItem ci_detail : CI_DETAIL2) {
+                    String productType = ci_detail.getCIPRD();
+                    String summary = ci_detail.getCISUMMRY();
+                    if (!Arrays.asList(NON_FINANCIAL_PRODUCTS).contains(productType)) {
+                        // Financial Product
+                        char firstMonthDelinquency = summary.charAt(0);
+                        if (Chars.contains(CURRENT_DELINQUENCY_VALUES, firstMonthDelinquency)) {
+                            CURRENT_DELINQUENCY = "1";
+                        } else {
+                            CURRENT_DELINQUENCY = "0";
+                            break;
+                        }
+                        if (firstMonthDelinquency == 'M') {
+                            CURRENT_DELINQUENCY_T = "0";
+                        }
                     }
                 }
             }
@@ -1227,6 +1388,26 @@ public class ScoringEngine implements JavaService2 {
                     MAX_DELINQUENCY = String.valueOf(Character.getNumericValue(tempMaxDelinquency));
                 }
             }
+        } else {
+            if (CI_DETAIL2 != null && CI_DETAIL2.size() > 0) {
+                int tempMaxDelinquency = 0;
+                for (com.ijarah.Model.consumerEnquiryModelFinal.CIDETAILSItem ci_detail : CI_DETAIL2) {
+                    String productType = ci_detail.getCIPRD();
+                    String summary = ci_detail.getCISUMMRY();
+                    if (!Arrays.asList(NON_FINANCIAL_PRODUCTS).contains(productType)) {
+                        // Financial Product
+                        char[] summaryChar = summary.toCharArray();
+                        for (char delinquencyChar : summaryChar) {
+                            if (Character.isDigit(delinquencyChar)) {
+                                if (tempMaxDelinquency < delinquencyChar) {
+                                    tempMaxDelinquency = delinquencyChar;
+                                }
+                            }
+                        }
+                        MAX_DELINQUENCY = String.valueOf(Character.getNumericValue(tempMaxDelinquency));
+                    }
+                }
+            }
         }
     }
 
@@ -1238,6 +1419,16 @@ public class ScoringEngine implements JavaService2 {
                 if (!Arrays.asList(NON_FINANCIAL_PRODUCTS).contains(productType)) {
                     double FINANCIAL_DEFAULT_AMOUNT_TEMP = Double.parseDouble(defaultItem.getDFCUB());
                     FINANCIAL_DEFAULT_AMOUNT += FINANCIAL_DEFAULT_AMOUNT_TEMP;
+                }
+            }
+        } else {
+            if (DEFAULT2 != null && DEFAULT2.size() > 0) {
+                for (com.ijarah.Model.consumerEnquiryModelFinal.DEFAULTSItem defaultItem : DEFAULT2) {
+                    String productType = defaultItem.getDFPRD();
+                    if (!Arrays.asList(NON_FINANCIAL_PRODUCTS).contains(productType)) {
+                        double FINANCIAL_DEFAULT_AMOUNT_TEMP = Double.parseDouble(defaultItem.getDFCUB());
+                        FINANCIAL_DEFAULT_AMOUNT += FINANCIAL_DEFAULT_AMOUNT_TEMP;
+                    }
                 }
             }
         }
@@ -1252,6 +1443,16 @@ public class ScoringEngine implements JavaService2 {
                 if (Arrays.asList(NON_FINANCIAL_PRODUCTS).contains(productType)) {
                     double NON_FINANCIAL_DEFAULT_AMOUNT_TEMP = Double.parseDouble(defaultItem.getDFCUB());
                     NON_FINANCIAL_DEFAULT_AMOUNT += NON_FINANCIAL_DEFAULT_AMOUNT_TEMP;
+                }
+            }
+        } else {
+            if (DEFAULT2 != null && DEFAULT2.size() > 0) {
+                for (com.ijarah.Model.consumerEnquiryModelFinal.DEFAULTSItem defaultItem : DEFAULT2) {
+                    String productType = defaultItem.getDFPRD();
+                    if (Arrays.asList(NON_FINANCIAL_PRODUCTS).contains(productType)) {
+                        double NON_FINANCIAL_DEFAULT_AMOUNT_TEMP = Double.parseDouble(defaultItem.getDFCUB());
+                        NON_FINANCIAL_DEFAULT_AMOUNT += NON_FINANCIAL_DEFAULT_AMOUNT_TEMP;
+                    }
                 }
             }
         }
@@ -1339,6 +1540,16 @@ public class ScoringEngine implements JavaService2 {
                     if (!Arrays.asList(NON_FINANCIAL_PRODUCTS).contains(productType)) {
                         NEW_TO_INDUSTRY = "N";
                         break;
+                    }
+                }
+            } else {
+                if (CI_DETAIL2 != null && CI_DETAIL2.size() > 0) {
+                    for (com.ijarah.Model.consumerEnquiryModelFinal.CIDETAILSItem ci_detail : CI_DETAIL2) {
+                        String productType = ci_detail.getCIPRD();
+                        if (!Arrays.asList(NON_FINANCIAL_PRODUCTS).contains(productType)) {
+                            NEW_TO_INDUSTRY = "N";
+                            break;
+                        }
                     }
                 }
             }

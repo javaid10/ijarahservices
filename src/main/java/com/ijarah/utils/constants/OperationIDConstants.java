@@ -55,6 +55,7 @@ public class OperationIDConstants {
     public static final String LOAN_SIMULATION_ORCH_OPERATION_ID = "LoanSimulationOrch";
     public static final String PAYMENT_SCHEDULE_OPERATION_ID = "PaymentScheduleOrch";
     public static final String EMDHA_SIGN_OPERATION_ID = "EmdhaSign";
+    public static final String SP_GET_VOUCHER_DETAILS_OPERATION_ID = "sp_get_voucher_details";
 }
 
 
