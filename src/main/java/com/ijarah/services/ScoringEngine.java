@@ -3,7 +3,6 @@ package com.ijarah.services;
 import com.google.common.primitives.Chars;
 import com.google.gson.Gson;
 
-
 import com.ijarah.Model.EMPLOYER_NAME_FOR_PENSIONERS.EmployerNameForPensionerResponse;
 import com.ijarah.Model.EMPLOYER_NAME_FOR_PENSIONERS.EmployernamesforpensionerItem;
 import com.ijarah.Model.MORTGAGE_PRODUCT.MortgageProductResponse;
@@ -13,6 +12,8 @@ import com.ijarah.Model.ScorecardS3.ScoreCardS3;
 import com.ijarah.Model.consumerEnquiryModel.*;
 import com.ijarah.Model.consumerEnquiryModel.RESPONSEItem;
 
+import com.dbp.core.error.DBPApplicationException;
+import com.dbp.core.fabric.extn.DBPServiceExecutorBuilder;
 import com.ijarah.Model.consumerEnquiryModelFinal.ConsumerEnquiryModelResponse;
 import com.ijarah.utils.IjarahHelperMethods;
 import com.ijarah.utils.ServiceCaller;
@@ -68,10 +69,10 @@ public class ScoringEngine implements JavaService2 {
     String EMPLOYMENT_STATUS = "";
 
     String[] MORTGAGE_PRODUCT;
-    String[] CREDIT_CARD_PRODUCT = {"CDC", "CHC", "CRC", "LCRC"};
+    String[] CREDIT_CARD_PRODUCT = { "CDC", "CHC", "CRC", "LCRC" };
     String[] EMPLOYER_NAME_FOR_PENSIONERS;
-    String[] NON_FINANCIAL_PRODUCTS = {"MBL", "LND", "DAT", "NET"};
-    char[] CURRENT_DELINQUENCY_VALUES = {'0', 'C', 'D', 'N'};
+    String[] NON_FINANCIAL_PRODUCTS = { "MBL", "LND", "DAT", "NET" };
+    char[] CURRENT_DELINQUENCY_VALUES = { '0', 'C', 'D', 'N' };
 
     int MAX_GLOBAL_DTI = 45;
     int MAX_INTERNAL_DTI = 33;
@@ -107,13 +108,21 @@ public class ScoringEngine implements JavaService2 {
     private double CUSTOMER_GLOBAL_DTI = 0.0;
     private double CUSTOMER_INTERNAL_DTI = 0.0;
     private String PARTY_ID = "";
+
+    // Rajath Params for schedule and simulation
+
+    private String EMI = "";
+    private String SAAD = "";
+    private String SABB = "";
+    private String SIMID = "";
+    private String AAID = "";
     private String SC_SCORE = "0";
     private List<com.ijarah.Model.consumerEnquiryModelFinal.CIDETAILSItem> CI_DETAIL2;
     private List<com.ijarah.Model.consumerEnquiryModelFinal.DEFAULTSItem> DEFAULT2;
 
     @Override
     public Object invoke(String s, Object[] objects, DataControllerRequest dataControllerRequest,
-                         DataControllerResponse dataControllerResponse) throws Exception {
+            DataControllerResponse dataControllerResponse) throws Exception {
         Result result = StatusEnum.error.setStatus();
         try {
             EMPLOYER_TYPE_ID = "1";
@@ -205,6 +214,7 @@ public class ScoringEngine implements JavaService2 {
                 Result getScoreCardS3 = calculateScoreCardS3(createRequestForScoreCardS3Service(getConsumerEnquiry),
                         dataControllerRequest);
                 calculateMaxEmi();
+
                 // DB INTEGRATION SERVICES CALLS
                 result = updateCustomerApplicationData(createRequestForUpdateCustomerApplicationDataService(
                         getCustomerApplicationData, getScoreCardS2, getScoreCardS3), dataControllerRequest);
@@ -219,7 +229,8 @@ public class ScoringEngine implements JavaService2 {
     private void initMortgageProductArray(DataControllerRequest dataControllerRequest) {
         Result getMortgageProductsResponse = getMortgageProducts(dataControllerRequest);
         Gson gson = new Gson();
-        MortgageProductResponse mortgageProductResponse = gson.fromJson(ResultToJSON.convert(getMortgageProductsResponse), MortgageProductResponse.class);
+        MortgageProductResponse mortgageProductResponse = gson
+                .fromJson(ResultToJSON.convert(getMortgageProductsResponse), MortgageProductResponse.class);
         extractValuesFromMortgageProductResponse(mortgageProductResponse);
     }
 
@@ -237,7 +248,8 @@ public class ScoringEngine implements JavaService2 {
         Result result = StatusEnum.error.setStatus();
         try {
             Map<String, String> inputParams = new HashMap<>();
-            return ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, MORTGAGE_PRODUCT_GET_OPERATION_ID, inputParams, null, dataControllerRequest);
+            return ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, MORTGAGE_PRODUCT_GET_OPERATION_ID, inputParams,
+                    null, dataControllerRequest);
         } catch (Exception ex) {
             LOG.error("ERROR getCustomerApplicationData :: " + ex);
         }
@@ -247,12 +259,15 @@ public class ScoringEngine implements JavaService2 {
     private void initEmployerNamesForPensionerArray(DataControllerRequest dataControllerRequest) {
         Result getEmployerNameForPensionersResponse = getEmployerNameForPensioners(dataControllerRequest);
         Gson gson = new Gson();
-        EmployerNameForPensionerResponse employerNameForPensionerResponse = gson.fromJson(ResultToJSON.convert(getEmployerNameForPensionersResponse), EmployerNameForPensionerResponse.class);
+        EmployerNameForPensionerResponse employerNameForPensionerResponse = gson.fromJson(
+                ResultToJSON.convert(getEmployerNameForPensionersResponse), EmployerNameForPensionerResponse.class);
         extractValuesFromEmployerNamesForPensionerResponse(employerNameForPensionerResponse);
     }
 
-    private void extractValuesFromEmployerNamesForPensionerResponse(EmployerNameForPensionerResponse employerNameForPensionerResponse) {
-        List<EmployernamesforpensionerItem> employerNamesForPensionerList = employerNameForPensionerResponse.getEmployernamesforpensioner();
+    private void extractValuesFromEmployerNamesForPensionerResponse(
+            EmployerNameForPensionerResponse employerNameForPensionerResponse) {
+        List<EmployernamesforpensionerItem> employerNamesForPensionerList = employerNameForPensionerResponse
+                .getEmployernamesforpensioner();
         EMPLOYER_NAME_FOR_PENSIONERS = new String[employerNamesForPensionerList.size()];
         int index = 0;
         for (EmployernamesforpensionerItem employernamesforpensionerItem : employerNamesForPensionerList) {
@@ -265,7 +280,8 @@ public class ScoringEngine implements JavaService2 {
         Result result = StatusEnum.error.setStatus();
         try {
             Map<String, String> inputParams = new HashMap<>();
-            return ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, EMPLOYER_NAMES_FOR_PENSIONERS_GET_OPERATION_ID, inputParams, null, dataControllerRequest);
+            return ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, EMPLOYER_NAMES_FOR_PENSIONERS_GET_OPERATION_ID,
+                    inputParams, null, dataControllerRequest);
         } catch (Exception ex) {
             LOG.error("ERROR getEmployerNameForPensioners :: " + ex);
         }
@@ -273,7 +289,7 @@ public class ScoringEngine implements JavaService2 {
     }
 
     private Result createT24CustomerAddressUpdate(Map<String, String> inputParams,
-                                                  DataControllerRequest dataControllerRequest) {
+            DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
         try {
             Result T24CustomerAddress = ServiceCaller.internal(MORA_T24_SERVICE_ID,
@@ -285,13 +301,13 @@ public class ScoringEngine implements JavaService2 {
             StatusEnum.success.setStatus(T24CustomerAddress);
             return T24CustomerAddress;
         } catch (Exception ex) {
-            LOG.error("ERROR createT24CustomerAddressUpdate :: " + ex);
+            LOG.error("ERROR createT24CustomerAddressUpdate :: ", ex);
         }
         return result;
     }
 
     private Result createT24CustomerEmployeeDetails(Map<String, String> inputParams,
-                                                    DataControllerRequest dataControllerRequest) {
+            DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
         try {
             Result T24CustomerEmployeeDetails = ServiceCaller.internal(MORA_T24_SERVICE_ID,
@@ -305,9 +321,53 @@ public class ScoringEngine implements JavaService2 {
             StatusEnum.success.setStatus(T24CustomerEmployeeDetails);
             return T24CustomerEmployeeDetails;
         } catch (Exception ex) {
-            LOG.error("ERROR createT24CustomerEmployeeDetails :: " + ex);
+            LOG.error("ERROR createT24CustomerEmployeeDetails :: ", ex);
         }
         return result;
+    }
+
+    private String getLoanSimulation(HashMap<String, Object> inputParams) {
+        String schedRes = "";
+        try {
+            String res = DBPServiceExecutorBuilder.builder().withServiceId("LoanSimulationSchedulePayment")
+                    .withOperationId("LoanSimulation")
+                    .withRequestParameters(inputParams).build().getResponse();
+            LOG.error("====:::::  Response from SIMULATION  :::::" + res);
+            JSONObject JsonResponse = new JSONObject(res);
+            SIMID = JsonResponse.optString("simulationId");
+            AAID = JsonResponse.optString("arrangementId");
+
+            if (!SIMID.equals("") && !AAID.equals("")) {
+                Thread.sleep(Long.parseLong("20000"));
+                LOG.error("====::::: Inside if condition  :::::");
+
+                HashMap<String, Object> schedParam = new HashMap();
+                schedParam.put("simulationId", SIMID);
+                schedParam.put("arrangementId", AAID);
+
+                schedRes = DBPServiceExecutorBuilder.builder().withServiceId("LoanSimulationSchedulePayment")
+                        .withOperationId("PaymentScheduleOrch")
+                        .withRequestParameters(schedParam).build().getResponse();
+                JSONObject jsonSchedule = new JSONObject(schedRes);
+
+                EMI = jsonSchedule.getJSONArray("body").getJSONObject(1).optString("totalAmount");
+
+                SAAD = jsonSchedule.getJSONArray("body").getJSONObject(0).optString("sadadNumber");
+
+                SABB = jsonSchedule.getJSONArray("body").getJSONObject(0).optString("sabbNumber");
+
+                LOG.error("====:::::  Response from Schedule  :::::" + schedRes);
+
+                LOG.error("Sabb number ======" + SAAD);
+                LOG.error("Sabb number ======" + EMI);
+                LOG.error("Sabb number ======" + SABB);
+
+            }
+
+        } catch (Exception ex) {
+            LOG.error("ERROR getLoanSimulation :: ", ex);
+        }
+        return schedRes;
     }
 
     private Map<String, String> createRequestForT24CustomerAddressUpdateService(Result getNationalAddress) {
@@ -492,12 +552,14 @@ public class ScoringEngine implements JavaService2 {
             }
         } else {
             Gson gson2 = new Gson();
-            ConsumerEnquiryModelResponse consumerEnquiryModelResponse = gson2.fromJson(ResultToJSON.convert(getConsumerEnquiry),
+            ConsumerEnquiryModelResponse consumerEnquiryModelResponse = gson2.fromJson(
+                    ResultToJSON.convert(getConsumerEnquiry),
                     ConsumerEnquiryModelResponse.class);
 
             if (consumerEnquiryModelResponse != null) {
                 LOG.error("ConsumerEnquiryModelResponse FINAL");
-                if (consumerEnquiryModelResponse.getCIDETAILS() != null && consumerEnquiryModelResponse.getCIDETAILS().size() > 0) {
+                if (consumerEnquiryModelResponse.getCIDETAILS() != null
+                        && consumerEnquiryModelResponse.getCIDETAILS().size() > 0) {
                     CI_DETAIL2 = consumerEnquiryModelResponse.getCIDETAILS();
                 }
                 if (consumerEnquiryModelResponse.getSCORE() != null) {
@@ -505,7 +567,8 @@ public class ScoringEngine implements JavaService2 {
                         SC_SCORE = consumerEnquiryModelResponse.getSCORE().getSCSCORE();
                     }
                 }
-                if (consumerEnquiryModelResponse.getDEFAULTS() != null && consumerEnquiryModelResponse.getDEFAULTS().size() > 0) {
+                if (consumerEnquiryModelResponse.getDEFAULTS() != null
+                        && consumerEnquiryModelResponse.getDEFAULTS().size() > 0) {
                     DEFAULT2 = consumerEnquiryModelResponse.getDEFAULTS();
                 }
             }
@@ -642,7 +705,8 @@ public class ScoringEngine implements JavaService2 {
                 inputParams.put("employeejobnumber", getSalaryCertificate.getParamValueByName("employeeJobNumber"));
                 inputParams.put("agencyname", getSalaryCertificate.getParamValueByName("agencyName"));
                 inputParams.put("govsalary", getSalaryCertificate.getParamValueByName("govSalary"));
-                inputParams.put("agencyemploymentdate", getSalaryCertificate.getParamValueByName("agencyEmploymentDate"));
+                inputParams.put("agencyemploymentdate",
+                        getSalaryCertificate.getParamValueByName("agencyEmploymentDate"));
                 inputParams.put("paymonth", getSalaryCertificate.getParamValueByName("payMonth"));
                 inputParams.put("employeenamear", getSalaryCertificate.getParamValueByName("employeeNameAr"));
                 inputParams.put("totalallownces", getSalaryCertificate.getParamValueByName("totalAllownces"));
@@ -703,7 +767,7 @@ public class ScoringEngine implements JavaService2 {
     }
 
     private Map<String, String> createRequestForConsumerEnquiryService(Map<String, String> globalInputParams,
-                                                                       Result getCustomerData, Result getSalaryCertificate) {
+            Result getCustomerData, Result getSalaryCertificate) {
         Map<String, String> inputParams = new HashMap<>();
         try {
 
@@ -825,12 +889,14 @@ public class ScoringEngine implements JavaService2 {
         inputParams.put("sanadApproval", "0");
         inputParams.put("tenorCore", "0");
 
+
+
         LOG.error(inputParams);
         return inputParams;
     }
 
     private Map<String, String> createRequestForUpdateCustomerApplicationDataService(Result getCustomerApplicationData,
-                                                                                     Result getScoreCardS2, Result getScoreCardS3) {
+            Result getScoreCardS2, Result getScoreCardS3) {
         Map<String, String> inputParams = new HashMap<>();
         String knockoutStatus = "FAIL";
         String applicationStatus = "SID_SUSPENDED";
@@ -902,6 +968,10 @@ public class ScoringEngine implements JavaService2 {
         inputParams.put("insideKsa", INSIDE_KSA);
         inputParams.put("customerAge", HelperMethods.getFieldValue(getCustomerApplicationData, "customerAge"));
         inputParams.put("loanAmountCore", loanAmountCap);
+        //adding saad sabab sanad emi
+        inputParams.put("sabbNumber",SABB);
+        inputParams.put("sadadNumber",SAAD);
+
 
         if (!loanRate.equalsIgnoreCase("0")) {
 
@@ -916,8 +986,7 @@ public class ScoringEngine implements JavaService2 {
             // Math.min(Double.parseDouble(inputParams.get("loanAmountCap")),
             // Double.parseDouble(HelperMethods.getFieldValue(getCustomerApplicationData,
             // "loanAmount").replaceAll(",", "")));
-            inputParams.put("monthlyRepay",
-                    calculateMonthlyRepay(amountOffer, Double.parseDouble(loanRate), Integer.parseInt(tenor)));
+            inputParams.put("monthlyRepay",EMI);
             inputParams.put("offerAmount", String.valueOf(amountOffer));
         } else {
             inputParams.put("loanAmountInf", "0");
@@ -1007,7 +1076,7 @@ public class ScoringEngine implements JavaService2 {
                         if (NATIONALITY.equalsIgnoreCase("SAU") || NATIONALITY.equalsIgnoreCase("SA")) {
                             double minimumAmount = 0.1
                                     * (Integer.parseInt(getSalaryCertificate.getParamValueByName("basicWage")) + Integer
-                                    .parseInt(getSalaryCertificate.getParamValueByName("housingAllowance")));
+                                            .parseInt(getSalaryCertificate.getParamValueByName("housingAllowance")));
                             calculatedDeductions = Math.min(minimumAmount, 4500);
                             LOG.error("calculateMonthlyNetSalary calculatedDeductions :: " + calculatedDeductions);
                         }
@@ -1040,7 +1109,8 @@ public class ScoringEngine implements JavaService2 {
                             DateTimeFormatter.ofPattern("yyyy-MM-dd"));
                     LocalDate currentDate = LocalDate.now();
                     CURRENT_LENGTH_OF_SERVICE = String.valueOf(Math.toIntExact(
-                            ChronoUnit.MONTHS.between(YearMonth.from(agencyEmploymentDate), YearMonth.from(currentDate))));
+                            ChronoUnit.MONTHS.between(YearMonth.from(agencyEmploymentDate),
+                                    YearMonth.from(currentDate))));
                     break;
                 case "3":
                     LocalDate dateOfJoining = LocalDate.parse(getSalaryCertificate.getParamValueByName("dateOfJoining"),
@@ -1648,6 +1718,21 @@ public class ScoringEngine implements JavaService2 {
         return inputParams;
     }
 
+    private HashMap<String, Object> createRequestForSimulation() {
+        // Map<String, Object> inputParams = new HashMap<>();
+
+        HashMap<String, Object> inputParams = new HashMap<>();
+        try {
+            String term = TENOR+"M";
+            inputParams.put("amount", inputParams.get("offerAmount") );
+            inputParams.put("term",term );
+            inputParams.put("partyId", PARTY_ID);
+        } catch (Exception ex) {
+            LOG.error("ERROR createRequestForSimulation :: " + ex);
+        }
+        return inputParams;
+    }
+
     private Map<String, String> createRequestForScoreCardS3Service(Result getConsumerEnquiry) {
         Map<String, String> inputParams = new HashMap<>();
         try {
@@ -1745,7 +1830,7 @@ public class ScoringEngine implements JavaService2 {
     }
 
     private Result getSIMAHConsumerEnquiry(Map<String, String> inputParams,
-                                           DataControllerRequest dataControllerRequest) {
+            DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
         try {
             Result getConsumerEnquiry = ServiceCaller.internal(SIMAH_SERVICE_ID, CONSUMER_ENQUIRY_OPERATION_ID,
@@ -1763,7 +1848,7 @@ public class ScoringEngine implements JavaService2 {
     }
 
     private Result getSIMAHSalaryCertificate(Map<String, String> inputParams,
-                                             DataControllerRequest dataControllerRequest) {
+            DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
         try {
             Result getSalaryCertificate = ServiceCaller.internal(SIMAH_SALARY_ORCH_SERVICE_ID,
@@ -1823,8 +1908,12 @@ public class ScoringEngine implements JavaService2 {
                     inputParams, null, dataControllerRequest);
             String inputRequest = (new ObjectMapper()).writeValueAsString(inputParams);
             String outputResponse = ResultToJSON.convert(getScoreCardS3);
+
+
             auditLogData(dataControllerRequest, inputRequest, outputResponse,
                     KNOCKOUT_SERVICE_ID + " : " + CALCULATE_SCORECARD_S3_OPERATION_ID);
+            String simResp = getLoanSimulation(createRequestForSimulation());
+
             return getScoreCardS3;
         } catch (Exception ex) {
             LOG.error("ERROR calculateScoreCardS3 :: " + ex);
@@ -1835,15 +1924,19 @@ public class ScoringEngine implements JavaService2 {
     private void createCustomerAddress(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
         try {
             Map<String, String> filter = new HashMap<>();
-            filter.put(DBPUtilitiesConstants.FILTER, "User_id" + DBPUtilitiesConstants.EQUAL + inputParams.get("User_id"));
+            filter.put(DBPUtilitiesConstants.FILTER,
+                    "User_id" + DBPUtilitiesConstants.EQUAL + inputParams.get("User_id"));
             Result getCustomerAddress;
-            getCustomerAddress = ServiceCaller.internalDB(DBXDB_SERVICES_SERVICE_ID, TBL_CUSTOMER_ADDRESS_GET_OPERATION_ID, filter, null, dataControllerRequest);
+            getCustomerAddress = ServiceCaller.internalDB(DBXDB_SERVICES_SERVICE_ID,
+                    TBL_CUSTOMER_ADDRESS_GET_OPERATION_ID, filter, null, dataControllerRequest);
 
             if (HelperMethods.hasRecords(getCustomerAddress)) {
                 inputParams.put("id", HelperMethods.getFieldValue(getCustomerAddress, "id"));
-                ServiceCaller.internalDB(DBXDB_SERVICES_SERVICE_ID, TBL_CUSTOMER_ADDRESS_UPDATE_OPERATION_ID, inputParams, null, dataControllerRequest);
+                ServiceCaller.internalDB(DBXDB_SERVICES_SERVICE_ID, TBL_CUSTOMER_ADDRESS_UPDATE_OPERATION_ID,
+                        inputParams, null, dataControllerRequest);
             } else {
-                ServiceCaller.internalDB(DBXDB_SERVICES_SERVICE_ID, TBL_CUSTOMER_ADDRESS_CREATE_OPERATION_ID, inputParams, null, dataControllerRequest);
+                ServiceCaller.internalDB(DBXDB_SERVICES_SERVICE_ID, TBL_CUSTOMER_ADDRESS_CREATE_OPERATION_ID,
+                        inputParams, null, dataControllerRequest);
             }
         } catch (Exception ex) {
             LOG.error("ERROR createCustomerAddress :: " + ex);
@@ -1853,15 +1946,19 @@ public class ScoringEngine implements JavaService2 {
     private void createEmployerDetails(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
         try {
             Map<String, String> filter = new HashMap<>();
-            filter.put(DBPUtilitiesConstants.FILTER, "nationalid" + DBPUtilitiesConstants.EQUAL + inputParams.get("nationalid"));
+            filter.put(DBPUtilitiesConstants.FILTER,
+                    "nationalid" + DBPUtilitiesConstants.EQUAL + inputParams.get("nationalid"));
             Result getEmployerDetails;
-            getEmployerDetails = ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, TBL_EMPLOYER_DETAILS_GET_OPERATION_ID, filter, null, dataControllerRequest);
+            getEmployerDetails = ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID,
+                    TBL_EMPLOYER_DETAILS_GET_OPERATION_ID, filter, null, dataControllerRequest);
 
             if (HelperMethods.hasRecords(getEmployerDetails)) {
                 inputParams.put("id", HelperMethods.getFieldValue(getEmployerDetails, "id"));
-                ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, TBL_EMPLOYER_DETAILS_UPDATE_OPERATION_ID, inputParams, null, dataControllerRequest);
+                ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, TBL_EMPLOYER_DETAILS_UPDATE_OPERATION_ID,
+                        inputParams, null, dataControllerRequest);
             } else {
-                ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, TBL_EMPLOYER_DETAILS_CREATE_OPERATION_ID, inputParams, null, dataControllerRequest);
+                ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, TBL_EMPLOYER_DETAILS_CREATE_OPERATION_ID,
+                        inputParams, null, dataControllerRequest);
 
             }
         } catch (Exception ex) {
@@ -1870,7 +1967,7 @@ public class ScoringEngine implements JavaService2 {
     }
 
     private Result updateCustomerApplicationData(Map<String, String> inputParams,
-                                                 DataControllerRequest dataControllerRequest) {
+            DataControllerRequest dataControllerRequest) {
         Result updateCustomerApplicationData = StatusEnum.success.setStatus();
         updateCustomerApplicationData.appendResult(ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID,
                 CUSTOMER_APPLICATION_UPDATE_OPERATION_ID, inputParams, null, dataControllerRequest));
