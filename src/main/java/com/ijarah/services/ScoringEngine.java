@@ -64,6 +64,7 @@ public class ScoringEngine implements JavaService2 {
     String SALARY_WITHOUT_ALLOWANCES = "0";
     String INSIDE_KSA = "";
     String NATIONALITY = "SA";
+    private String AMOUNT_OFFER = "";
 
     String EMPLOYER_TYPE_ID = "1";
     String EMPLOYMENT_STATUS = "";
@@ -334,16 +335,18 @@ public class ScoringEngine implements JavaService2 {
                     .withRequestParameters(inputParams).build().getResponse();
             LOG.error("====:::::  Response from SIMULATION  :::::" + res);
             JSONObject JsonResponse = new JSONObject(res);
-            SIMID = JsonResponse.optString("simulationId");
-            AAID = JsonResponse.optString("arrangementId");
+            String simid = JsonResponse.optString("simulationId");
+            String aaid = JsonResponse.optString("arrangementId");
 
-            if (!SIMID.equals("") && !AAID.equals("")) {
+            LOG.error("AAID");
+
+            if (!simid.isEmpty() && !aaid.isEmpty()) {
                 Thread.sleep(Long.parseLong("20000"));
                 LOG.error("====::::: Inside if condition  :::::");
 
                 HashMap<String, Object> schedParam = new HashMap();
-                schedParam.put("simulationId", SIMID);
-                schedParam.put("arrangementId", AAID);
+                schedParam.put("simulationId", simid);
+                schedParam.put("arrangementId", aaid);
 
                 schedRes = DBPServiceExecutorBuilder.builder().withServiceId("LoanSimulationSchedulePayment")
                         .withOperationId("PaymentScheduleOrch")
@@ -355,9 +358,9 @@ public class ScoringEngine implements JavaService2 {
                 SAAD = jsonSchedule.getJSONArray("body").getJSONObject(0).optString("sadadNumber");
 
                 SABB = jsonSchedule.getJSONArray("body").getJSONObject(0).optString("sabbNumber");
-
+                AAID = aaid;
+                SIMID = simid;
                 LOG.error("====:::::  Response from Schedule  :::::" + schedRes);
-
                 LOG.error("Sabb number ======" + SAAD);
                 LOG.error("Sabb number ======" + EMI);
                 LOG.error("Sabb number ======" + SABB);
@@ -889,8 +892,6 @@ public class ScoringEngine implements JavaService2 {
         inputParams.put("sanadApproval", "0");
         inputParams.put("tenorCore", "0");
 
-
-
         LOG.error(inputParams);
         return inputParams;
     }
@@ -968,10 +969,9 @@ public class ScoringEngine implements JavaService2 {
         inputParams.put("insideKsa", INSIDE_KSA);
         inputParams.put("customerAge", HelperMethods.getFieldValue(getCustomerApplicationData, "customerAge"));
         inputParams.put("loanAmountCore", loanAmountCap);
-        //adding saad sabab sanad emi
-        inputParams.put("sabbNumber",SABB);
-        inputParams.put("sadadNumber",SAAD);
-
+        // adding saad sabab sanad emi
+        inputParams.put("sabbNumber", SABB);
+        inputParams.put("sadadNumber", SAAD);
 
         if (!loanRate.equalsIgnoreCase("0")) {
 
@@ -986,8 +986,13 @@ public class ScoringEngine implements JavaService2 {
             // Math.min(Double.parseDouble(inputParams.get("loanAmountCap")),
             // Double.parseDouble(HelperMethods.getFieldValue(getCustomerApplicationData,
             // "loanAmount").replaceAll(",", "")));
-            inputParams.put("monthlyRepay",EMI);
+            inputParams.put("monthlyRepay", EMI);
             inputParams.put("offerAmount", String.valueOf(amountOffer));
+
+            AMOUNT_OFFER = String.valueOf(amountOffer);
+
+            LOG.error("Offer Amount :::::======"+AMOUNT_OFFER);
+
         } else {
             inputParams.put("loanAmountInf", "0");
             inputParams.put("monthlyRepay", "0");
@@ -1723,9 +1728,9 @@ public class ScoringEngine implements JavaService2 {
 
         HashMap<String, Object> inputParams = new HashMap<>();
         try {
-            String term = TENOR+"M";
-            inputParams.put("amount", inputParams.get("offerAmount") );
-            inputParams.put("term",term );
+            String term = TENOR + "M";
+            inputParams.put("amount", AMOUNT_OFFER.isEmpty() ? AMOUNT_OFFER : LOAN_AMOUNT); //TODO amount offer should be sent
+            inputParams.put("term", term);
             inputParams.put("partyId", PARTY_ID);
         } catch (Exception ex) {
             LOG.error("ERROR createRequestForSimulation :: " + ex);
@@ -1908,7 +1913,6 @@ public class ScoringEngine implements JavaService2 {
                     inputParams, null, dataControllerRequest);
             String inputRequest = (new ObjectMapper()).writeValueAsString(inputParams);
             String outputResponse = ResultToJSON.convert(getScoreCardS3);
-
 
             auditLogData(dataControllerRequest, inputRequest, outputResponse,
                     KNOCKOUT_SERVICE_ID + " : " + CALCULATE_SCORECARD_S3_OPERATION_ID);
