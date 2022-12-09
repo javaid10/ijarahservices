@@ -39,6 +39,7 @@ import com.ijarah.Model.AccessToken.AccessTokenResponse;
 import com.ijarah.utils.HTTPOperations;
 import com.ijarah.utils.IjarahHelperMethods;
 import com.ijarah.utils.ServiceCaller;
+import com.ijarah.utils.enums.EnvironmentConfig;
 import com.ijarah.utils.enums.IjarahErrors;
 import com.ijarah.utils.enums.StatusEnum;
 import com.kony.dbputilities.util.DBPUtilitiesConstants;
@@ -241,6 +242,7 @@ public class CreateLoan implements JavaService2 {
             inputParams.put("sadadNumber", StringUtils.isNotBlank(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sadadNumber")) ? CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sadadNumber") : "");
             inputParams.put("sanadRef", StringUtils.isNotBlank(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sanadNumber")) ? CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sanadNumber") : "");
             inputParams.put("infIoanRef", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("applicationID"));
+            inputParams.put("mobileNumber", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("mobile"));
         } catch (Exception ex) {
             LOG.error("ERROR createInputParamsForCreateLoanService :: " + ex);
         }
@@ -257,6 +259,9 @@ public class CreateLoan implements JavaService2 {
             auditLogData(dataControllerRequest, inputRequest, outputResponse, MORA_T24_SERVICE_ID + " : " + LOAN_CREATION_OPERATION_ID);
             if (IjarahHelperMethods.hasSuccessStatus(getCreateLoanResult)) {
                 StatusEnum.success.setStatus(getCreateLoanResult);
+                
+                TriggerNotification.sendMessage(getMessageBody(inputParams, dataControllerRequest), inputParams.get("mobileNumber"));
+                
                 return getCreateLoanResult;
             }
         } catch (Exception ex) {
@@ -265,6 +270,22 @@ public class CreateLoan implements JavaService2 {
         return result;
     }
 
+    /**
+     * 
+     * @param inputParams
+     * @param dataControllerRequest
+     * @return
+     */
+    private static String getMessageBody (Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
+    	String message = EnvironmentConfig.CREATE_LOAN_MESSAGE_TEMPLATE.getValue(dataControllerRequest);
+        LOG.error("======> Message Body Before parsing " + message);
+    	inputParams.put("#SADAD#", inputParams.get("sadadNumber"));
+    	inputParams.put("#SABB ACCOUNT#", inputParams.get("sabbNumber"));
+    	String messageBody = TriggerNotification.getJsonFromTemplate(message, inputParams);
+        LOG.error("======> Message Body after parsing " + messageBody);
+    	return messageBody;
+    }
+    
     private Result activateCustomer(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
         try {

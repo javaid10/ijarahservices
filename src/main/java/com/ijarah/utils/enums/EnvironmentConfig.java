@@ -14,7 +14,8 @@ public enum EnvironmentConfig implements Serializable {
     SIGN_SECRET,
     RKA_NAME,
     PAYMENT_SCHEDULE_SLEEP_VALUE,
-    APP_HASH_VALUE;
+    APP_HASH_VALUE,
+    CREATE_LOAN_MESSAGE_TEMPLATE;
 
     EnvironmentConfig() {
     }
