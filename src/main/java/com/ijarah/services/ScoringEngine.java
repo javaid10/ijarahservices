@@ -476,6 +476,8 @@ public class ScoringEngine implements JavaService2 {
                 // inputParams.put("employerName",
                 // getSalaryCertificate.getParamValueByName("employerName"));
                 inputParams.put("employerName", "Employer Name");
+              //TODO Salary Pay Date should be YYYYMMDD M0128 for SALARY.DATE.FREQ
+
                 LocalDate dateOfJoining = LocalDate.parse(getSalaryCertificate.getParamValueByName("dateOfJoining"),
                         DateTimeFormatter.ofPattern("dd/MM/yyyy"));
                 inputParams.put("employStartDate", String.valueOf(dateOfJoining));
@@ -1729,7 +1731,8 @@ public class ScoringEngine implements JavaService2 {
         HashMap<String, Object> inputParams = new HashMap<>();
         try {
             String term = TENOR + "M";
-            inputParams.put("amount", AMOUNT_OFFER.isEmpty() ? AMOUNT_OFFER : LOAN_AMOUNT); //TODO amount offer should be sent
+           String loanAmt =  AMOUNT_OFFER.isEmpty() ? AMOUNT_OFFER : LOAN_AMOUNT;
+            inputParams.put("amount", loanAmt.replaceAll(",", "")); //TODO amount offer should be sent
             inputParams.put("term", term);
             inputParams.put("partyId", PARTY_ID);
         } catch (Exception ex) {
