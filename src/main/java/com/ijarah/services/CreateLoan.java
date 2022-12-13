@@ -18,6 +18,7 @@ import static com.ijarah.utils.constants.ServiceIDConstants.NAFAES_REST_API_SERV
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -230,7 +231,10 @@ public class CreateLoan implements JavaService2 {
         }
         return result;
     }
-
+    public int gen() {
+        Random r = new Random( System.currentTimeMillis() );
+        return 10000 + r.nextInt(20000);
+    }
     private Map<String, String> createInputParamsForCreateLoanService(int index, Result getCustomerData) {
         Map<String, String> inputParams = new HashMap<>();
         try {
@@ -240,10 +244,12 @@ public class CreateLoan implements JavaService2 {
             inputParams.put("fixed", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("loanRate"));
             inputParams.put("term", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("tenor") + "M");
             inputParams.put("sabbNumber", StringUtils.isNotBlank(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sabbNumber")) ? CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sabbNumber") : "");
-           
-            inputParams.put("sadadNumber", RandomStringUtils.random(5)); //TOOD need to pick from sanad number
-            // inputParams.put("sadadNumber", StringUtils.isNotBlank(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sadadNumber")) ? CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sadadNumber") : "");
-            inputParams.put("sanadRef", StringUtils.isNotBlank(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sanadNumber")) ? CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sanadNumber") : "");
+            String randomSanda = String.valueOf(gen());
+            LOG.error("RandomNumber::::::::++++++===="+randomSanda);
+            // inputParams.put("sadadNumber", RandomStringUtils.random(5)); //TOOD need to pick from sanad number
+            inputParams.put("sadadNumber", StringUtils.isNotBlank(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sadadNumber")) ? CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sadadNumber") : randomSanda);
+            // inputParams.put("sanadRef", StringUtils.isNotBlank(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sanadNumber")) ? CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sanadNumber") : "");
+            inputParams.put("sanadRef",randomSanda);
             inputParams.put("infIoanRef", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("applicationID"));
             inputParams.put("mobileNumber", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("mobile"));
         } catch (Exception ex) {
