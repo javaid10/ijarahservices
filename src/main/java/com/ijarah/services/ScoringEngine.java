@@ -64,7 +64,7 @@ public class ScoringEngine implements JavaService2 {
     String SALARY_WITHOUT_ALLOWANCES = "0";
     String INSIDE_KSA = "";
     String NATIONALITY = "SA";
-    private String AMOUNT_OFFER = "";
+    String AMOUNT_OFFER = "";
 
     String EMPLOYER_TYPE_ID = "1";
     String EMPLOYMENT_STATUS = "";
@@ -379,6 +379,8 @@ public class ScoringEngine implements JavaService2 {
         inputParams.put("country", "SA");
 
         JSONObject mainObj = new JSONObject(ResultToJSON.convert(getNationalAddress));
+        // mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
+
         LOG.error("mainObj Response " + mainObj);
 
         if (mainObj.opt("addressListList") instanceof JSONObject) {
@@ -476,7 +478,7 @@ public class ScoringEngine implements JavaService2 {
                 // inputParams.put("employerName",
                 // getSalaryCertificate.getParamValueByName("employerName"));
                 inputParams.put("employerName", "Employer Name");
-              //TODO Salary Pay Date should be YYYYMMDD M0128 for SALARY.DATE.FREQ
+                // TODO Salary Pay Date should be YYYYMMDD M0128 for SALARY.DATE.FREQ
 
                 LocalDate dateOfJoining = LocalDate.parse(getSalaryCertificate.getParamValueByName("dateOfJoining"),
                         DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -599,6 +601,8 @@ public class ScoringEngine implements JavaService2 {
         inputParams.put("id", generateUUID());
 
         JSONObject mainObj = new JSONObject(ResultToJSON.convert(getNationalAddress));
+        
+        // mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
         LOG.error("mainObj Response " + mainObj);
 
         if (mainObj.opt("addressListList") instanceof JSONObject) {
@@ -971,9 +975,6 @@ public class ScoringEngine implements JavaService2 {
         inputParams.put("insideKsa", INSIDE_KSA);
         inputParams.put("customerAge", HelperMethods.getFieldValue(getCustomerApplicationData, "customerAge"));
         inputParams.put("loanAmountCore", loanAmountCap);
-        // adding saad sabab sanad emi
-        inputParams.put("sabbNumber", SABB);
-        inputParams.put("sadadNumber", SAAD);
 
         if (!loanRate.equalsIgnoreCase("0")) {
 
@@ -988,12 +989,17 @@ public class ScoringEngine implements JavaService2 {
             // Math.min(Double.parseDouble(inputParams.get("loanAmountCap")),
             // Double.parseDouble(HelperMethods.getFieldValue(getCustomerApplicationData,
             // "loanAmount").replaceAll(",", "")));
+            
+            getLoanSimulation(createRequestForSimulation(String.valueOf(amountOffer)));
+
             inputParams.put("monthlyRepay", EMI);
             inputParams.put("offerAmount", String.valueOf(amountOffer));
-
+            // adding saad sabab sanad emi
+            inputParams.put("sabbNumber", SABB);
+            inputParams.put("sadadNumber", SAAD);
             AMOUNT_OFFER = String.valueOf(amountOffer);
 
-            LOG.error("Offer Amount :::::======"+AMOUNT_OFFER);
+            LOG.error("Offer Amount :::::======" + AMOUNT_OFFER);
 
         } else {
             inputParams.put("loanAmountInf", "0");
@@ -1725,14 +1731,19 @@ public class ScoringEngine implements JavaService2 {
         return inputParams;
     }
 
-    private HashMap<String, Object> createRequestForSimulation() {
+    private HashMap<String, Object> createRequestForSimulation(String amoOffer) {
         // Map<String, Object> inputParams = new HashMap<>();
 
         HashMap<String, Object> inputParams = new HashMap<>();
         try {
             String term = TENOR + "M";
-           String loanAmt =  AMOUNT_OFFER.isEmpty() ? AMOUNT_OFFER : LOAN_AMOUNT;
-            inputParams.put("amount", loanAmt.replaceAll(",", "")); //TODO amount offer should be sent
+
+
+        //    loanAmt= loanAmt.replace(",", "");
+           LOG.error("========== AMount Offer sending for simulation is ::"+amoOffer);
+
+        //    LOG.error("========== Loan Amount sending for simulation is ::"+);
+            inputParams.put("amount", amoOffer); //TODO amount offer should be sent
             inputParams.put("term", term);
             inputParams.put("partyId", PARTY_ID);
         } catch (Exception ex) {
@@ -1919,8 +1930,6 @@ public class ScoringEngine implements JavaService2 {
 
             auditLogData(dataControllerRequest, inputRequest, outputResponse,
                     KNOCKOUT_SERVICE_ID + " : " + CALCULATE_SCORECARD_S3_OPERATION_ID);
-            String simResp = getLoanSimulation(createRequestForSimulation());
-
             return getScoreCardS3;
         } catch (Exception ex) {
             LOG.error("ERROR calculateScoreCardS3 :: " + ex);
