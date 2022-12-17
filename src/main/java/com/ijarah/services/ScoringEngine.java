@@ -990,7 +990,7 @@ public class ScoringEngine implements JavaService2 {
             // Double.parseDouble(HelperMethods.getFieldValue(getCustomerApplicationData,
             // "loanAmount").replaceAll(",", "")));
             
-            getLoanSimulation(createRequestForSimulation(String.valueOf(amountOffer)));
+            getLoanSimulation(createRequestForSimulation(String.valueOf(amountOffer) , loanRate));
 
             inputParams.put("monthlyRepay", EMI);
             inputParams.put("offerAmount", String.valueOf(amountOffer));
@@ -1731,7 +1731,7 @@ public class ScoringEngine implements JavaService2 {
         return inputParams;
     }
 
-    private HashMap<String, Object> createRequestForSimulation(String amoOffer) {
+    private HashMap<String, Object> createRequestForSimulation(String amoOffer , String loanRate) {
         // Map<String, Object> inputParams = new HashMap<>();
 
         HashMap<String, Object> inputParams = new HashMap<>();
@@ -1746,6 +1746,8 @@ public class ScoringEngine implements JavaService2 {
             inputParams.put("amount", amoOffer); //TODO amount offer should be sent
             inputParams.put("term", term);
             inputParams.put("partyId", PARTY_ID);
+            inputParams.put("fixedRate", loanRate);
+
         } catch (Exception ex) {
             LOG.error("ERROR createRequestForSimulation :: " + ex);
         }
