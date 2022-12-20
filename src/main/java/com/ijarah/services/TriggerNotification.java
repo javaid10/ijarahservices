@@ -17,7 +17,7 @@ public class TriggerNotification {
 	private static final Logger LOG = LogManager.getLogger(TriggerNotification.class);
 
 	private static String SERVICE_ID = "UniphonicRestAPI";
-	private static String OPERATION_ID = "SendMessage";
+	private static String OPERATION_ID = "sendNotification";
 
 	/**
 	 * 

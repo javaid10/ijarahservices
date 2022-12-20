@@ -15,30 +15,18 @@ import static com.ijarah.utils.constants.ServiceIDConstants.DB_MORA_SERVICES_SER
 import static com.ijarah.utils.constants.ServiceIDConstants.MORA_T24_SERVICE_ID;
 import static com.ijarah.utils.constants.ServiceIDConstants.NAFAES_REST_API_SERVICE_ID;
 
-import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLContextBuilder;
-import org.apache.http.conn.ssl.TrustAllStrategy;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.dbp.core.error.DBPApplicationException;
+import com.dbp.core.fabric.extn.DBPServiceExecutorBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-import com.ijarah.Model.AccessToken.AccessTokenResponse;
-import com.ijarah.utils.HTTPOperations;
 import com.ijarah.utils.IjarahHelperMethods;
 import com.ijarah.utils.ServiceCaller;
 import com.ijarah.utils.enums.EnvironmentConfig;
@@ -56,422 +44,495 @@ import com.konylabs.middleware.dataobject.ResultToJSON;
 
 public class CreateLoan implements JavaService2 {
 
-    private static final Logger LOG = Logger.getLogger(CreateLoan.class);
-    Map<String, String> inputParams = new HashMap<>();
-    private String NATIONAL_ID = "";
-    private String SID_PRO_ACTIVE = "SID_PRO_ACTIVE";
-    private String APPLICATION_STATUS = "applicationStatus";
-    private String CSA_APPROVAL = "csaAppoRval";
-    private String SANAD_APPROVAL = "sanadApproval";
-    private Dataset CUSTOMERS_APPLICATION_DATA = new Dataset();
-    private String FIXED_AMOUNT_VALUE = "100";
+	private static final Logger LOG = Logger.getLogger(CreateLoan.class);
+	private String SID_PRO_ACTIVE = "SID_PRO_ACTIVE";
+	private String APPLICATION_STATUS = "applicationStatus";
+	private String CSA_APPROVAL = "csaAppoRval";
+	private String SANAD_APPROVAL = "sanadApproval";
+	private String FIXED_AMOUNT_VALUE = "100";
+	private String LOAN_CREATED = "LOAN_CREATED";
 
-    private Dataset NAFAES_DATA = new Dataset();
-    private String REFERENCE_NUMBER = "";
-    private String ACCESS_TOKEN = "";
-    private String LOAN_CREATED = "LOAN_CREATED";
+	@Override
+	public Object invoke(String s, Object[] objects, DataControllerRequest dataControllerRequest,
+			DataControllerResponse dataControllerResponse) throws Exception {
+		LOG.debug("======> CreateLoan - Begin ");
+		Result result = StatusEnum.error.setStatus();
+		IjarahErrors.ERR_CREATE_LOAN_002.setErrorCode(result);
 
-    @Override
-    public Object invoke(String s, Object[] objects, DataControllerRequest dataControllerRequest, DataControllerResponse dataControllerResponse) throws Exception {
-        inputParams = HelperMethods.getInputParamMap(objects);
-        Result result = StatusEnum.error.setStatus();
-        IjarahErrors.ERR_CREATE_LOAN_002.setErrorCode(result);
+		Result getCustomerApplicationData = getCustomerApplicationData(dataControllerRequest);
+		LOG.debug("======> Customer Application Data:  " + ResultToJSON.convert(getCustomerApplicationData));
+		if (HelperMethods.hasRecords(getCustomerApplicationData) && IjarahHelperMethods.hasSuccessCode(getCustomerApplicationData)) {
+			Dataset customerApplicationData = extractValuesFromCustomerApplication(getCustomerApplicationData);
+			for (int index = 0; index < customerApplicationData.getAllRecords().size(); index++) {
+				Result getCustomerData = getPartyIDFromCustomerTable(customerApplicationData.getRecord(index).getParamValueByName("applicationID"), dataControllerRequest);
+				LOG.debug("======> Customer Data:  " + ResultToJSON.convert(getCustomerData));
+				if (IjarahHelperMethods.hasSuccessCode(getCustomerData) && HelperMethods.hasRecords(getCustomerData)) {
+					Result getNafaesData = getNafaesData(getCustomerData, dataControllerRequest);
+					LOG.debug("======> Nafaes Data:  " + ResultToJSON.convert(getNafaesData));
+					if (IjarahHelperMethods.hasSuccessCode(getNafaesData) && HelperMethods.hasRecords(getNafaesData)) {
+						Map<String, String> nafaesData = extractValuesFromNafaes(getNafaesData);
 
-        Result getCustomerApplicationData = getCustomerApplicationData(dataControllerRequest);
-        Result successResult = StatusEnum.success.setStatus();
-        successResult.addParam("Message", "Loan Creation Successfully Completed");
-        if (HelperMethods.hasRecords(getCustomerApplicationData) && IjarahHelperMethods.hasSuccessCode(getCustomerApplicationData)) {
-            extractValuesFromCustomerApplication(getCustomerApplicationData);
-            for (int index = 0; index < CUSTOMERS_APPLICATION_DATA.getAllRecords().size(); index++) {
-                Result getCustomerData = getPartyIDFromCustomerTable(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("applicationID"), dataControllerRequest);
-                if (IjarahHelperMethods.hasSuccessCode(getCustomerData) && HelperMethods.hasRecords(getCustomerData)) {
-                    Result activateCustomer = activateCustomer(createInputParamsForActivateCustomerService(getCustomerData), dataControllerRequest);
-                    if (IjarahHelperMethods.hasSuccessCode(activateCustomer)) {
-                        Result createLoanResult = createLoan(createInputParamsForCreateLoanService(index, getCustomerData), dataControllerRequest);
-                        if (IjarahHelperMethods.hasSuccessCode(createLoanResult)) {
-                            updateCustomerApplicationData(createInputParamsForCustomerApplicationService(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("id")), dataControllerRequest);
-                            Result getNafaesData = getNafaesData(getCustomerData, dataControllerRequest);
-                            if (IjarahHelperMethods.hasSuccessCode(getNafaesData) && HelperMethods.hasRecords(getNafaesData)) {
-                                extractValuesFromNafaes(getNafaesData);
-                                ACCESS_TOKEN = getAccessToken();
+						Result transferOrder = new Result();
+						if (!nafaesData.get("transferOrderStatus").equals("2") || !nafaesData.get("transferOrderStatus").equals("1")) {
+							transferOrder = callTransferOrder(nafaesData.get("accessToken"), nafaesData.get("referenceId"), dataControllerRequest);
+						}
+						LOG.debug("======> Transfer Order Result 1 " + ResultToJSON.convert(transferOrder));
 
-                                Result transferOrder = callTransferOrder(dataControllerRequest);
-                                LOG.debug("======> Transfer Order Result 1 " + ResultToJSON.convert(transferOrder));
+						String transferOrderStatus = transferOrder.getParamValueByName("status");
+						
+						if (nafaesData.get("transferOrderStatus").equals("2") || StringUtils.equalsAnyIgnoreCase("success", transferOrderStatus)) {
+							Result transferOrderresult = callTransferOrderResult(nafaesData.get("accessToken"), nafaesData.get("referenceId"), dataControllerRequest);
+							LOG.debug("======> Transfer Order Result 2 " + ResultToJSON.convert(transferOrderresult));
+							String transferOrderResult_Status = transferOrderresult.getParamValueByName("status");
+							if (!StringUtils.equalsAnyIgnoreCase("success", transferOrderResult_Status)) {
+								// Updating the transfer Order status to 2 in Nafaes Table. So that it will pick the record again in the next batch process
+								updateTransferOrder(nafaesData.get("id"), "2");
+								continue;
+							}
+							
+							if (StringUtils.equalsAnyIgnoreCase("success", transferOrderResult_Status)) {
+								Result saleOrder = callSaleOrder(nafaesData.get("accessToken"), nafaesData.get("referenceId"), dataControllerRequest);
+								LOG.debug("======> Sale Order Result " + ResultToJSON.convert(saleOrder));
+								String saleOrderResult_Status = saleOrder.getParamValueByName("status");
+								if (StringUtils.equalsAnyIgnoreCase("success", saleOrderResult_Status)) {
+									updateTransferOrderSellOrder(nafaesData.get("id"), "1", "1");
+								}
+								
+								Result activateCustomer = activateCustomer(createInputParamsForActivateCustomerService(getCustomerData), dataControllerRequest);
+							    LOG.debug("======> Activate Customer: " +ResultToJSON.convert(activateCustomer));
+							    if (!IjarahHelperMethods.hasSuccessCode(activateCustomer)) {
+							    	IjarahErrors.ERR_ACTIVATE_CUSTOMER_FAILED_005.setErrorCode(result);
+							    	continue;
+								} 
+							    
+							    Map<String, String> createLoanInputParams = createInputParamsForCreateLoanService(customerApplicationData, index, getCustomerData);
+							    Result createLoanResult = createLoan(createLoanInputParams, dataControllerRequest);
+							    LOG.debug("======> Create Loan: " +ResultToJSON.convert(createLoanResult));
+		                        if (IjarahHelperMethods.hasSuccessCode(createLoanResult)) {
+		                        	Map<String, String> inputParam = new HashMap<>();
+		                    		inputParam.put("id", customerApplicationData.getRecord(index).getParamValueByName("id"));
+		                    		inputParam.put(APPLICATION_STATUS, LOAN_CREATED);
+									updateCustomerApplicationData(inputParam, dataControllerRequest);
+								} else {
+		                            IjarahErrors.ERR_LOAN_CREATION_FAILED_006.setErrorCode(result);
+		                        }
+							}
+						} 
+					} else {
+						IjarahErrors.ERR_NAFAES_DATA_NOT_FOUND_007.setErrorCode(result);
+					}
+				} else {
+					IjarahErrors.ERR_NO_CUSTOMER_RECORD_FOUND_004.setErrorCode(result);
+				}
+			}
+		} else {
+			IjarahErrors.ERR_CUSTOMER_APPLICATION_DATA_NOT_FOUND_009.setErrorCode(result);
+		}
+		LOG.debug("======> CreateLoan - End ");
+		return result;
+	}
+	
+	/**
+	 * 
+	 * @param nafaesId
+	 * @param transferorder
+	 */
+	private void updateTransferOrder(String nafaesId, String transferorder) {
+		Map<String, Object> userInputs = new HashMap<>();
+        userInputs.put("id", nafaesId);
+        userInputs.put("transferorder", transferorder);
+		try {
+			String updateCustomerResponse = DBPServiceExecutorBuilder.builder().withServiceId("DBMoraServices")
+			        .withOperationId("dbxdb_nafaes_update").withRequestParameters(userInputs).build()
+			        .getResponse();
+			LOG.debug("======> Customer Update Response" + updateCustomerResponse);
+		} catch (DBPApplicationException e) {
+		}
+	}
+	
+	/**
+	 * 
+	 * @param nafaesId
+	 * @param transferorder
+	 * @param sellOrder
+	 */
+	private void updateTransferOrderSellOrder(String nafaesId, String transferorder, String sellOrder) {
+		Map<String, Object> userInputs = new HashMap<>();
+        userInputs.put("id", nafaesId);
+        userInputs.put("transferorder", transferorder);
+        userInputs.put("sellorder", sellOrder);
+		try {
+			String updateCustomerResponse = DBPServiceExecutorBuilder.builder().withServiceId("DBMoraServices")
+			        .withOperationId("dbxdb_nafaes_update").withRequestParameters(userInputs).build()
+			        .getResponse();
+			LOG.debug("======> Customer Update Response" + updateCustomerResponse);
+		} catch (DBPApplicationException e) {
+		}
+	}
+	
+	/**
+	 * 
+	 * @param accessToken
+	 * @param referenceId
+	 * @param dataControllerRequest
+	 * @return
+	 */
+	private Result callTransferOrderResult(String accessToken, String referenceId,
+			DataControllerRequest dataControllerRequest) {
+		Result result = StatusEnum.error.setStatus();
+		try {
+			Map<String, String> inputParam = new HashMap<>();
+			inputParam.put("uuid", IjarahHelperMethods.generateUUID() + "-TOR");
+			inputParam.put("accessToken", accessToken);
+			inputParam.put("referenceNo", referenceId);
+			inputParam.put("orderType", "TO");
+			inputParam.put("lng", "2");
+			Result transferOrderResult = ServiceCaller.internal(NAFAES_REST_API_SERVICE_ID,
+					TRANSFER_ORDER_RESULT_OPERATION_ID, inputParam, null, dataControllerRequest);
+			String inputRequest = (new ObjectMapper()).writeValueAsString(inputParam);
+			String outputResponse = ResultToJSON.convert(transferOrderResult);
+			auditLogData(dataControllerRequest, inputRequest, outputResponse,
+					NAFAES_REST_API_SERVICE_ID + " : " + TRANSFER_ORDER_RESULT_OPERATION_ID);
+			if (IjarahHelperMethods.hasSuccessStatus(transferOrderResult)) {
+				StatusEnum.success.setStatus(transferOrderResult);
+				return transferOrderResult;
+			}
+		} catch (Exception ex) {
+			LOG.error("ERROR callTransferOrder :: " + ex);
+		}
+		return result;
+	}
 
-                                String transferOrderStatus = transferOrder.getParamValueByName("status");
+	/**
+	 * 
+	 * @param accessToken
+	 * @param referenceId
+	 * @param dataControllerRequest
+	 * @return
+	 */
+	private Result callTransferOrder(String accessToken, String referenceId,
+			DataControllerRequest dataControllerRequest) {
+		Result result = StatusEnum.error.setStatus();
+		try {
+			Map<String, String> inputParam = new HashMap<>();
+			inputParam.put("uuid", IjarahHelperMethods.generateUUID() + "-TO");
+			inputParam.put("accessToken", accessToken);
+			inputParam.put("referenceNo", referenceId);
+			inputParam.put("orderType", "TO");
+			inputParam.put("lng", "2");
+			Result transferOrderResult = ServiceCaller.internal(NAFAES_REST_API_SERVICE_ID, TRANSFER_ORDER_OPERATION_ID,
+					inputParam, null, dataControllerRequest);
+			String inputRequest = (new ObjectMapper()).writeValueAsString(inputParam);
+			String outputResponse = ResultToJSON.convert(transferOrderResult);
+			auditLogData(dataControllerRequest, inputRequest, outputResponse,
+					NAFAES_REST_API_SERVICE_ID + " : " + TRANSFER_ORDER_OPERATION_ID);
+			if (IjarahHelperMethods.hasSuccessStatus(transferOrderResult)) {
+				StatusEnum.success.setStatus(transferOrderResult);
+				return transferOrderResult;
+			}
+		} catch (Exception ex) {
+			LOG.error("ERROR callTransferOrder :: " + ex);
+		}
+		return result;
+	}
 
-                                if (StringUtils.equalsAnyIgnoreCase("success", transferOrderStatus)) {
+	/**
+	 * 
+	 * @param accessToken
+	 * @param referenceId
+	 * @param dataControllerRequest
+	 * @return
+	 */
+	private Result callSaleOrder(String accessToken, String referenceId, DataControllerRequest dataControllerRequest) {
+		Result result = StatusEnum.error.setStatus();
+		try {
+			Map<String, String> inputParam = new HashMap<>();
+			inputParam.put("uuid", IjarahHelperMethods.generateUUID() + "-SO");
+			inputParam.put("accessToken", accessToken);
+			inputParam.put("referenceNo", referenceId);
+			inputParam.put("orderType", "SO");
+			inputParam.put("lng", "2");
+			Result saleOrderResult = ServiceCaller.internal(NAFAES_REST_API_SERVICE_ID,
+					SALE_ORDER_PUSH_METHOD_OPERATION_ID, inputParam, null, dataControllerRequest);
+			String inputRequest = (new ObjectMapper()).writeValueAsString(inputParam);
+			String outputResponse = ResultToJSON.convert(saleOrderResult);
+			auditLogData(dataControllerRequest, inputRequest, outputResponse,
+					NAFAES_REST_API_SERVICE_ID + " : " + SALE_ORDER_PUSH_METHOD_OPERATION_ID);
+			if (IjarahHelperMethods.hasSuccessStatus(saleOrderResult)) {
+				StatusEnum.success.setStatus(saleOrderResult);
+				return saleOrderResult;
+			}
+		} catch (Exception ex) {
+			LOG.error("ERROR callSaleOrder :: " + ex);
+		}
+		return result;
+	}
 
-                                    Result transferOrderresult = callTransferOrderResult(dataControllerRequest);
-                                    LOG.debug("======> Transfer Order Result 2 " + ResultToJSON.convert(transferOrderresult));
-                                    String transferOrderResult_Status = transferOrderresult.getParamValueByName("status");
+	/**
+	 * 
+	 * @param getCustomerData
+	 * @param dataControllerRequest
+	 * @return
+	 */
+	private Result getNafaesData(Result getCustomerData, DataControllerRequest dataControllerRequest) {
+		Result getNafaesData = StatusEnum.error.setStatus();
+		try {
+			String currentAppId = HelperMethods.getFieldValue(getCustomerData, "currentAppId");
+			Map<String, String> inputParam = new HashMap<>();
+			inputParam.put(DBPUtilitiesConstants.FILTER, "applicationid" + DBPUtilitiesConstants.EQUAL + currentAppId);
+			getNafaesData = ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, NAFAES_GET_OPERATION_ID,
+					inputParam, null, dataControllerRequest);
+			StatusEnum.success.setStatus(getNafaesData);
+		} catch (Exception ex) {
+			LOG.error("ERROR getNafaesData :: " + ex);
+		}
+		return getNafaesData;
+	}
 
-                                    if (StringUtils.equalsAnyIgnoreCase("success", transferOrderResult_Status)) {
-                                        Result saleOrder = callSaleOrder(dataControllerRequest);
-                                        LOG.debug("======> Sale Order Result " + ResultToJSON.convert(saleOrder));
-                                    }
-                                }
-                                    /*
-                                    if (IjarahHelperMethods.hasSuccessCode(transferOrder) && IjarahHelperMethods.hasSuccessCode(saleOrder)) {
-                                        updateCustomerApplicationData(createInputParamsForCustomerApplicationService(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("id")), dataControllerRequest);
-                                        return successResult;
-                                    } else {
-                                        IjarahErrors.ERR_TRANSFER_ORDER_OR_SALE_ORDER_008.setErrorCode(result);
-                                    }
-                                     */
-                            } else {
-                                IjarahErrors.ERR_NAFAES_DATA_NOT_FOUND_007.setErrorCode(result);
-                            }
-                        } else {
-                            IjarahErrors.ERR_LOAN_CREATION_FAILED_006.setErrorCode(result);
-                        }
-                    } else {
-                        IjarahErrors.ERR_ACTIVATE_CUSTOMER_FAILED_005.setErrorCode(result);
-                    }
-                } else {
-                    IjarahErrors.ERR_NO_CUSTOMER_RECORD_FOUND_004.setErrorCode(result);
-                }
-            }
-        } else {
-            IjarahErrors.ERR_CREATE_LOAN_003.setErrorCode(result);
-        }
-        return result;
-    }
+	public int gen() {
+		Random r = new Random(System.currentTimeMillis());
+		return 10000 + r.nextInt(20000);
+	}
 
-    private Map<String, String> createInputParamsForCustomerApplicationService(String id) {
-        Map<String, String> inputParam = new HashMap<>();
-        inputParam.put("id", id);
-        inputParam.put(APPLICATION_STATUS, LOAN_CREATED);
-        return inputParam;
-    }
+	private Map<String, String> createInputParamsForCreateLoanService(Dataset customerApplicationData, int index, Result getCustomerData) {
+		Map<String, String> inputParams = new HashMap<>();
+		try {
+			inputParams.put("partyId",
+					StringUtils.isNotBlank(HelperMethods.getFieldValue(getCustomerData, "partyId"))
+							? HelperMethods.getFieldValue(getCustomerData, "partyId")
+							: "");
+			inputParams.put("fixedAmount", FIXED_AMOUNT_VALUE);
+			inputParams.put("amount",
+					customerApplicationData.getRecord(index).getParamValueByName("offerAmount").replace(",", ""));
+			inputParams.put("fixed", customerApplicationData.getRecord(index).getParamValueByName("loanRate"));
+			inputParams.put("term", customerApplicationData.getRecord(index).getParamValueByName("tenor") + "M");
+			inputParams.put("sabbNumber",
+					StringUtils
+							.isNotBlank(customerApplicationData.getRecord(index).getParamValueByName("sabbNumber"))
+									? customerApplicationData.getRecord(index).getParamValueByName("sabbNumber")
+									: "");
+			String randomSanda = String.valueOf(gen());
+			LOG.error("RandomNumber::::::::++++++====" + randomSanda);
+			inputParams.put("sadadNumber",
+					StringUtils
+							.isNotBlank(customerApplicationData.getRecord(index).getParamValueByName("sadadNumber"))
+									? customerApplicationData.getRecord(index).getParamValueByName("sadadNumber")
+									: randomSanda);
+			inputParams.put("sanadRef", randomSanda);
+			inputParams.put("infIoanRef",
+					customerApplicationData.getRecord(index).getParamValueByName("applicationID"));
+			inputParams.put("mobileNumber", customerApplicationData.getRecord(index).getParamValueByName("mobile"));
+		} catch (Exception ex) {
+			LOG.error("ERROR createInputParamsForCreateLoanService :: " + ex);
+		}
+		return inputParams;
+	}
+
+	private Result createLoan(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
+		Result result = StatusEnum.error.setStatus();
+		try {
+			LOG.error("createLoan PARTY_ID :: " + inputParams.get("partyId"));
+			Result getCreateLoanResult = ServiceCaller.internal(MORA_T24_SERVICE_ID, LOAN_CREATION_OPERATION_ID,
+					inputParams, null, dataControllerRequest);
+			String inputRequest = (new ObjectMapper()).writeValueAsString(inputParams);
+			String outputResponse = ResultToJSON.convert(getCreateLoanResult);
+			auditLogData(dataControllerRequest, inputRequest, outputResponse,
+					MORA_T24_SERVICE_ID + " : " + LOAN_CREATION_OPERATION_ID);
+			if (IjarahHelperMethods.hasSuccessStatus(getCreateLoanResult)) {
+				StatusEnum.success.setStatus(getCreateLoanResult);
+
+				TriggerNotification.sendMessage(getMessageBody(inputParams, dataControllerRequest),
+						inputParams.get("mobileNumber"));
+
+				return getCreateLoanResult;
+			}
+		} catch (Exception ex) {
+			LOG.error("ERROR createLoan :: " + ex);
+		}
+		return result;
+	}
+
+	/**
+	 * 
+	 * @param inputParams
+	 * @param dataControllerRequest
+	 * @return
+	 */
+	private static String getMessageBody(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
+		String message = EnvironmentConfig.CREATE_LOAN_MESSAGE_TEMPLATE.getValue(dataControllerRequest);
+		LOG.error("======> Message Body Before parsing " + message);
+		inputParams.put("#SADAD#", inputParams.get("sadadNumber"));
+		inputParams.put("#SABB ACCOUNT#", inputParams.get("sabbNumber"));
+		String messageBody = TriggerNotification.getJsonFromTemplate(message, inputParams);
+		LOG.error("======> Message Body after parsing " + messageBody);
+		return messageBody;
+	}
+
+	private Result activateCustomer(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
+		Result result = StatusEnum.error.setStatus();
+		try {
+			Result getActivateCustomerResult = ServiceCaller.internal(MORA_T24_SERVICE_ID,
+					ACTIVATE_CUSTOMER_OPERATION_ID, inputParams, null, dataControllerRequest);
+			String inputRequest = (new ObjectMapper()).writeValueAsString(inputParams);
+			String outputResponse = ResultToJSON.convert(getActivateCustomerResult);
+			auditLogData(dataControllerRequest, inputRequest, outputResponse,
+					MORA_T24_SERVICE_ID + " : " + ACTIVATE_CUSTOMER_OPERATION_ID);
+			if (IjarahHelperMethods.hasSuccessStatus(getActivateCustomerResult)) {
+				StatusEnum.success.setStatus(getActivateCustomerResult);
+				return getActivateCustomerResult;
+			}
+		} catch (Exception ex) {
+			LOG.error("ERROR activateCustomer :: " + ex);
+		}
+		return result;
+	}
+
+	private Map<String, String> createInputParamsForActivateCustomerService(Result getCustomerData) {
+		Map<String, String> inputParams = new HashMap<>();
+		try {
+			inputParams.put("partyId", HelperMethods.getFieldValue(getCustomerData, "partyId"));
+		} catch (Exception ex) {
+			LOG.error("ERROR createInputParamsForActivateCustomerService :: " + ex);
+		}
+		return inputParams;
+	}
+
+	/**
+	 * 
+	 * @param applicationID
+	 * @param dataControllerRequest
+	 * @return
+	 */
+	private Result getPartyIDFromCustomerTable(String applicationID, DataControllerRequest dataControllerRequest) {
+		Result getCustomerData = StatusEnum.error.setStatus();
+		try {
+			LOG.error("======> Application Id: " + applicationID);
+			Map<String, String> inputParam = new HashMap<>();
+			inputParam.put(DBPUtilitiesConstants.FILTER, "currentAppId" + DBPUtilitiesConstants.EQUAL + applicationID);
+			getCustomerData = ServiceCaller.internalDB(DBXDB_SERVICES_SERVICE_ID, CUSTOMER_GET_OPERATION_ID,
+					inputParam, null, dataControllerRequest);
+			StatusEnum.success.setStatus(getCustomerData);
+		} catch (Exception ex) {
+			LOG.error("======> Error while processing the getPartyIDFromCustomerTable: " + ex);
+		}
+		return getCustomerData;
+	}
 
 
-    private Result callTransferOrderResult(DataControllerRequest dataControllerRequest) {
-        Result result = StatusEnum.error.setStatus();
-        try {
-            Map<String, String> inputParam = new HashMap<>();
-            inputParam.put("uuid", IjarahHelperMethods.generateUUID() + "-TOR");
-            inputParam.put("accessToken", ACCESS_TOKEN);
-            inputParam.put("referenceNo", REFERENCE_NUMBER);
-            inputParam.put("orderType", "TO");
-            inputParam.put("lng", "2");
-            Result transferOrderResult = ServiceCaller.internal(NAFAES_REST_API_SERVICE_ID, TRANSFER_ORDER_RESULT_OPERATION_ID, inputParam, null, dataControllerRequest);
-            String inputRequest = (new ObjectMapper()).writeValueAsString(inputParam);
-            String outputResponse = ResultToJSON.convert(transferOrderResult);
-            auditLogData(dataControllerRequest, inputRequest, outputResponse, NAFAES_REST_API_SERVICE_ID + " : " + TRANSFER_ORDER_RESULT_OPERATION_ID);
-            if (IjarahHelperMethods.hasSuccessStatus(transferOrderResult)) {
-                StatusEnum.success.setStatus(transferOrderResult);
-                return transferOrderResult;
-            }
-        } catch (Exception ex) {
-            LOG.error("ERROR callTransferOrder :: " + ex);
-        }
-        return result;
-    }
+	/**
+	 * 
+	 * @param dataControllerRequest
+	 * @return
+	 */
+	private Result getCustomerApplicationData(DataControllerRequest dataControllerRequest) {
+		Result result = StatusEnum.error.setStatus();
+		try {
+			Map<String, String> filter = new HashMap<>();
+			filter.put(DBPUtilitiesConstants.FILTER,
+					APPLICATION_STATUS + DBPUtilitiesConstants.EQUAL + SID_PRO_ACTIVE + DBPUtilitiesConstants.AND
+							+ CSA_APPROVAL + DBPUtilitiesConstants.EQUAL + DBPUtilitiesConstants.BOOLEAN_STRING_TRUE
+							+ DBPUtilitiesConstants.AND + SANAD_APPROVAL + DBPUtilitiesConstants.EQUAL
+							+ DBPUtilitiesConstants.BOOLEAN_STRING_TRUE);
+			Result getCustomerApplicationData = ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID,
+					CUSTOMER_APPLICATION_GET_OPERATION_ID, filter, null, dataControllerRequest);
+			StatusEnum.success.setStatus(getCustomerApplicationData);
+			return getCustomerApplicationData;
+		} catch (Exception ex) {
+			LOG.error("======> Error while processing the getCustomerApplicationData : " + ex);
+		}
+		return result;
+	}
 
-    private Result callTransferOrder(DataControllerRequest dataControllerRequest) {
-        Result result = StatusEnum.error.setStatus();
-        try {
-            Map<String, String> inputParam = new HashMap<>();
-            inputParam.put("uuid", IjarahHelperMethods.generateUUID() + "-TO");
-            inputParam.put("accessToken", ACCESS_TOKEN);
-            inputParam.put("referenceNo", REFERENCE_NUMBER);
-            inputParam.put("orderType", "TO");
-            inputParam.put("lng", "2");
-            Result transferOrderResult = ServiceCaller.internal(NAFAES_REST_API_SERVICE_ID, TRANSFER_ORDER_OPERATION_ID, inputParam, null, dataControllerRequest);
-            String inputRequest = (new ObjectMapper()).writeValueAsString(inputParam);
-            String outputResponse = ResultToJSON.convert(transferOrderResult);
-            auditLogData(dataControllerRequest, inputRequest, outputResponse, NAFAES_REST_API_SERVICE_ID + " : " + TRANSFER_ORDER_OPERATION_ID);
-            if (IjarahHelperMethods.hasSuccessStatus(transferOrderResult)) {
-                StatusEnum.success.setStatus(transferOrderResult);
-                return transferOrderResult;
-            }
-        } catch (Exception ex) {
-            LOG.error("ERROR callTransferOrder :: " + ex);
-        }
-        return result;
-    }
+	/**
+	 * 
+	 * @param getCustomerApplicationData
+	 * @return
+	 */
+	private Dataset extractValuesFromCustomerApplication(Result getCustomerApplicationData) {
+		Dataset customerApplicationData = new Dataset();
+		try {
+			customerApplicationData = getCustomerApplicationData.getDatasetById("tbl_customerapplication");
 
-    private Result callSaleOrder(DataControllerRequest dataControllerRequest) {
-        Result result = StatusEnum.error.setStatus();
-        try {
-            Map<String, String> inputParam = new HashMap<>();
-            inputParam.put("uuid", IjarahHelperMethods.generateUUID() + "-SO");
-            inputParam.put("accessToken", ACCESS_TOKEN);
-            inputParam.put("referenceNo", REFERENCE_NUMBER);
-            inputParam.put("orderType", "SO");
-            inputParam.put("lng", "2");
-            Result saleOrderResult = ServiceCaller.internal(NAFAES_REST_API_SERVICE_ID, SALE_ORDER_PUSH_METHOD_OPERATION_ID, inputParam, null, dataControllerRequest);
-            String inputRequest = (new ObjectMapper()).writeValueAsString(inputParam);
-            String outputResponse = ResultToJSON.convert(saleOrderResult);
-            auditLogData(dataControllerRequest, inputRequest, outputResponse, NAFAES_REST_API_SERVICE_ID + " : " + SALE_ORDER_PUSH_METHOD_OPERATION_ID);
-            if (IjarahHelperMethods.hasSuccessStatus(saleOrderResult)) {
-                StatusEnum.success.setStatus(saleOrderResult);
-                return saleOrderResult;
-            }
-        } catch (Exception ex) {
-            LOG.error("ERROR callSaleOrder :: " + ex);
-        }
-        return result;
-    }
+		} catch (Exception ex) {
+			LOG.error("======> Error while processing extractValuesFromCustomerApplication : ", ex);
+		}
+		return customerApplicationData;
+	}
 
-    private Result getNafaesData(Result getCustomerData, DataControllerRequest dataControllerRequest) {
-        Result result = StatusEnum.error.setStatus();
-        try {
-            String currentAppId = HelperMethods.getFieldValue(getCustomerData, "currentAppId");
-            Map<String, String> inputParam = new HashMap<>();
-            inputParam.put(DBPUtilitiesConstants.FILTER, "applicationid"
-                    + DBPUtilitiesConstants.EQUAL
-                    + currentAppId);
-            Result getNafaesData = ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, NAFAES_GET_OPERATION_ID, inputParam, null, dataControllerRequest);
-            StatusEnum.success.setStatus(getNafaesData);
-            return getNafaesData;
-        } catch (Exception ex) {
-            LOG.error("ERROR getNafaesData :: " + ex);
-        }
-        return result;
-    }
-    public int gen() {
-        Random r = new Random( System.currentTimeMillis() );
-        return 10000 + r.nextInt(20000);
-    }
-    private Map<String, String> createInputParamsForCreateLoanService(int index, Result getCustomerData) {
-        Map<String, String> inputParams = new HashMap<>();
-        try {
-            inputParams.put("partyId", StringUtils.isNotBlank(HelperMethods.getFieldValue(getCustomerData, "partyId")) ? HelperMethods.getFieldValue(getCustomerData, "partyId") : "");
-            inputParams.put("fixedAmount", FIXED_AMOUNT_VALUE);
-            inputParams.put("amount", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("offerAmount").replace(",", ""));
-            inputParams.put("fixed", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("loanRate"));
-            inputParams.put("term", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("tenor") + "M");
-            inputParams.put("sabbNumber", StringUtils.isNotBlank(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sabbNumber")) ? CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sabbNumber") : "");
-            String randomSanda = String.valueOf(gen());
-            LOG.error("RandomNumber::::::::++++++===="+randomSanda);
-            // inputParams.put("sadadNumber", RandomStringUtils.random(5)); //TOOD need to pick from sanad number
-            inputParams.put("sadadNumber", StringUtils.isNotBlank(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sadadNumber")) ? CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sadadNumber") : randomSanda);
-            // inputParams.put("sanadRef", StringUtils.isNotBlank(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sanadNumber")) ? CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sanadNumber") : "");
-            inputParams.put("sanadRef",randomSanda);
-            inputParams.put("infIoanRef", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("applicationID"));
-            inputParams.put("mobileNumber", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("mobile"));
-        } catch (Exception ex) {
-            LOG.error("ERROR createInputParamsForCreateLoanService :: " + ex);
-        }
-        return inputParams;
-    }
+	
+	public static void main(String[] args) {
+		String s = "{\"nafaes\":[{\"nationalid\":\"1071950487\",\"transferorder\":\"2\",\"referencenumber\":\"108503\",\"id\":\"f34e1bce-9f41-4d2b-b071-00cec2d59e99\",\"accessToken\":\"52ba6870-27f9-466e-8169-f0696a54d86b\",\"applicationid\":\"M0374149\",\"createdts\":\"2022-12-20 16:43:23.0\"}],\"opstatus\":0,\"httpStatusCode\":0}";
+		JSONObject j = new JSONObject(s);
+		
+		Result r = JSONToResult.convert(s);
+		try {
+			CreateLoan c = new CreateLoan();
+			Map<String, String> m = c.extractValuesFromNafaes(r);
+			if (m.get("transferOrderStatus").equals("2")) {
+				System.out.println(true);
+			}
+			else {
+				System.out.println(false);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
-    private Result createLoan(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
-        Result result = StatusEnum.error.setStatus();
-        try {
-            LOG.error("createLoan PARTY_ID :: " + inputParams.get("partyId"));
-            Result getCreateLoanResult = ServiceCaller.internal(MORA_T24_SERVICE_ID, LOAN_CREATION_OPERATION_ID, inputParams, null, dataControllerRequest);
-            String inputRequest = (new ObjectMapper()).writeValueAsString(inputParams);
-            String outputResponse = ResultToJSON.convert(getCreateLoanResult);
-            auditLogData(dataControllerRequest, inputRequest, outputResponse, MORA_T24_SERVICE_ID + " : " + LOAN_CREATION_OPERATION_ID);
-            if (IjarahHelperMethods.hasSuccessStatus(getCreateLoanResult)) {
-                StatusEnum.success.setStatus(getCreateLoanResult);
-                
-                TriggerNotification.sendMessage(getMessageBody(inputParams, dataControllerRequest), inputParams.get("mobileNumber"));
-                
-                return getCreateLoanResult;
-            }
-        } catch (Exception ex) {
-            LOG.error("ERROR createLoan :: " + ex);
-        }
-        return result;
-    }
+	/**
+	 * 
+	 * @param getNafaesData
+	 * @return
+	 */
+	private Map<String, String> extractValuesFromNafaes(Result getNafaesData) {
+		Map<String, String> nafaesData = new HashMap<>();
+		try {
+			nafaesData.put("id",
+					getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("id"));
+			nafaesData.put("accessToken",
+					getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("accessToken"));
+			nafaesData.put("referenceId",
+					getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("referencenumber"));
+			
+			if (getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("transferorder") == null) {
+				nafaesData.put("transferOrderStatus","0");
+			} else {
+				nafaesData.put("transferOrderStatus",
+						getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("transferorder"));
+			}
+		} catch (Exception ex) {
+			LOG.error("======> Error while processing the Nafaes data:: ", ex);
+		}
+		return nafaesData;
+	}
 
-    /**
-     * 
-     * @param inputParams
-     * @param dataControllerRequest
-     * @return
-     */
-    private static String getMessageBody (Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
-    	String message = EnvironmentConfig.CREATE_LOAN_MESSAGE_TEMPLATE.getValue(dataControllerRequest);
-        LOG.error("======> Message Body Before parsing " + message);
-    	inputParams.put("#SADAD#", inputParams.get("sadadNumber"));
-    	inputParams.put("#SABB ACCOUNT#", inputParams.get("sabbNumber"));
-    	String messageBody = TriggerNotification.getJsonFromTemplate(message, inputParams);
-        LOG.error("======> Message Body after parsing " + messageBody);
-    	return messageBody;
-    }
-    
-    private Result activateCustomer(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
-        Result result = StatusEnum.error.setStatus();
-        try {
-            Result getActivateCustomerResult = ServiceCaller.internal(MORA_T24_SERVICE_ID, ACTIVATE_CUSTOMER_OPERATION_ID, inputParams, null, dataControllerRequest);
-            String inputRequest = (new ObjectMapper()).writeValueAsString(inputParams);
-            String outputResponse = ResultToJSON.convert(getActivateCustomerResult);
-            auditLogData(dataControllerRequest, inputRequest, outputResponse, MORA_T24_SERVICE_ID + " : " + ACTIVATE_CUSTOMER_OPERATION_ID);
-            if (IjarahHelperMethods.hasSuccessStatus(getActivateCustomerResult)) {
-                StatusEnum.success.setStatus(getActivateCustomerResult);
-                return getActivateCustomerResult;
-            }
-        } catch (Exception ex) {
-            LOG.error("ERROR activateCustomer :: " + ex);
-        }
-        return result;
-    }
+	/**
+	 * 
+	 * @param inputParams
+	 * @param dataControllerRequest
+	 */
+	private void updateCustomerApplicationData(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
+		Result updateCustomerApplicationTable = ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, CUSTOMER_APPLICATION_UPDATE_OPERATION_ID, inputParams, null, dataControllerRequest);
+		LOG.debug("======> Update Customer Application Table: " + ResultToJSON.convert(updateCustomerApplicationTable));
+	}
 
-    private Map<String, String> createInputParamsForActivateCustomerService(Result getCustomerData) {
-        Map<String, String> inputParams = new HashMap<>();
-        try {
-            inputParams.put("partyId", HelperMethods.getFieldValue(getCustomerData, "partyId"));
-        } catch (Exception ex) {
-            LOG.error("ERROR createInputParamsForActivateCustomerService :: " + ex);
-        }
-        return inputParams;
-    }
-
-    private Result getPartyIDFromCustomerTable(String applicationID, DataControllerRequest dataControllerRequest) {
-        Result result = StatusEnum.error.setStatus();
-        try {
-            LOG.error("getPartyIDFromCustomerTable applicationID :: " + applicationID);
-            Map<String, String> inputParam = new HashMap<>();
-            inputParam.put(DBPUtilitiesConstants.FILTER, "currentAppId"
-                    + DBPUtilitiesConstants.EQUAL
-                    + applicationID);
-            Result getCustomerData = ServiceCaller.internalDB(DBXDB_SERVICES_SERVICE_ID, CUSTOMER_GET_OPERATION_ID, inputParam, null, dataControllerRequest);
-            StatusEnum.success.setStatus(getCustomerData);
-            return getCustomerData;
-        } catch (Exception ex) {
-            LOG.error("ERROR getPartyIDFromCustomerTable :: " + ex);
-        }
-        return result;
-    }
-
-    private boolean preProcess(Map<String, String> inputParams) {
-        try {
-
-        } catch (Exception ex) {
-            LOG.error("ERROR preProcess :: " + ex);
-        }
-        return !inputParams.isEmpty();
-    }
-
-    private Result getCustomerApplicationData(DataControllerRequest dataControllerRequest) {
-        Result result = StatusEnum.error.setStatus();
-        try {
-            Map<String, String> filter = new HashMap<>();
-            filter.put(DBPUtilitiesConstants.FILTER, APPLICATION_STATUS
-                    + DBPUtilitiesConstants.EQUAL
-                    + SID_PRO_ACTIVE
-                    + DBPUtilitiesConstants.AND
-                    + CSA_APPROVAL
-                    + DBPUtilitiesConstants.EQUAL
-                    + DBPUtilitiesConstants.BOOLEAN_STRING_TRUE
-                    + DBPUtilitiesConstants.AND
-                    + SANAD_APPROVAL
-                    + DBPUtilitiesConstants.EQUAL
-                    + DBPUtilitiesConstants.BOOLEAN_STRING_TRUE);
-            Result getCustomerApplicationData = ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, CUSTOMER_APPLICATION_GET_OPERATION_ID, filter, null, dataControllerRequest);
-            StatusEnum.success.setStatus(getCustomerApplicationData);
-            return getCustomerApplicationData;
-        } catch (Exception ex) {
-            LOG.error("ERROR getCustomerApplicationData :: " + ex);
-        }
-        return result;
-    }
-
-    private void extractValuesFromCustomerApplication(Result getCustomerApplicationData) {
-        try {
-            CUSTOMERS_APPLICATION_DATA = getCustomerApplicationData.getDatasetById("tbl_customerapplication");
-
-        } catch (Exception ex) {
-            LOG.error("ERROR extractValuesFromCustomerApplication :: " + ex);
-        }
-    }
-
-    private void extractValuesFromNafaes(Result getNafaesData) {
-        try {
-            ACCESS_TOKEN = getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("accessToken");
-            REFERENCE_NUMBER = getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("referencenumber");
-        } catch (Exception ex) {
-            LOG.error("ERROR extractValuesFromNafaes :: " + ex);
-        }
-    }
-
-    private void updateCustomerApplicationData(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
-        ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, CUSTOMER_APPLICATION_UPDATE_OPERATION_ID, inputParams, null, dataControllerRequest);
-    }
-
-    public static void main(String[] args) {
-        getAccessToken();
-    }
-
-    /**
-     * @return
-     */
-    private static String getAccessToken() {
-        LOG.debug("==========> Nafaes - excuteLogin - Begin");
-        String authToken = null;
-
-        String loginURL = "https://testapi.nafaes.com/oauth/token?grant_type=password&username=APINIG1102&client_id=IFCSUD2789";
-        LOG.debug("==========> Login URL  :: " + loginURL);
-        HashMap<String, String> paramsMap = new HashMap<>();
-        paramsMap.put("password", "<fq$h(59@3");
-        paramsMap.put("client_secret", "$69$is9@n>");
-
-        HashMap<String, String> headersMap = new HashMap<String, String>();
-
-        String endPointResponse = HTTPOperations.hitPOSTServiceAndGetResponse(loginURL, paramsMap, null, headersMap);
-        JSONObject responseJson = getStringAsJSONObject(endPointResponse);
-        LOG.debug("==========> responseJson :: " + responseJson);
-        authToken = responseJson.getString("access_token");
-        LOG.debug("==========> authToken :: " + authToken);
-        LOG.debug("==========> Nafaes - excuteLogin - End");
-        return authToken;
-    }
-
-    /**
-     * Converts the given String into the JSONObject
-     *
-     * @param jsonString
-     * @return
-     */
-    public static JSONObject getStringAsJSONObject(String jsonString) {
-        JSONObject generatedJSONObject = new JSONObject();
-        if (StringUtils.isBlank(jsonString)) {
-            return null;
-        }
-        try {
-            generatedJSONObject = new JSONObject(jsonString);
-            return generatedJSONObject;
-        } catch (JSONException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    public String extractAccessToken() {
-        try {
-            LOG.error("extractAccessToken 1");
-            String url = "https://testapi.nafaes.com/oauth/token?grant_type=password&username=APINIG1102&password=<fq$h(59@3&client_id=IFCSUD2789&client_secret=$69$is9@n>";
-            String encodedURL = URLEncoder.encode(url, "UTF-8");
-            HttpClient httpClient = HttpClients
-                    .custom()
-                    .setSSLContext(new SSLContextBuilder().loadTrustMaterial(null, TrustAllStrategy.INSTANCE).build())
-                    .setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
-                    .build();
-            HttpPost request = new HttpPost(encodedURL);
-            request.setHeader("Content-Type", "application/x-www-form-urlencoded");
-            LOG.error("extractAccessToken 2");
-            HttpResponse httpResponse = httpClient.execute(request);
-            LOG.error("extractAccessToken 3");
-            HttpEntity entity = httpResponse.getEntity();
-            String responseString = EntityUtils.toString(entity);
-            LOG.error("extractAccessToken 4");
-            JSONObject responseObject = new JSONObject(responseString);
-            LOG.error("extractAccessToken  1 = " + responseString);
-            LOG.error("extractAccessToken  2 = " + responseObject);
-            Result accessTokenResult = JSONToResult.convert(responseString);
-            LOG.error("extractAccessToken  3 = " + accessTokenResult.getParamValueByName("access_token"));
-            Gson gson = new Gson();
-            AccessTokenResponse accessTokenResponse = gson.fromJson(ResultToJSON.convert(accessTokenResult), AccessTokenResponse.class);
-            LOG.error("extractAccessToken  4 = " + accessTokenResponse.getProviderToken().getParams().getAccessToken());
-            return accessTokenResponse.getProviderToken().getParams().getAccessToken();
-        } catch (Exception e) {
-            LOG.error("extractAccessToken  postWithFormData exception= " + e);
-            return null;
-        }
-    }
+	/**
+	 * Converts the given String into the JSONObject
+	 *
+	 * @param jsonString
+	 * @return
+	 */
+	public static JSONObject getStringAsJSONObject(String jsonString) {
+		JSONObject generatedJSONObject = new JSONObject();
+		if (StringUtils.isBlank(jsonString)) {
+			return null;
+		}
+		try {
+			generatedJSONObject = new JSONObject(jsonString);
+			return generatedJSONObject;
+		} catch (JSONException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 }
