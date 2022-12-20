@@ -380,7 +380,8 @@ public class ScoringEngine implements JavaService2 {
 
         JSONObject mainObj = new JSONObject(ResultToJSON.convert(getNationalAddress));
         // mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
-
+        // for PT testing
+        mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
         LOG.error("mainObj Response " + mainObj);
 
         if (mainObj.opt("addressListList") instanceof JSONObject) {
@@ -603,6 +604,8 @@ public class ScoringEngine implements JavaService2 {
         JSONObject mainObj = new JSONObject(ResultToJSON.convert(getNationalAddress));
         
         // mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
+        // for PT testing
+        mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
         LOG.error("mainObj Response " + mainObj);
 
         if (mainObj.opt("addressListList") instanceof JSONObject) {
@@ -1550,7 +1553,7 @@ public class ScoringEngine implements JavaService2 {
             if (bounced_cheque.getBCSETTLDDATE() != null) {
                 LOG.error("calculateBouncedCheque 2nd IF");
                 LOG.error("calculateBouncedCheque 2nd IF :: " + bounced_cheque.getBCSETTLDDATE());
-                if (IjarahHelperMethods.isBlank(bounced_cheque.getBCSETTLDDATE())) {
+                if (IjarahHelperMethods.isNotBlank(bounced_cheque.getBCSETTLDDATE())) {
                     BOUNCED_CHEQUE = "SB";
                 } else {
                     BOUNCED_CHEQUE = "UB";
@@ -1567,7 +1570,7 @@ public class ScoringEngine implements JavaService2 {
         if (JUDGEMENT != null && JUDGEMENT.size() > 0) {
             JUDGEMENTItem judgement = JUDGEMENT.get(0);
             if (judgement.getEJSETTLEDATE() != null) {
-                if (IjarahHelperMethods.isBlank(judgement.getEJSETTLEDATE())) {
+                if (IjarahHelperMethods.isNotBlank(judgement.getEJSETTLEDATE())) {
                     LOG.error("calculateCourtJudgement END getEJSETTLEDATE is BLANK");
                     COURT_JUDGEMENT = "SJ";
                 } else {
@@ -1774,7 +1777,9 @@ public class ScoringEngine implements JavaService2 {
             inputParams.put("courtJudgement", COURT_JUDGEMENT);
             inputParams.put("validUtil", NON_FINANCIAL_DEFAULT_AMOUNT);
             inputParams.put("tenor", TENOR);
-            inputParams.put("validDefaults", FINANCIAL_DEFAULT_AMOUNT);
+            //ForPT testing
+            //inputParams.put("validDefaults", FINANCIAL_DEFAULT_AMOUNT);
+            inputParams.put("validDefaults", "0");
             inputParams.put("validInternalDti", INTERNAL_DTI);
             inputParams.put("currDelinquencyT", CURRENT_DELINQUENCY_T);
             inputParams.put("employeeName", EMPLOYER_NAME);
