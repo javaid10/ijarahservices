@@ -70,31 +70,33 @@ public class CreateLoan implements JavaService2 {
 					LOG.debug("======> Nafaes Data:  " + ResultToJSON.convert(getNafaesData));
 					if (IjarahHelperMethods.hasSuccessCode(getNafaesData) && HelperMethods.hasRecords(getNafaesData)) {
 						Map<String, String> nafaesData = extractValuesFromNafaes(getNafaesData);
-						if (nafaesData.get("transferOrderStatus").equals("2")) {
-							LOG.debug("======> This record is already processed. So, Not processing again");
-							continue;
-						}
 
-						Result transferOrder = callTransferOrder(nafaesData.get("accessToken"), nafaesData.get("referenceId"), dataControllerRequest);
+						Result transferOrder = new Result();
+						if (!nafaesData.get("transferOrderStatus").equals("2") || !nafaesData.get("transferOrderStatus").equals("1")) {
+							LOG.debug("======> This record is already processed. So, Not processing again");
+							transferOrder = callTransferOrder(nafaesData.get("accessToken"), nafaesData.get("referenceId"), dataControllerRequest);
+						}
 						LOG.debug("======> Transfer Order Result 1 " + ResultToJSON.convert(transferOrder));
 
 						String transferOrderStatus = transferOrder.getParamValueByName("status");
 						
-						if (!StringUtils.equalsAnyIgnoreCase("success", transferOrderStatus)) {
-							// Updating the transfer Order status to 1 in Nafaes Table. So that it will pick the record again in the next batch process
-							updateTransferOrder(nafaesData.get("id"), "1");
-							continue;
-						}
-
-						if (StringUtils.equalsAnyIgnoreCase("success", transferOrderStatus)) {
-							updateTransferOrder(nafaesData.get("id"), "2");
+						if (nafaesData.get("transferOrderStatus").equals("2") || StringUtils.equalsAnyIgnoreCase("success", transferOrderStatus)) {
 							Result transferOrderresult = callTransferOrderResult(nafaesData.get("accessToken"), nafaesData.get("referenceId"), dataControllerRequest);
 							LOG.debug("======> Transfer Order Result 2 " + ResultToJSON.convert(transferOrderresult));
 							String transferOrderResult_Status = transferOrderresult.getParamValueByName("status");
-
+							if (!StringUtils.equalsAnyIgnoreCase("success", transferOrderResult_Status)) {
+								// Updating the transfer Order status to 2 in Nafaes Table. So that it will pick the record again in the next batch process
+								updateTransferOrder(nafaesData.get("id"), "2");
+								continue;
+							}
+							
 							if (StringUtils.equalsAnyIgnoreCase("success", transferOrderResult_Status)) {
 								Result saleOrder = callSaleOrder(nafaesData.get("accessToken"), nafaesData.get("referenceId"), dataControllerRequest);
 								LOG.debug("======> Sale Order Result " + ResultToJSON.convert(saleOrder));
+								String saleOrderResult_Status = saleOrder.getParamValueByName("status");
+								if (StringUtils.equalsAnyIgnoreCase("success", saleOrderResult_Status)) {
+									updateTransferOrderSellOrder(nafaesData.get("id"), "1", "1");
+								}
 								
 								Result activateCustomer = activateCustomer(createInputParamsForActivateCustomerService(getCustomerData), dataControllerRequest);
 							    LOG.debug("======> Activate Customer: " +ResultToJSON.convert(activateCustomer));
@@ -129,6 +131,11 @@ public class CreateLoan implements JavaService2 {
 		LOG.debug("======> CreateLoan - End ");
 		return result;
 	}
+	
+	public static void main(String[] args) {
+		Result transferOrder = new Result();
+		System.out.println(transferOrder.getParamValueByName("status"));
+	}
 
 	/**
 	 * 
@@ -139,6 +146,26 @@ public class CreateLoan implements JavaService2 {
 		Map<String, Object> userInputs = new HashMap<>();
         userInputs.put("id", nafaesId);
         userInputs.put("transferorder", transferorder);
+		try {
+			String updateCustomerResponse = DBPServiceExecutorBuilder.builder().withServiceId("DBMoraServices")
+			        .withOperationId("dbxdb_nafaes_update").withRequestParameters(userInputs).build()
+			        .getResponse();
+			LOG.debug("======> Customer Update Response" + updateCustomerResponse);
+		} catch (DBPApplicationException e) {
+		}
+	}
+	
+	/**
+	 * 
+	 * @param nafaesId
+	 * @param transferorder
+	 * @param sellOrder
+	 */
+	private void updateTransferOrderSellOrder(String nafaesId, String transferorder, String sellOrder) {
+		Map<String, Object> userInputs = new HashMap<>();
+        userInputs.put("id", nafaesId);
+        userInputs.put("transferorder", transferorder);
+        userInputs.put("sellorder", sellOrder);
 		try {
 			String updateCustomerResponse = DBPServiceExecutorBuilder.builder().withServiceId("DBMoraServices")
 			        .withOperationId("dbxdb_nafaes_update").withRequestParameters(userInputs).build()
