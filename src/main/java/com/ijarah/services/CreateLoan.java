@@ -83,6 +83,7 @@ public class CreateLoan implements JavaService2 {
 						if (!StringUtils.equalsAnyIgnoreCase("success", transferOrderStatus)) {
 							// Updating the transfer Order status to 1 in Nafaes Table. So that it will pick the record again in the next batch process
 							updateTransferOrder(nafaesData.get("id"), "1");
+							continue;
 						}
 
 						if (StringUtils.equalsAnyIgnoreCase("success", transferOrderStatus)) {
