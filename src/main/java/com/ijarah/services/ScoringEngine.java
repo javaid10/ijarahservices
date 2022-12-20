@@ -1553,7 +1553,7 @@ public class ScoringEngine implements JavaService2 {
             if (bounced_cheque.getBCSETTLDDATE() != null) {
                 LOG.error("calculateBouncedCheque 2nd IF");
                 LOG.error("calculateBouncedCheque 2nd IF :: " + bounced_cheque.getBCSETTLDDATE());
-                if (IjarahHelperMethods.isNotBlank(bounced_cheque.getBCSETTLDDATE())) {
+                if (IjarahHelperMethods.isBlank(bounced_cheque.getBCSETTLDDATE())) {
                     BOUNCED_CHEQUE = "SB";
                 } else {
                     BOUNCED_CHEQUE = "UB";
@@ -1570,7 +1570,7 @@ public class ScoringEngine implements JavaService2 {
         if (JUDGEMENT != null && JUDGEMENT.size() > 0) {
             JUDGEMENTItem judgement = JUDGEMENT.get(0);
             if (judgement.getEJSETTLEDATE() != null) {
-                if (IjarahHelperMethods.isNotBlank(judgement.getEJSETTLEDATE())) {
+                if (IjarahHelperMethods.isBlank(judgement.getEJSETTLEDATE())) {
                     LOG.error("calculateCourtJudgement END getEJSETTLEDATE is BLANK");
                     COURT_JUDGEMENT = "SJ";
                 } else {
