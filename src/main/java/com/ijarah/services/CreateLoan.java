@@ -38,6 +38,7 @@ import com.konylabs.middleware.common.JavaService2;
 import com.konylabs.middleware.controller.DataControllerRequest;
 import com.konylabs.middleware.controller.DataControllerResponse;
 import com.konylabs.middleware.dataobject.Dataset;
+import com.konylabs.middleware.dataobject.JSONToResult;
 import com.konylabs.middleware.dataobject.Result;
 import com.konylabs.middleware.dataobject.ResultToJSON;
 
@@ -73,7 +74,6 @@ public class CreateLoan implements JavaService2 {
 
 						Result transferOrder = new Result();
 						if (!nafaesData.get("transferOrderStatus").equals("2") || !nafaesData.get("transferOrderStatus").equals("1")) {
-							LOG.debug("======> This record is already processed. So, Not processing again");
 							transferOrder = callTransferOrder(nafaesData.get("accessToken"), nafaesData.get("referenceId"), dataControllerRequest);
 						}
 						LOG.debug("======> Transfer Order Result 1 " + ResultToJSON.convert(transferOrder));
@@ -132,11 +132,6 @@ public class CreateLoan implements JavaService2 {
 		return result;
 	}
 	
-	public static void main(String[] args) {
-		Result transferOrder = new Result();
-		System.out.println(transferOrder.getParamValueByName("status"));
-	}
-
 	/**
 	 * 
 	 * @param nafaesId
@@ -464,6 +459,25 @@ public class CreateLoan implements JavaService2 {
 		return customerApplicationData;
 	}
 
+	
+	public static void main(String[] args) {
+		String s = "{\"nafaes\":[{\"nationalid\":\"1071950487\",\"transferorder\":\"2\",\"referencenumber\":\"108503\",\"id\":\"f34e1bce-9f41-4d2b-b071-00cec2d59e99\",\"accessToken\":\"52ba6870-27f9-466e-8169-f0696a54d86b\",\"applicationid\":\"M0374149\",\"createdts\":\"2022-12-20 16:43:23.0\"}],\"opstatus\":0,\"httpStatusCode\":0}";
+		JSONObject j = new JSONObject(s);
+		
+		Result r = JSONToResult.convert(s);
+		try {
+			CreateLoan c = new CreateLoan();
+			Map<String, String> m = c.extractValuesFromNafaes(r);
+			if (m.get("transferOrderStatus").equals("2")) {
+				System.out.println(true);
+			}
+			else {
+				System.out.println(false);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
 	/**
 	 * 
@@ -479,8 +493,13 @@ public class CreateLoan implements JavaService2 {
 					getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("accessToken"));
 			nafaesData.put("referenceId",
 					getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("referencenumber"));
-			nafaesData.put("transferOrderStatus",
-					getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("transferorder"));
+			
+			if (getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("transferorder") == null) {
+				nafaesData.put("transferOrderStatus","0");
+			} else {
+				nafaesData.put("transferOrderStatus",
+						getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("transferorder"));
+			}
 		} catch (Exception ex) {
 			LOG.error("======> Error while processing the Nafaes data:: ", ex);
 		}
