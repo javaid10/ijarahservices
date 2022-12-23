@@ -316,6 +316,8 @@ public class CreateLoan implements JavaService2 {
 							? HelperMethods.getFieldValue(getCustomerData, "partyId")
 							: "");
 			inputParams.put("fixedAmount", FIXED_AMOUNT_VALUE);
+
+			inputParams.put("loanApr",customerApplicationData.getRecord(index).getParamValueByName("approx"));
 			inputParams.put("amount",
 					customerApplicationData.getRecord(index).getParamValueByName("offerAmount").replace(",", ""));
 			inputParams.put("fixed", customerApplicationData.getRecord(index).getParamValueByName("loanRate"));
@@ -354,8 +356,13 @@ public class CreateLoan implements JavaService2 {
 					MORA_T24_SERVICE_ID + " : " + LOAN_CREATION_OPERATION_ID);
 			if (IjarahHelperMethods.hasSuccessStatus(getCreateLoanResult)) {
 				StatusEnum.success.setStatus(getCreateLoanResult);
-				
-				String msg1 = "Dear Customer,Your application "+inputParams.get("infIoanRef")+" has beenapproved. You will be notified when loanamount is disbursed to your bank account.Thank you for choosing Mora.";
+				String msg1 = "عزيزي العميل, تمت الموافقة على طلبكم "+inputParams.get("infIoanRef")+". سوف يتم إشعاركم حال تم إيداع مبلغ التمويل في حسابكم البنكي. شكراً لاختياركم مورا.";
+
+// 				String msg2 = " عزيزي العميل، , يمكنكم سداد دفعاتكم عن طريق خدمة سدادحساب "+inputParams.get("sadadNumber") +" من خلال "مورا" (رمز 187)
+// او في الحساب المخصص لكم في بنك ساب "+inputParams.get("sabbNumber")+" مع تحيات مورا للتمويل. ";
+			
+
+				// String msg1 = "Dear Customer,Your application "+inputParams.get("infIoanRef")+" has beenapproved. You will be notified when loanamount is disbursed to your bank account.Thank you for choosing Mora.";
 				String msg2 = "Dear Customer, You can make your payment through SADAD: Account no. "+inputParams.get("sadadNumber") +" Through “Mora” (Biller Code ###)Or in your allocated SABB Payment Account "+inputParams.get("sabbNumber")+" Thank you for choosing Mora.";
 				// TriggerNotification.sendMessage(getMessageBody(inputParams,
 				// dataControllerRequest),inputParams.get("sadadNumber")
