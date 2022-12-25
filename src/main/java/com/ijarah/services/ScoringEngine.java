@@ -380,10 +380,9 @@ public class ScoringEngine implements JavaService2 {
         inputParams.put("country", "SA");
 
         JSONObject mainObj = new JSONObject(ResultToJSON.convert(getNationalAddress));
-        // mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
         // for PT testing
-        // mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
-        // LOG.error("mainObj Response " + mainObj);
+         mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
+         LOG.error("mainObj Response " + mainObj);
 
         if (mainObj.opt("addressListList") instanceof JSONObject) {
 
@@ -606,7 +605,7 @@ public class ScoringEngine implements JavaService2 {
         
         // mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
         // for PT testing
-        // mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
+         mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
         LOG.error("mainObj Response " + mainObj);
 
         if (mainObj.opt("addressListList") instanceof JSONObject) {
