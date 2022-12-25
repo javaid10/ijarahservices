@@ -57,7 +57,7 @@ public class ScoringEngine implements JavaService2 {
     String NON_FINANCIAL_DEFAULT_AMOUNT = "0";
     String BOUNCED_CHEQUE = "NB";
     String COURT_JUDGEMENT = "NJ";
-    String EMPLOYER_CATEGORISATION = "";
+    String EMPLOYER_CATEGORISATION = "NULL";
     String MAX_LOAN_AMOUNT_CAPPING = "";
     String MANAGING_SEASONAL_AND_TEMPORARY_LIFT_IN_SALARY = "0";
     String NEW_TO_INDUSTRY = "";
@@ -152,6 +152,7 @@ public class ScoringEngine implements JavaService2 {
                             dataControllerRequest);
                 } else {
                     EMPLOYER_TYPE_ID = "1";
+                    EMPLOYER_CATEGORISATION = "G";
                 }
 
                 Result getNationalAddress = getNationalAddress(inputParams, dataControllerRequest);
@@ -1724,6 +1725,7 @@ public class ScoringEngine implements JavaService2 {
             inputParams.put("pensioner", PENSIONER);
             inputParams.put("validLos", CURRENT_LENGTH_OF_SERVICE);
             inputParams.put("employeeName", EMPLOYER_NAME);
+            inputParams.put("employeeCategory", EMPLOYER_CATEGORISATION);
             inputParams.put("liftSalary", MANAGING_SEASONAL_AND_TEMPORARY_LIFT_IN_SALARY);
             inputParams.put("salaryNonAllowance", SALARY_WITHOUT_ALLOWANCES);
             inputParams.put("salaryAmount", MONTHLY_NET_SALARY);
@@ -1777,12 +1779,11 @@ public class ScoringEngine implements JavaService2 {
             inputParams.put("courtJudgement", COURT_JUDGEMENT);
             inputParams.put("validUtil", NON_FINANCIAL_DEFAULT_AMOUNT);
             inputParams.put("tenor", TENOR);
-            //ForPT testing
-            //inputParams.put("validDefaults", FINANCIAL_DEFAULT_AMOUNT);
             inputParams.put("validDefaults", "0");
             inputParams.put("validInternalDti", INTERNAL_DTI);
             inputParams.put("currDelinquencyT", CURRENT_DELINQUENCY_T);
             inputParams.put("employeeName", EMPLOYER_NAME);
+            inputParams.put("employeeCategory", EMPLOYER_CATEGORISATION);
             inputParams.put("loanAmountCap", MAX_LOAN_AMOUNT_CAPPING);
             inputParams.put("liftSalary", MANAGING_SEASONAL_AND_TEMPORARY_LIFT_IN_SALARY);
             inputParams.put("nationality", NATIONALITY);
