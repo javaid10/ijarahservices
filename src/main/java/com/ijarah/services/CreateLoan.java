@@ -61,10 +61,13 @@ public class CreateLoan implements JavaService2 {
 
 		Result getCustomerApplicationData = getCustomerApplicationData(dataControllerRequest);
 		LOG.debug("======> Customer Application Data:  " + ResultToJSON.convert(getCustomerApplicationData));
-		if (HelperMethods.hasRecords(getCustomerApplicationData) && IjarahHelperMethods.hasSuccessCode(getCustomerApplicationData)) {
+		if (HelperMethods.hasRecords(getCustomerApplicationData)
+				&& IjarahHelperMethods.hasSuccessCode(getCustomerApplicationData)) {
 			Dataset customerApplicationData = extractValuesFromCustomerApplication(getCustomerApplicationData);
 			for (int index = 0; index < customerApplicationData.getAllRecords().size(); index++) {
-				Result getCustomerData = getPartyIDFromCustomerTable(customerApplicationData.getRecord(index).getParamValueByName("applicationID"), dataControllerRequest);
+				Result getCustomerData = getPartyIDFromCustomerTable(
+						customerApplicationData.getRecord(index).getParamValueByName("applicationID"),
+						dataControllerRequest);
 				LOG.debug("======> Customer Data:  " + ResultToJSON.convert(getCustomerData));
 				if (IjarahHelperMethods.hasSuccessCode(getCustomerData) && HelperMethods.hasRecords(getCustomerData)) {
 					Result getNafaesData = getNafaesData(getCustomerData, dataControllerRequest);
@@ -73,51 +76,61 @@ public class CreateLoan implements JavaService2 {
 						Map<String, String> nafaesData = extractValuesFromNafaes(getNafaesData);
 
 						Result transferOrder = new Result();
-						if (!nafaesData.get("transferOrderStatus").equals("2") || !nafaesData.get("transferOrderStatus").equals("1")) {
-							transferOrder = callTransferOrder(nafaesData.get("accessToken"), nafaesData.get("referenceId"), dataControllerRequest);
+						if (!nafaesData.get("transferOrderStatus").equals("2")
+								|| !nafaesData.get("transferOrderStatus").equals("1")) {
+							transferOrder = callTransferOrder(nafaesData.get("accessToken"),
+									nafaesData.get("referenceId"), dataControllerRequest);
 						}
 						LOG.debug("======> Transfer Order Result 1 " + ResultToJSON.convert(transferOrder));
 
 						String transferOrderStatus = transferOrder.getParamValueByName("status");
-						
-						if (nafaesData.get("transferOrderStatus").equals("2") || StringUtils.equalsAnyIgnoreCase("success", transferOrderStatus)) {
-							Result transferOrderresult = callTransferOrderResult(nafaesData.get("accessToken"), nafaesData.get("referenceId"), dataControllerRequest);
+
+						if (nafaesData.get("transferOrderStatus").equals("2")
+								|| StringUtils.equalsAnyIgnoreCase("success", transferOrderStatus)) {
+							Result transferOrderresult = callTransferOrderResult(nafaesData.get("accessToken"),
+									nafaesData.get("referenceId"), dataControllerRequest);
 							LOG.debug("======> Transfer Order Result 2 " + ResultToJSON.convert(transferOrderresult));
 							String transferOrderResult_Status = transferOrderresult.getParamValueByName("status");
 							if (!StringUtils.equalsAnyIgnoreCase("success", transferOrderResult_Status)) {
-								// Updating the transfer Order status to 2 in Nafaes Table. So that it will pick the record again in the next batch process
+								// Updating the transfer Order status to 2 in Nafaes Table. So that it will pick
+								// the record again in the next batch process
 								updateTransferOrder(nafaesData.get("id"), "2");
 								continue;
 							}
-							
+
 							if (StringUtils.equalsAnyIgnoreCase("success", transferOrderResult_Status)) {
-								Result saleOrder = callSaleOrder(nafaesData.get("accessToken"), nafaesData.get("referenceId"), dataControllerRequest);
+								Result saleOrder = callSaleOrder(nafaesData.get("accessToken"),
+										nafaesData.get("referenceId"), dataControllerRequest);
 								LOG.debug("======> Sale Order Result " + ResultToJSON.convert(saleOrder));
 								String saleOrderResult_Status = saleOrder.getParamValueByName("status");
 								if (StringUtils.equalsAnyIgnoreCase("success", saleOrderResult_Status)) {
 									updateTransferOrderSellOrder(nafaesData.get("id"), "1", "1");
 								}
-								
-								Result activateCustomer = activateCustomer(createInputParamsForActivateCustomerService(getCustomerData), dataControllerRequest);
-							    LOG.debug("======> Activate Customer: " +ResultToJSON.convert(activateCustomer));
-							    if (!IjarahHelperMethods.hasSuccessCode(activateCustomer)) {
-							    	IjarahErrors.ERR_ACTIVATE_CUSTOMER_FAILED_005.setErrorCode(result);
-							    	continue;
-								} 
-							    
-							    Map<String, String> createLoanInputParams = createInputParamsForCreateLoanService(customerApplicationData, index, getCustomerData);
-							    Result createLoanResult = createLoan(createLoanInputParams, dataControllerRequest);
-							    LOG.debug("======> Create Loan: " +ResultToJSON.convert(createLoanResult));
-		                        if (IjarahHelperMethods.hasSuccessCode(createLoanResult)) {
-		                        	Map<String, String> inputParam = new HashMap<>();
-		                    		inputParam.put("id", customerApplicationData.getRecord(index).getParamValueByName("id"));
-		                    		inputParam.put(APPLICATION_STATUS, LOAN_CREATED);
+
+								Result activateCustomer = activateCustomer(
+										createInputParamsForActivateCustomerService(getCustomerData),
+										dataControllerRequest);
+								LOG.debug("======> Activate Customer: " + ResultToJSON.convert(activateCustomer));
+								if (!IjarahHelperMethods.hasSuccessCode(activateCustomer)) {
+									IjarahErrors.ERR_ACTIVATE_CUSTOMER_FAILED_005.setErrorCode(result);
+									continue;
+								}
+
+								Map<String, String> createLoanInputParams = createInputParamsForCreateLoanService(
+										customerApplicationData, index, getCustomerData);
+								Result createLoanResult = createLoan(createLoanInputParams, dataControllerRequest);
+								LOG.debug("======> Create Loan: " + ResultToJSON.convert(createLoanResult));
+								if (IjarahHelperMethods.hasSuccessCode(createLoanResult)) {
+									Map<String, String> inputParam = new HashMap<>();
+									inputParam.put("id",
+											customerApplicationData.getRecord(index).getParamValueByName("id"));
+									inputParam.put(APPLICATION_STATUS, LOAN_CREATED);
 									updateCustomerApplicationData(inputParam, dataControllerRequest);
 								} else {
-		                            IjarahErrors.ERR_LOAN_CREATION_FAILED_006.setErrorCode(result);
-		                        }
+									IjarahErrors.ERR_LOAN_CREATION_FAILED_006.setErrorCode(result);
+								}
 							}
-						} 
+						}
 					} else {
 						IjarahErrors.ERR_NAFAES_DATA_NOT_FOUND_007.setErrorCode(result);
 					}
@@ -131,7 +144,7 @@ public class CreateLoan implements JavaService2 {
 		LOG.debug("======> CreateLoan - End ");
 		return result;
 	}
-	
+
 	/**
 	 * 
 	 * @param nafaesId
@@ -139,17 +152,17 @@ public class CreateLoan implements JavaService2 {
 	 */
 	private void updateTransferOrder(String nafaesId, String transferorder) {
 		Map<String, Object> userInputs = new HashMap<>();
-        userInputs.put("id", nafaesId);
-        userInputs.put("transferorder", transferorder);
+		userInputs.put("id", nafaesId);
+		userInputs.put("transferorder", transferorder);
 		try {
 			String updateCustomerResponse = DBPServiceExecutorBuilder.builder().withServiceId("DBMoraServices")
-			        .withOperationId("dbxdb_nafaes_update").withRequestParameters(userInputs).build()
-			        .getResponse();
+					.withOperationId("dbxdb_nafaes_update").withRequestParameters(userInputs).build()
+					.getResponse();
 			LOG.debug("======> Customer Update Response" + updateCustomerResponse);
 		} catch (DBPApplicationException e) {
 		}
 	}
-	
+
 	/**
 	 * 
 	 * @param nafaesId
@@ -158,18 +171,18 @@ public class CreateLoan implements JavaService2 {
 	 */
 	private void updateTransferOrderSellOrder(String nafaesId, String transferorder, String sellOrder) {
 		Map<String, Object> userInputs = new HashMap<>();
-        userInputs.put("id", nafaesId);
-        userInputs.put("transferorder", transferorder);
-        userInputs.put("sellorder", sellOrder);
+		userInputs.put("id", nafaesId);
+		userInputs.put("transferorder", transferorder);
+		userInputs.put("sellorder", sellOrder);
 		try {
 			String updateCustomerResponse = DBPServiceExecutorBuilder.builder().withServiceId("DBMoraServices")
-			        .withOperationId("dbxdb_nafaes_update").withRequestParameters(userInputs).build()
-			        .getResponse();
+					.withOperationId("dbxdb_nafaes_update").withRequestParameters(userInputs).build()
+					.getResponse();
 			LOG.debug("======> Customer Update Response" + updateCustomerResponse);
 		} catch (DBPApplicationException e) {
 		}
 	}
-	
+
 	/**
 	 * 
 	 * @param accessToken
@@ -294,7 +307,8 @@ public class CreateLoan implements JavaService2 {
 		return 10000 + r.nextInt(20000);
 	}
 
-	private Map<String, String> createInputParamsForCreateLoanService(Dataset customerApplicationData, int index, Result getCustomerData) {
+	private Map<String, String> createInputParamsForCreateLoanService(Dataset customerApplicationData, int index,
+			Result getCustomerData) {
 		Map<String, String> inputParams = new HashMap<>();
 		try {
 			inputParams.put("partyId",
@@ -302,6 +316,8 @@ public class CreateLoan implements JavaService2 {
 							? HelperMethods.getFieldValue(getCustomerData, "partyId")
 							: "");
 			inputParams.put("fixedAmount", FIXED_AMOUNT_VALUE);
+
+			inputParams.put("loanApr", customerApplicationData.getRecord(index).getParamValueByName("approx"));
 			inputParams.put("amount",
 					customerApplicationData.getRecord(index).getParamValueByName("offerAmount").replace(",", ""));
 			inputParams.put("fixed", customerApplicationData.getRecord(index).getParamValueByName("loanRate"));
@@ -340,9 +356,30 @@ public class CreateLoan implements JavaService2 {
 					MORA_T24_SERVICE_ID + " : " + LOAN_CREATION_OPERATION_ID);
 			if (IjarahHelperMethods.hasSuccessStatus(getCreateLoanResult)) {
 				StatusEnum.success.setStatus(getCreateLoanResult);
+				String msg1 = "عزيزي العميل, تمت الموافقة على طلبكم " + inputParams.get("infIoanRef")
+						+ ". سوف يتم إشعاركم حال تم إيداع مبلغ التمويل في حسابكم البنكي. شكراً لاختياركم مورا.";
 
-				TriggerNotification.sendMessage(getMessageBody(inputParams, dataControllerRequest),
-						inputParams.get("mobileNumber"));
+				// String msg2 = " عزيزي العميل، , يمكنكم سداد دفعاتكم عن طريق خدمة سدادحساب
+				// "+inputParams.get("sadadNumber") +" من خلال "مورا" (رمز 187)
+				// او في الحساب المخصص لكم في بنك ساب "+inputParams.get("sabbNumber")+" مع تحيات
+				// مورا للتمويل. ";
+
+				String msg2 = "عزيزي العميل، يمكنكم سداد دفعاتكم عن طريق خدمة سداد حساب  "
+						+ inputParams.get("sadadNumber")
+						+ "من خلال \"مورا\" (رمز 187) او في الحساب المخصص لكم في بنك ساب  "
+						+ inputParams.get("sabbNumber") + "مع تحيات مورا للتمويل.";
+				// String msg1 = "Dear Customer,Your application
+				// "+inputParams.get("infIoanRef")+" has beenapproved. You will be notified when
+				// loanamount is disbursed to your bank account.Thank you for choosing Mora.";
+				// String msg2 = "Dear Customer, You can make your payment through SADAD:
+				// Account no. "+inputParams.get("sadadNumber") +" Through “Mora” (Biller Code
+				// ###)Or in your allocated SABB Payment Account
+				// "+inputParams.get("sabbNumber")+" Thank you for choosing Mora.";
+				// TriggerNotification.sendMessage(getMessageBody(inputParams,
+				// dataControllerRequest),inputParams.get("sadadNumber")
+				// );
+				TriggerNotification.sendMessage(msg1, inputParams.get("mobileNumber"));
+				TriggerNotification.sendMessage(msg2, inputParams.get("mobileNumber"));
 
 				return getCreateLoanResult;
 			}
@@ -418,7 +455,6 @@ public class CreateLoan implements JavaService2 {
 		return getCustomerData;
 	}
 
-
 	/**
 	 * 
 	 * @param dataControllerRequest
@@ -459,19 +495,17 @@ public class CreateLoan implements JavaService2 {
 		return customerApplicationData;
 	}
 
-	
 	public static void main(String[] args) {
 		String s = "{\"nafaes\":[{\"nationalid\":\"1071950487\",\"transferorder\":\"2\",\"referencenumber\":\"108503\",\"id\":\"f34e1bce-9f41-4d2b-b071-00cec2d59e99\",\"accessToken\":\"52ba6870-27f9-466e-8169-f0696a54d86b\",\"applicationid\":\"M0374149\",\"createdts\":\"2022-12-20 16:43:23.0\"}],\"opstatus\":0,\"httpStatusCode\":0}";
 		JSONObject j = new JSONObject(s);
-		
+
 		Result r = JSONToResult.convert(s);
 		try {
 			CreateLoan c = new CreateLoan();
 			Map<String, String> m = c.extractValuesFromNafaes(r);
 			if (m.get("transferOrderStatus").equals("2")) {
 				System.out.println(true);
-			}
-			else {
+			} else {
 				System.out.println(false);
 			}
 		} catch (Exception e) {
@@ -493,9 +527,9 @@ public class CreateLoan implements JavaService2 {
 					getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("accessToken"));
 			nafaesData.put("referenceId",
 					getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("referencenumber"));
-			
+
 			if (getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("transferorder") == null) {
-				nafaesData.put("transferOrderStatus","0");
+				nafaesData.put("transferOrderStatus", "0");
 			} else {
 				nafaesData.put("transferOrderStatus",
 						getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("transferorder"));
@@ -511,8 +545,10 @@ public class CreateLoan implements JavaService2 {
 	 * @param inputParams
 	 * @param dataControllerRequest
 	 */
-	private void updateCustomerApplicationData(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
-		Result updateCustomerApplicationTable = ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, CUSTOMER_APPLICATION_UPDATE_OPERATION_ID, inputParams, null, dataControllerRequest);
+	private void updateCustomerApplicationData(Map<String, String> inputParams,
+			DataControllerRequest dataControllerRequest) {
+		Result updateCustomerApplicationTable = ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID,
+				CUSTOMER_APPLICATION_UPDATE_OPERATION_ID, inputParams, null, dataControllerRequest);
 		LOG.debug("======> Update Customer Application Table: " + ResultToJSON.convert(updateCustomerApplicationTable));
 	}
 

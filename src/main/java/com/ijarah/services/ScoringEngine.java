@@ -382,8 +382,8 @@ public class ScoringEngine implements JavaService2 {
         JSONObject mainObj = new JSONObject(ResultToJSON.convert(getNationalAddress));
         // mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
         // for PT testing
-        mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
-        LOG.error("mainObj Response " + mainObj);
+        // mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
+        // LOG.error("mainObj Response " + mainObj);
 
         if (mainObj.opt("addressListList") instanceof JSONObject) {
 
@@ -606,7 +606,7 @@ public class ScoringEngine implements JavaService2 {
         
         // mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
         // for PT testing
-        mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
+        // mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
         LOG.error("mainObj Response " + mainObj);
 
         if (mainObj.opt("addressListList") instanceof JSONObject) {
@@ -615,7 +615,7 @@ public class ScoringEngine implements JavaService2 {
             inputParams.put("addressLine1", mainObj.optJSONObject("addressListList").optString("district"));
             inputParams.put("addressLine2", mainObj.optJSONObject("addressListList").optString("streetName"));
             inputParams.put("addressLine3",
-                    String.valueOf(mainObj.optJSONObject("addressListList").optString("unitNumber")));
+                    String.valueOf(mainObj.optJSONObject("addressListList").optString("buildingNumber")));
             inputParams.put("zipCode", String.valueOf(mainObj.optJSONObject("addressListList").optString("postCode")));
             inputParams.put("latitude",
                     mainObj.optJSONObject("addressListList").optString("locationCoordinates").split(" ")[0].trim());
@@ -631,7 +631,7 @@ public class ScoringEngine implements JavaService2 {
             inputParams.put("addressLine2",
                     mainObj.optJSONArray("addressListList").getJSONObject(0).optString("streetName"));
             inputParams.put("addressLine3",
-                    String.valueOf(mainObj.optJSONArray("addressListList").getJSONObject(0).optString("unitNumber")));
+                    String.valueOf(mainObj.optJSONArray("addressListList").getJSONObject(0).optString("buildingNumber")));
             inputParams.put("zipCode",
                     String.valueOf(mainObj.optJSONArray("addressListList").getJSONObject(0).optString("postCode")));
             inputParams.put("latitude", mainObj.optJSONArray("addressListList").getJSONObject(0)
