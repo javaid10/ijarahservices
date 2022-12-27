@@ -481,7 +481,7 @@ public class ScoringEngine implements JavaService2 {
                 } else {
                     inputParams.put("employerName", "Employer Name");
                 }
-                inputParams.put("employStatus", "HIRED");
+                inputParams.put("employStatus", "EMPLOYED");
                 inputParams.put("jobTitleMfb", getSalaryCertificate.getParamValueByName("employeeJobTitle"));
                 // inputParams.put("employerName",
                 // getSalaryCertificate.getParamValueByName("agencyName"));
@@ -491,13 +491,12 @@ public class ScoringEngine implements JavaService2 {
                 inputParams.put("basicWageMfb", "0");
                 break;
             case "3":
-                if (!getSalaryCertificate.getParamValueByName("employerName").isEmpty()) {
-                    empName = getSalaryCertificate.getParamValueByName("employerName");
-                    LOG.error("EMPLOYEEE NAMEE=====>>>" + empName);
-                }
-                inputParams.put("employerName", empName);
-                inputParams.put("lEmpName", empName);
-                inputParams.put("employStatus", "HIRED");
+                // if (!getSalaryCertificate.getParamValueByName("employerName").isEmpty()) {
+                    LOG.error("EMPLOYEEE NAMEE=====>>>" + getSalaryCertificate.getParamValueByName("employerName") );
+             
+                inputParams.put("employerName", getSalaryCertificate.getParamValueByName("employerName"));
+                inputParams.put("lEmpName", getSalaryCertificate.getParamValueByName("employerName"));
+                inputParams.put("employStatus", "EMPLOYED");
                 inputParams.put("houseAllowMfb", getSalaryCertificate.getParamValueByName("housingAllowance"));
                 inputParams.put("othAllowMfb", getSalaryCertificate.getParamValueByName("otherAllowance"));
                 // TODO Salary Pay Date should be YYYYMMDD M0128 for SALARY.DATE.FREQ
@@ -529,6 +528,7 @@ public class ScoringEngine implements JavaService2 {
                     MESSAGEItem MESSAGE = RESPONSE.getMESSAGE().get(0);
                     if (MESSAGE.getITEM() != null && MESSAGE.getITEM().size() > 0) {
                         ITEMItem ITEM = MESSAGE.getITEM().get(0);
+
                         if (ITEM.getRSPREPORT() != null && ITEM.getRSPREPORT().size() > 0) {
                             RSPREPORTItem RSPREPORT = ITEM.getRSPREPORT().get(0);
                             if (RSPREPORT.getCONSUMER() != null && RSPREPORT.getCONSUMER().size() > 0) {
