@@ -378,35 +378,24 @@ public class ScoringEngine implements JavaService2 {
         Map<String, String> inputParams = new HashMap<>();
         inputParams.put("partyId", PARTY_ID);
         inputParams.put("country", "SA");
-        String streetVal = "";
+
         JSONObject mainObj = new JSONObject(ResultToJSON.convert(getNationalAddress));
         // for PT testing
-        // mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
-        LOG.error("mainObj Response " + mainObj);
+         mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
+         LOG.error("mainObj Response " + mainObj);
 
         if (mainObj.opt("addressListList") instanceof JSONObject) {
 
             if (mainObj.opt("addressListList") != null) {
-                streetVal = mainObj.optJSONObject("addressListList").optString("streetName");
-                String upToNCharacters = streetVal.substring(0, Math.min(streetVal.length(), 35));
 
-                inputParams.put("street", upToNCharacters);
-                inputParams.put("StreetEnMfb", mainObj.optJSONObject("addressListList").optString("streetName"));
-                inputParams.put("buildingNumber", mainObj.optJSONObject("addressListList").optString("buildingNumber"));
-                inputParams.put("flatNumber", mainObj.optJSONObject("addressListList").optString("unitNumber"));
-                inputParams.put("districtName", mainObj.optJSONObject("addressListList").optString("district"));
+                inputParams.put("street", mainObj.optJSONObject("addressListList").optString("streetName"));
+                inputParams.put("address", mainObj.optJSONObject("addressListList").optString("district") + " "
+                        + mainObj.optJSONObject("addressListList").optString("unitNumber"));
                 inputParams.put("addressCity", mainObj.optJSONObject("addressListList").optString("city"));
-                inputParams.put("postCode", mainObj.optJSONObject("addressListList").optString("postCode"));
-
             } else {
-
-                inputParams.put("street", "street");
-                inputParams.put("StreetEnMfb", "StreetEnMfb");
-                inputParams.put("buildingNumber", "buildingNumber");
-                inputParams.put("flatNumber", "flatNumber");
-                inputParams.put("districtName", "districtName");
-                inputParams.put("addressCity", "addressCity");
-                inputParams.put("postCode", "postCode");
+                inputParams.put("street", "streetValue");
+                inputParams.put("address", "addressValue");
+                inputParams.put("addressCity", "addressCityValue");
             }
 
             LOG.error("createRequestForT24CustomerAddressUpdateService Single Address " + inputParams);
@@ -468,42 +457,28 @@ public class ScoringEngine implements JavaService2 {
         inputParams.put("partyId", PARTY_ID);
 
         LOG.error("partyId ::" + PARTY_ID);
-String empName =getSalaryCertificate.getParamValueByName("employerName");
-String agencyName =  getSalaryCertificate.getParamValueByName("agencyName");
+
         inputParams.put("salaryCurrency", "SAR");
 
         switch (EMPLOYER_TYPE_ID) {
             case "1":
                 inputParams.put("employStatus", "EMPLOYED");
-                if(empName.length()> 70){
-                    inputParams.put("employerName", empName.substring(0,70));
-
-                    inputParams.put("lEmpName", empName.substring(0,70));
-                }else{
-                    inputParams.put("employerName", empName);
-                    inputParams.put("lEmpName", empName);
-                }
+                inputParams.put("occupation", "occupation");
                 inputParams.put("jobTitleMfb", getSalaryCertificate.getParamValueByName("employeeJobTitle"));
+                // inputParams.put("employerName",
+                // getSalaryCertificate.getParamValueByName("agencyName"));
                 inputParams.put("employerName", "Agency Name");
                 inputParams.put("employStartDate", getSalaryCertificate.getParamValueByName("agencyEmploymentDate"));
                 inputParams.put("salaryMfb", getSalaryCertificate.getParamValueByName("netSalary"));
                 inputParams.put("basicWageMfb", "0");
-                inputParams.put("houseAllowMfb", getSalaryCertificate.getParamValueByName("housingAllowance"));
-
                 break;
             case "3":
                 inputParams.put("employStatus", "EMPLOYED");
-                inputParams.put("jobTitleMfb", " ");
-                if(agencyName.length()> 70){
-                    
-                    inputParams.put("lEmpName", agencyName.substring(0,70));
-                    inputParams.put("employerName",agencyName);
-                }else{
-                    inputParams.put("lEmpName", agencyName);
-                    inputParams.put("employerName",agencyName);
-                }
-                // inputParams.put("employerName", getSalaryCertificate.getParamValueByName("agencyName"));
-                inputParams.put("othAllowMfb", getSalaryCertificate.getParamValueByName("totalAllownces"));
+                inputParams.put("occupation", "occupation");
+                inputParams.put("jobTitleMfb", "jobTitleMfb");
+                // inputParams.put("employerName",
+                // getSalaryCertificate.getParamValueByName("employerName"));
+                inputParams.put("employerName", "Employer Name");
                 // TODO Salary Pay Date should be YYYYMMDD M0128 for SALARY.DATE.FREQ
 
                 LocalDate dateOfJoining = LocalDate.parse(getSalaryCertificate.getParamValueByName("dateOfJoining"),
@@ -627,10 +602,10 @@ String agencyName =  getSalaryCertificate.getParamValueByName("agencyName");
         inputParams.put("id", generateUUID());
 
         JSONObject mainObj = new JSONObject(ResultToJSON.convert(getNationalAddress));
-
+        
         // mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
         // for PT testing
-        // mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
+         mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
         LOG.error("mainObj Response " + mainObj);
 
         if (mainObj.opt("addressListList") instanceof JSONObject) {
@@ -655,8 +630,7 @@ String agencyName =  getSalaryCertificate.getParamValueByName("agencyName");
             inputParams.put("addressLine2",
                     mainObj.optJSONArray("addressListList").getJSONObject(0).optString("streetName"));
             inputParams.put("addressLine3",
-                    String.valueOf(
-                            mainObj.optJSONArray("addressListList").getJSONObject(0).optString("buildingNumber")));
+                    String.valueOf(mainObj.optJSONArray("addressListList").getJSONObject(0).optString("buildingNumber")));
             inputParams.put("zipCode",
                     String.valueOf(mainObj.optJSONArray("addressListList").getJSONObject(0).optString("postCode")));
             inputParams.put("latitude", mainObj.optJSONArray("addressListList").getJSONObject(0)
@@ -1018,8 +992,8 @@ String agencyName =  getSalaryCertificate.getParamValueByName("agencyName");
             // Math.min(Double.parseDouble(inputParams.get("loanAmountCap")),
             // Double.parseDouble(HelperMethods.getFieldValue(getCustomerApplicationData,
             // "loanAmount").replaceAll(",", "")));
-
-            getLoanSimulation(createRequestForSimulation(String.valueOf(amountOffer), loanRate));
+            
+            getLoanSimulation(createRequestForSimulation(String.valueOf(amountOffer) , loanRate));
 
             inputParams.put("monthlyRepay", EMI);
             inputParams.put("offerAmount", String.valueOf(amountOffer));
@@ -1761,18 +1735,19 @@ String agencyName =  getSalaryCertificate.getParamValueByName("agencyName");
         return inputParams;
     }
 
-    private HashMap<String, Object> createRequestForSimulation(String amoOffer, String loanRate) {
+    private HashMap<String, Object> createRequestForSimulation(String amoOffer , String loanRate) {
         // Map<String, Object> inputParams = new HashMap<>();
 
         HashMap<String, Object> inputParams = new HashMap<>();
         try {
             String term = TENOR + "M";
 
-            // loanAmt= loanAmt.replace(",", "");
-            LOG.error("========== AMount Offer sending for simulation is ::" + amoOffer);
 
-            // LOG.error("========== Loan Amount sending for simulation is ::"+);
-            inputParams.put("amount", amoOffer); // TODO amount offer should be sent
+        //    loanAmt= loanAmt.replace(",", "");
+           LOG.error("========== AMount Offer sending for simulation is ::"+amoOffer);
+
+        //    LOG.error("========== Loan Amount sending for simulation is ::"+);
+            inputParams.put("amount", amoOffer); //TODO amount offer should be sent
             inputParams.put("term", term);
             inputParams.put("partyId", PARTY_ID);
             inputParams.put("fixedRate", loanRate);
