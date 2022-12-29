@@ -156,8 +156,7 @@ public class CreateLoan implements JavaService2 {
 		userInputs.put("transferorder", transferorder);
 		try {
 			String updateCustomerResponse = DBPServiceExecutorBuilder.builder().withServiceId("DBMoraServices")
-					.withOperationId("dbxdb_nafaes_update").withRequestParameters(userInputs).build()
-					.getResponse();
+					.withOperationId("dbxdb_nafaes_update").withRequestParameters(userInputs).build().getResponse();
 			LOG.debug("======> Customer Update Response" + updateCustomerResponse);
 		} catch (DBPApplicationException e) {
 		}
@@ -176,8 +175,7 @@ public class CreateLoan implements JavaService2 {
 		userInputs.put("sellorder", sellOrder);
 		try {
 			String updateCustomerResponse = DBPServiceExecutorBuilder.builder().withServiceId("DBMoraServices")
-					.withOperationId("dbxdb_nafaes_update").withRequestParameters(userInputs).build()
-					.getResponse();
+					.withOperationId("dbxdb_nafaes_update").withRequestParameters(userInputs).build().getResponse();
 			LOG.debug("======> Customer Update Response" + updateCustomerResponse);
 		} catch (DBPApplicationException e) {
 		}
@@ -293,8 +291,8 @@ public class CreateLoan implements JavaService2 {
 			String currentAppId = HelperMethods.getFieldValue(getCustomerData, "currentAppId");
 			Map<String, String> inputParam = new HashMap<>();
 			inputParam.put(DBPUtilitiesConstants.FILTER, "applicationid" + DBPUtilitiesConstants.EQUAL + currentAppId);
-			getNafaesData = ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, NAFAES_GET_OPERATION_ID,
-					inputParam, null, dataControllerRequest);
+			getNafaesData = ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, NAFAES_GET_OPERATION_ID, inputParam,
+					null, dataControllerRequest);
 			StatusEnum.success.setStatus(getNafaesData);
 		} catch (Exception ex) {
 			LOG.error("ERROR getNafaesData :: " + ex);
@@ -323,21 +321,21 @@ public class CreateLoan implements JavaService2 {
 			inputParams.put("fixed", customerApplicationData.getRecord(index).getParamValueByName("loanRate"));
 			inputParams.put("term", customerApplicationData.getRecord(index).getParamValueByName("tenor") + "M");
 			inputParams.put("sabbNumber",
-					StringUtils
-							.isNotBlank(customerApplicationData.getRecord(index).getParamValueByName("sabbNumber"))
-									? customerApplicationData.getRecord(index).getParamValueByName("sabbNumber")
-									: "");
+					StringUtils.isNotBlank(customerApplicationData.getRecord(index).getParamValueByName("sabbNumber"))
+							? customerApplicationData.getRecord(index).getParamValueByName("sabbNumber")
+							: "");
 			String randomSanda = String.valueOf(gen());
 			LOG.error("RandomNumber::::::::++++++====" + randomSanda);
 			inputParams.put("sadadNumber",
-					StringUtils
-							.isNotBlank(customerApplicationData.getRecord(index).getParamValueByName("sadadNumber"))
-									? customerApplicationData.getRecord(index).getParamValueByName("sadadNumber")
-									: randomSanda);
+					StringUtils.isNotBlank(customerApplicationData.getRecord(index).getParamValueByName("sadadNumber"))
+							? customerApplicationData.getRecord(index).getParamValueByName("sadadNumber")
+							: randomSanda);
 			inputParams.put("sanadRef", randomSanda);
 			inputParams.put("infIoanRef",
 					customerApplicationData.getRecord(index).getParamValueByName("applicationID"));
 			inputParams.put("mobileNumber", customerApplicationData.getRecord(index).getParamValueByName("mobile"));
+			inputParams.put("effectiveDate",
+					customerApplicationData.getRecord(index).getParamValueByName("effectiveDate"));
 		} catch (Exception ex) {
 			LOG.error("ERROR createInputParamsForCreateLoanService :: " + ex);
 		}
@@ -446,8 +444,8 @@ public class CreateLoan implements JavaService2 {
 			LOG.error("======> Application Id: " + applicationID);
 			Map<String, String> inputParam = new HashMap<>();
 			inputParam.put(DBPUtilitiesConstants.FILTER, "currentAppId" + DBPUtilitiesConstants.EQUAL + applicationID);
-			getCustomerData = ServiceCaller.internalDB(DBXDB_SERVICES_SERVICE_ID, CUSTOMER_GET_OPERATION_ID,
-					inputParam, null, dataControllerRequest);
+			getCustomerData = ServiceCaller.internalDB(DBXDB_SERVICES_SERVICE_ID, CUSTOMER_GET_OPERATION_ID, inputParam,
+					null, dataControllerRequest);
 			StatusEnum.success.setStatus(getCustomerData);
 		} catch (Exception ex) {
 			LOG.error("======> Error while processing the getPartyIDFromCustomerTable: " + ex);
@@ -521,8 +519,7 @@ public class CreateLoan implements JavaService2 {
 	private Map<String, String> extractValuesFromNafaes(Result getNafaesData) {
 		Map<String, String> nafaesData = new HashMap<>();
 		try {
-			nafaesData.put("id",
-					getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("id"));
+			nafaesData.put("id", getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("id"));
 			nafaesData.put("accessToken",
 					getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("accessToken"));
 			nafaesData.put("referenceId",
