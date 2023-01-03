@@ -27,6 +27,7 @@ import org.json.JSONObject;
 import com.dbp.core.error.DBPApplicationException;
 import com.dbp.core.fabric.extn.DBPServiceExecutorBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ijarah.utils.HTTPOperations;
 import com.ijarah.utils.IjarahHelperMethods;
 import com.ijarah.utils.ServiceCaller;
 import com.ijarah.utils.enums.EnvironmentConfig;
@@ -56,6 +57,7 @@ public class CreateLoan implements JavaService2 {
 	public Object invoke(String s, Object[] objects, DataControllerRequest dataControllerRequest,
 			DataControllerResponse dataControllerResponse) throws Exception {
 		LOG.debug("======> CreateLoan - Begin ");
+		String accessToken = "";
 		Result result = StatusEnum.error.setStatus();
 		IjarahErrors.ERR_CREATE_LOAN_002.setErrorCode(result);
 
@@ -77,9 +79,15 @@ public class CreateLoan implements JavaService2 {
 
 						Result transferOrder = new Result();
 						if (!nafaesData.get("transferOrderStatus").equals("2")
-								|| !nafaesData.get("transferOrderStatus").equals("1")) {
-							transferOrder = callTransferOrder(nafaesData.get("accessToken"),
-									nafaesData.get("referenceId"), dataControllerRequest);
+								&& !nafaesData.get("transferOrderStatus").equals("1")) {
+
+							// Get New Fresh access Token
+							// nafaesData.get("accessToken");
+							accessToken = getAccessToken(dataControllerRequest);
+							LOG.debug("======> accessToken:  " + accessToken);
+
+							transferOrder = callTransferOrder(accessToken, nafaesData.get("referenceId"),
+									dataControllerRequest);
 						}
 						LOG.debug("======> Transfer Order Result 1 " + ResultToJSON.convert(transferOrder));
 
@@ -99,8 +107,8 @@ public class CreateLoan implements JavaService2 {
 							}
 
 							if (StringUtils.equalsAnyIgnoreCase("success", transferOrderResult_Status)) {
-								Result saleOrder = callSaleOrder(nafaesData.get("accessToken"),
-										nafaesData.get("referenceId"), dataControllerRequest);
+								Result saleOrder = callSaleOrder(accessToken, nafaesData.get("referenceId"),
+										dataControllerRequest);
 								LOG.debug("======> Sale Order Result " + ResultToJSON.convert(saleOrder));
 								String saleOrderResult_Status = saleOrder.getParamValueByName("status");
 								if (StringUtils.equalsAnyIgnoreCase("success", saleOrderResult_Status)) {
@@ -130,6 +138,33 @@ public class CreateLoan implements JavaService2 {
 									IjarahErrors.ERR_LOAN_CREATION_FAILED_006.setErrorCode(result);
 								}
 							}
+						} else if(nafaesData.get("transferOrderStatus").equals("1") 
+								&& nafaesData.get("sellOrderStatus").equals("1") ){
+							// if po =1, to =1, and so =1
+
+							Result activateCustomer = activateCustomer(
+									createInputParamsForActivateCustomerService(getCustomerData),
+									dataControllerRequest);
+							LOG.debug("======> Activate Customer: " + ResultToJSON.convert(activateCustomer));
+							if (!IjarahHelperMethods.hasSuccessCode(activateCustomer)) {
+								IjarahErrors.ERR_ACTIVATE_CUSTOMER_FAILED_005.setErrorCode(result);
+								continue;
+							}
+
+							Map<String, String> createLoanInputParams = createInputParamsForCreateLoanService(
+									customerApplicationData, index, getCustomerData);
+							Result createLoanResult = createLoan(createLoanInputParams, dataControllerRequest);
+							LOG.debug("======> Create Loan: " + ResultToJSON.convert(createLoanResult));
+							if (IjarahHelperMethods.hasSuccessCode(createLoanResult)) {
+								Map<String, String> inputParam = new HashMap<>();
+								inputParam.put("id",
+										customerApplicationData.getRecord(index).getParamValueByName("id"));
+								inputParam.put(APPLICATION_STATUS, LOAN_CREATED);
+								updateCustomerApplicationData(inputParam, dataControllerRequest);
+							} else {
+								IjarahErrors.ERR_LOAN_CREATION_FAILED_006.setErrorCode(result);
+							}
+
 						}
 					} else {
 						IjarahErrors.ERR_NAFAES_DATA_NOT_FOUND_007.setErrorCode(result);
@@ -531,6 +566,12 @@ public class CreateLoan implements JavaService2 {
 				nafaesData.put("transferOrderStatus",
 						getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("transferorder"));
 			}
+			if (getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("sellorder") == null) {
+				nafaesData.put("sellOrderStatus", "0");
+			} else {
+				nafaesData.put("sellOrderStatus",
+						getNafaesData.getDatasetById("nafaes").getRecord(0).getParamValueByName("sellorder"));
+			}
 		} catch (Exception ex) {
 			LOG.error("======> Error while processing the Nafaes data:: ", ex);
 		}
@@ -567,5 +608,29 @@ public class CreateLoan implements JavaService2 {
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	private static String getAccessToken(DataControllerRequest dataControllerRequest) {
+		LOG.debug("==========> Nafaes - excuteLogin - Begin");
+		String authToken = null;
+
+		String loginURL = EnvironmentConfig.CUSTOM_NAFAES_URL.getValue(dataControllerRequest)
+				+ "oauth/token?grant_type=password" + "&username="
+				+ EnvironmentConfig.NAFAES_USERNAME.getValue(dataControllerRequest) + "&client_id="
+				+ EnvironmentConfig.NAFAES_CLIENT_ID.getValue(dataControllerRequest);
+		LOG.debug("==========> Login URL  :: " + loginURL);
+		HashMap<String, String> paramsMap = new HashMap<>();
+		paramsMap.put("password", EnvironmentConfig.NAFAES_PASSWORD.getValue(dataControllerRequest));
+		paramsMap.put("client_secret", EnvironmentConfig.NAFAES_CLIENT_SECRET.getValue(dataControllerRequest));
+
+		HashMap<String, String> headersMap = new HashMap<String, String>();
+
+		String endPointResponse = HTTPOperations.hitPOSTServiceAndGetResponse(loginURL, paramsMap, null, headersMap);
+		JSONObject responseJson = getStringAsJSONObject(endPointResponse);
+		LOG.debug("==========> responseJson :: " + responseJson);
+		authToken = responseJson.getString("access_token");
+		LOG.debug("==========> authToken :: " + authToken);
+		LOG.debug("==========> Nafaes - excuteLogin - End");
+		return authToken;
 	}
 }

@@ -15,6 +15,11 @@ public enum EnvironmentConfig implements Serializable {
     RKA_NAME,
     PAYMENT_SCHEDULE_SLEEP_VALUE,
     APP_HASH_VALUE,
+    CUSTOM_NAFAES_URL,
+	NAFAES_PASSWORD,
+	NAFAES_USERNAME,
+	NAFAES_CLIENT_ID,
+	NAFAES_CLIENT_SECRET,
     CREATE_LOAN_MESSAGE_TEMPLATE;
 
     EnvironmentConfig() {
