@@ -81,9 +81,9 @@ public class CreateLoan implements JavaService2 {
 						if (!nafaesData.get("transferOrderStatus").equals("2")
 								&& !nafaesData.get("transferOrderStatus").equals("1")) {
 
-							// Get New Fresh access Token
-							// nafaesData.get("accessToken");
-							accessToken = getAccessToken(dataControllerRequest);
+							// 06/01/2022 revert back to the old token
+							//accessToken = getAccessToken(dataControllerRequest);
+							accessToken = nafaesData.get("accessToken");
 							LOG.debug("======> accessToken:  " + accessToken);
 
 							transferOrder = callTransferOrder(accessToken, nafaesData.get("referenceId"),
@@ -92,6 +92,9 @@ public class CreateLoan implements JavaService2 {
 						LOG.debug("======> Transfer Order Result 1 " + ResultToJSON.convert(transferOrder));
 
 						String transferOrderStatus = transferOrder.getParamValueByName("status");
+						
+						
+						
 
 						if (nafaesData.get("transferOrderStatus").equals("2")
 								|| StringUtils.equalsAnyIgnoreCase("success", transferOrderStatus)) {
@@ -371,6 +374,12 @@ public class CreateLoan implements JavaService2 {
 			inputParams.put("mobileNumber", customerApplicationData.getRecord(index).getParamValueByName("mobile"));
 			inputParams.put("effectiveDate",
 					customerApplicationData.getRecord(index).getParamValueByName("effectiveDate"));
+			
+			// add new param 06/01/2023 for loan creation
+			inputParams.put("lExternalAcct",
+					StringUtils.isNotBlank(HelperMethods.getFieldValue(getCustomerData, "Bank_id"))
+							? HelperMethods.getFieldValue(getCustomerData, "Bank_id")
+							: "");
 		} catch (Exception ex) {
 			LOG.error("ERROR createInputParamsForCreateLoanService :: " + ex);
 		}
