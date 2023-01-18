@@ -26,7 +26,7 @@ public class Body {
     private String applicationStatus;
 
     @SerializedName("salaryAmount")
-    private int salaryAmount;
+    private double salaryAmount;
 
     @SerializedName("pensioner")
     private String pensioner;
@@ -148,7 +148,7 @@ public class Body {
         this.salaryAmount = salaryAmount;
     }
 
-    public int getSalaryAmount() {
+    public double getSalaryAmount() {
         return salaryAmount;
     }
 

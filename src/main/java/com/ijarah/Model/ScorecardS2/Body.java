@@ -20,7 +20,7 @@ public class Body{
 	private String applicationStatus;
 
 	@SerializedName("salaryAmount")
-	private int salaryAmount;
+	private double salaryAmount;
 
 	@SerializedName("dataTypes1")
 	private String dataTypes1;
@@ -60,7 +60,7 @@ public class Body{
 		return applicationStatus;
 	}
 
-	public int getSalaryAmount(){
+	public double getSalaryAmount(){
 		return salaryAmount;
 	}
 

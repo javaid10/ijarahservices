@@ -147,10 +147,12 @@ public class ScoringEngine implements JavaService2 {
 				if (IjarahHelperMethods.isBlank(getSalaryCertificate.getParamValueByName("payMonth"))) {
 					LOG.error("PRIVATE EMPLOYEE");
 					EMPLOYER_TYPE_ID = "3";
+					EMPLOYER_CATEGORISATION = "NULL";
 					getSalaryCertificate = getSIMAHSalaryCertificate(
 							createRequestForSIMAHSALARY(getCustomerData, EMPLOYER_TYPE_ID, NATIONAL_ID),
 							dataControllerRequest);
 				} else {
+					LOG.error("GOVT EMPLOYEE");
 					EMPLOYER_TYPE_ID = "1";
 					EMPLOYER_CATEGORISATION = "G";
 				}
@@ -377,25 +379,38 @@ public class ScoringEngine implements JavaService2 {
 		inputParams.put("partyId", PARTY_ID);
 		inputParams.put("country", "SA");
 		String streetVal = "";
+		String streetEnMfb = "NONE";
 
 		JSONObject mainObj = new JSONObject(ResultToJSON.convert(getNationalAddress));
 		// for PT testing
-	    mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
+		mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
 		LOG.error("mainObj Response " + mainObj);
 
 		if (mainObj.opt("addressListList") instanceof JSONObject) {
 
 			if (mainObj.opt("addressListList") != null) {
-				streetVal = mainObj.optJSONObject("addressListList").optString("streetName");
-				String upToNCharacters = streetVal.substring(0, Math.min(streetVal.length(), 35));
 
-				inputParams.put("street", upToNCharacters);
-				inputParams.put("StreetEnMfb", mainObj.optJSONObject("addressListList").optString("streetName"));
-				inputParams.put("buildingNumber", mainObj.optJSONObject("addressListList").optString("buildingNumber"));
-				inputParams.put("flatNumber", mainObj.optJSONObject("addressListList").optString("unitNumber"));
-				inputParams.put("districtName", mainObj.optJSONObject("addressListList").optString("district"));
-				inputParams.put("addressCity", mainObj.optJSONObject("addressListList").optString("city"));
-				inputParams.put("postCode", mainObj.optJSONObject("addressListList").optString("postCode"));
+				try {
+					streetVal = mainObj.optJSONObject("addressListList").optString("streetName");
+					String upToNCharacters = streetVal.substring(0, Math.min(streetVal.length(), 35));
+
+					if (streetVal.isBlank() || streetVal.isEmpty() || streetVal == null) {
+						streetVal = "";
+						upToNCharacters = "NONE";
+					}
+
+					inputParams.put("street", upToNCharacters);
+					inputParams.put("StreetEnMfb", streetVal);
+					inputParams.put("buildingNumber",
+							mainObj.optJSONObject("addressListList").optString("buildingNumber"));
+					inputParams.put("flatNumber", mainObj.optJSONObject("addressListList").optString("unitNumber"));
+					inputParams.put("districtName", mainObj.optJSONObject("addressListList").optString("district"));
+					inputParams.put("addressCity", mainObj.optJSONObject("addressListList").optString("city"));
+					inputParams.put("postCode", mainObj.optJSONObject("addressListList").optString("postCode"));
+
+				} catch (Exception e) {
+					LOG.error("Single Address Exception =" + e.getMessage());
+				}
 
 			} else {
 				inputParams.put("street", "street");
@@ -412,15 +427,32 @@ public class ScoringEngine implements JavaService2 {
 
 			if (mainObj.opt("addressListList") != null) {
 
-				inputParams.put("street",
-						mainObj.optJSONArray("addressListList").getJSONObject(0).optString("streetName"));
-				// inputParams.put("address",
-				// mainObj.optJSONArray("addressListList").getJSONObject(0).optString("district")
-				// + " "
-				// +
-				// mainObj.optJSONArray("addressListList").getJSONObject(0).optString("unitNumber"));
-				inputParams.put("addressCity",
-						mainObj.optJSONArray("addressListList").getJSONObject(0).optString("city"));
+				try {
+
+					streetVal = mainObj.optJSONArray("addressListList").getJSONObject(0).optString("streetName");
+					String upToNCharacters = streetVal.substring(0, Math.min(streetVal.length(), 35));
+
+					if (streetVal.isBlank() || streetVal.isEmpty() || streetVal == null) {
+						streetVal = "";
+						upToNCharacters = "NONE";
+					}
+
+					inputParams.put("street", upToNCharacters);
+					inputParams.put("StreetEnMfb", streetVal);
+					inputParams.put("districtName",
+							mainObj.optJSONArray("addressListList").getJSONObject(0).optString("district"));
+					inputParams.put("flatNumber",
+							mainObj.optJSONArray("addressListList").getJSONObject(0).optString("unitNumber"));
+					inputParams.put("buildingNumber",
+							mainObj.optJSONArray("addressListList").getJSONObject(0).optString("buildingNumber"));
+					inputParams.put("postCode",
+							mainObj.optJSONArray("addressListList").getJSONObject(0).optString("postCode"));
+					inputParams.put("addressCity",
+							mainObj.optJSONArray("addressListList").getJSONObject(0).optString("city"));
+				} catch (Exception e) {
+					LOG.error("Multiple Address Exception =" + e.getMessage());
+				}
+
 			} else {
 				inputParams.put("street", "streetValue");
 				inputParams.put("address", "addressValue");
@@ -474,6 +506,14 @@ public class ScoringEngine implements JavaService2 {
 
 		switch (EMPLOYER_TYPE_ID) {
 		case "1":
+
+			String basic = getSalaryCertificate.getParamValueByName("basicSalary");
+			String allowence = getSalaryCertificate.getParamValueByName("totalAllownces");
+			String deduc = getSalaryCertificate.getParamValueByName("totalDeductions");
+
+			String netsalary = String
+					.valueOf(Double.parseDouble(basic) + Double.parseDouble(allowence) - Double.parseDouble(deduc));
+
 			if (!getSalaryCertificate.getParamValueByName("agencyName").isEmpty()) {
 				inputParams.put("employerName", getSalaryCertificate.getParamValueByName("agencyName"));
 			} else {
@@ -485,7 +525,7 @@ public class ScoringEngine implements JavaService2 {
 			// getSalaryCertificate.getParamValueByName("agencyName"));
 
 			inputParams.put("employStartDate", getSalaryCertificate.getParamValueByName("agencyEmploymentDate"));
-			inputParams.put("salaryMfb", getSalaryCertificate.getParamValueByName("netSalary"));
+			inputParams.put("salaryMfb", netsalary);
 			inputParams.put("basicWageMfb", "0");
 			break;
 		case "3":
@@ -729,6 +769,13 @@ public class ScoringEngine implements JavaService2 {
 
 		switch (EMPLOYER_TYPE_ID) {
 		case "1":
+			String basic = getSalaryCertificate.getParamValueByName("basicSalary");
+			String allowence = getSalaryCertificate.getParamValueByName("totalAllownces");
+			String deduc = getSalaryCertificate.getParamValueByName("totalDeductions");
+
+			String netsalary = String
+					.valueOf(Double.parseDouble(basic) + Double.parseDouble(allowence) - Double.parseDouble(deduc));
+
 			inputParams.put("agencycode", getSalaryCertificate.getParamValueByName("agencyCode"));
 			inputParams.put("accountnumber", getSalaryCertificate.getParamValueByName("accountNumber"));
 			inputParams.put("employeejobnumber", getSalaryCertificate.getParamValueByName("employeeJobNumber"));
@@ -739,7 +786,7 @@ public class ScoringEngine implements JavaService2 {
 			inputParams.put("employeenamear", getSalaryCertificate.getParamValueByName("employeeNameAr"));
 			inputParams.put("totalallownces", getSalaryCertificate.getParamValueByName("totalAllownces"));
 			inputParams.put("basicsalary", getSalaryCertificate.getParamValueByName("basicSalary"));
-			inputParams.put("netsalary", getSalaryCertificate.getParamValueByName("netSalary"));
+			inputParams.put("netsalary", netsalary);
 			inputParams.put("employeenameen", getSalaryCertificate.getParamValueByName("employeeNameEn"));
 			inputParams.put("employeejobtitle", getSalaryCertificate.getParamValueByName("employeeJobTitle"));
 			break;
@@ -1095,7 +1142,13 @@ public class ScoringEngine implements JavaService2 {
 			LOG.error("calculateMonthlyNetSalary EMPLOYER_TYPE_ID :: " + EMPLOYER_TYPE_ID);
 			switch (EMPLOYER_TYPE_ID) {
 			case "1":
-				MONTHLY_NET_SALARY = getSalaryCertificate.getParamValueByName("netSalary");
+				String basic = getSalaryCertificate.getParamValueByName("basicSalary");
+				String allowence = getSalaryCertificate.getParamValueByName("totalAllownces");
+				String deduc = getSalaryCertificate.getParamValueByName("totalDeductions");
+
+				String netsalary = String
+						.valueOf(Double.parseDouble(basic) + Double.parseDouble(allowence) - Double.parseDouble(deduc));
+				MONTHLY_NET_SALARY = netsalary;
 				break;
 			case "3":
 
@@ -1710,12 +1763,15 @@ public class ScoringEngine implements JavaService2 {
 			case "1": // Govt
 				SALARY_WITHOUT_ALLOWANCES = String.valueOf(Double.parseDouble(MONTHLY_NET_SALARY)
 						- Double.parseDouble(getSalaryCertificate.getParamValueByName("totalAllownces")));
+				SALARY_WITHOUT_ALLOWANCES = String.format("%.2f", Double.parseDouble(SALARY_WITHOUT_ALLOWANCES));
 				break;
 			case "3": // Private
 				SALARY_WITHOUT_ALLOWANCES = String.valueOf(Double.parseDouble(MONTHLY_NET_SALARY)
 						- Double.parseDouble(getSalaryCertificate.getParamValueByName("otherAllowance")));
+				SALARY_WITHOUT_ALLOWANCES = String.format("%.2f", Double.parseDouble(SALARY_WITHOUT_ALLOWANCES));
 				break;
 			}
+
 		} catch (Exception ex) {
 			LOG.error("ERROR calculateSalaryWithoutAllowances :: " + ex);
 		}
@@ -1748,7 +1804,11 @@ public class ScoringEngine implements JavaService2 {
 			inputParams.put("pensioner", PENSIONER);
 			inputParams.put("validLos", CURRENT_LENGTH_OF_SERVICE);
 			inputParams.put("employeeName", EMPLOYER_NAME);
-			inputParams.put("employeeCategory", EMPLOYER_CATEGORISATION);
+
+			// Stop sending the employee categorization
+			// if (EMPLOYER_TYPE_ID == "1") inputParams.put("employeeCategory",
+			// EMPLOYER_CATEGORISATION);
+
 			inputParams.put("liftSalary", MANAGING_SEASONAL_AND_TEMPORARY_LIFT_IN_SALARY);
 			inputParams.put("salaryNonAllowance", SALARY_WITHOUT_ALLOWANCES);
 			inputParams.put("salaryAmount", MONTHLY_NET_SALARY);
@@ -1805,7 +1865,10 @@ public class ScoringEngine implements JavaService2 {
 			inputParams.put("validInternalDti", INTERNAL_DTI);
 			inputParams.put("currDelinquencyT", CURRENT_DELINQUENCY_T);
 			inputParams.put("employeeName", EMPLOYER_NAME);
-			inputParams.put("employeeCategory", EMPLOYER_CATEGORISATION);
+			//// Stop sending the employee categorization
+			// if (EMPLOYER_TYPE_ID == "1") inputParams.put("employeeCategory",
+			//// EMPLOYER_CATEGORISATION);
+
 			inputParams.put("loanAmountCap", MAX_LOAN_AMOUNT_CAPPING);
 			inputParams.put("liftSalary", MANAGING_SEASONAL_AND_TEMPORARY_LIFT_IN_SALARY);
 			inputParams.put("nationality", NATIONALITY);
