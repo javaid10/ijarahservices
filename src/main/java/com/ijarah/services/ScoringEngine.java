@@ -1148,6 +1148,9 @@ public class ScoringEngine implements JavaService2 {
 
 				String netsalary = String
 						.valueOf(Double.parseDouble(basic) + Double.parseDouble(allowence) - Double.parseDouble(deduc));
+
+				netsalary = String.format("%.2f", Double.parseDouble(netsalary));
+
 				MONTHLY_NET_SALARY = netsalary;
 				break;
 			case "3":
@@ -1165,11 +1168,15 @@ public class ScoringEngine implements JavaService2 {
 						calculatedDeductions = Math.min(minimumAmount, 4500);
 						LOG.error("calculateMonthlyNetSalary calculatedDeductions :: " + calculatedDeductions);
 					}
-					MONTHLY_NET_SALARY = String
+					String pvtNetsalary = String
 							.valueOf((Integer.parseInt(getSalaryCertificate.getParamValueByName("basicWage"))
 									+ Integer.parseInt(getSalaryCertificate.getParamValueByName("housingAllowance"))
 									+ Integer.parseInt(getSalaryCertificate.getParamValueByName("otherAllowance")))
 									- calculatedDeductions);
+
+					pvtNetsalary = String.format("%.2f", Double.parseDouble(pvtNetsalary));
+
+					MONTHLY_NET_SALARY = pvtNetsalary;
 				}
 				LOG.error("calculateMonthlyNetSalary CAse 3 :: " + MONTHLY_NET_SALARY);
 				break;
