@@ -24,6 +24,7 @@ import com.kony.dbputilities.util.HelperMethods;
 import com.konylabs.middleware.common.JavaService2;
 import com.konylabs.middleware.controller.DataControllerRequest;
 import com.konylabs.middleware.controller.DataControllerResponse;
+import com.konylabs.middleware.dataobject.JSONToResult;
 import com.konylabs.middleware.dataobject.Result;
 import com.konylabs.middleware.dataobject.ResultToJSON;
 import org.apache.log4j.Logger;
@@ -199,6 +200,44 @@ public class ScoringEngine implements JavaService2 {
 				Result getConsumerEnquiry = getSIMAHConsumerEnquiry(
 						createRequestForConsumerEnquiryService(inputParams, getCustomerData, getSalaryCertificate),
 						dataControllerRequest);
+
+				// Check if consumer has failed with 404 request
+				String jsonObject = ResultToJSON.convert(getConsumerEnquiry);
+
+				JSONObject consumerEnquiryObj = new JSONObject(jsonObject);
+				String checkConsumerResp = "";
+				checkConsumerResp = consumerEnquiryObj.optString("errmsg");
+				LOG.error("ERROR BEfore consumerEnquiryObj :: " + checkConsumerResp);
+				if (checkConsumerResp != "") {
+					LOG.error("ERROR After consumerEnquiryObj :: " + checkConsumerResp);
+					result = updateCustomerApplicationData(
+							createRequestForUpdateCustomerApplicationDataServiceS2(getCustomerApplicationData),
+							dataControllerRequest);
+					return result;
+				}
+				
+				// check if consumer enquiry is failed with some wrong parameters
+			//	Gson gson = new Gson();
+			//	ConsumerEnquiryModelResponse consumerEnquiryModelResponse = gson
+			//			.fromJson(ResultToJSON.convert(getConsumerEnquiry), ConsumerEnquiryModelResponse.class);
+				
+			//	String checkErrorResp = consumerEnquiryModelResponse.getRESPONSE().getSTATUS();
+				
+			//	LOG.error("ERROR BEfore checkErrorItem :: " + checkErrorResp);
+			//	if (!checkErrorResp.equalsIgnoreCase("OK")) {
+			//		LOG.error("ERROR After checkErrorItem :: " + checkErrorResp);
+			//		result = updateCustomerApplicationData(
+			//				createRequestForUpdateCustomerApplicationDataServiceS2(getCustomerApplicationData),
+			//				dataControllerRequest);
+			//		return result;
+			//	}
+				
+				
+				
+				
+				
+				
+				
 
 				extractValuesFromConsumerEnquiryResponse(getConsumerEnquiry);
 				initMortgageProductArray(dataControllerRequest);
@@ -380,6 +419,7 @@ public class ScoringEngine implements JavaService2 {
 		inputParams.put("country", "SA");
 		String streetVal = "";
 		String streetEnMfb = "NONE";
+		String districtName = "";
 
 		JSONObject mainObj = new JSONObject(ResultToJSON.convert(getNationalAddress));
 		// for PT testing
@@ -392,11 +432,15 @@ public class ScoringEngine implements JavaService2 {
 
 				try {
 					streetVal = mainObj.optJSONObject("addressListList").optString("streetName");
+					districtName = mainObj.optJSONObject("addressListList").optString("district");
 					String upToNCharacters = streetVal.substring(0, Math.min(streetVal.length(), 35));
 
 					if (streetVal.isBlank() || streetVal.isEmpty() || streetVal == null) {
-						streetVal = "";
+						streetVal = "NONE";
 						upToNCharacters = "NONE";
+					}
+					if (districtName.isBlank() || districtName.isEmpty() || districtName == null) {
+						districtName = "NONE";
 					}
 
 					inputParams.put("street", upToNCharacters);
@@ -404,7 +448,7 @@ public class ScoringEngine implements JavaService2 {
 					inputParams.put("buildingNumber",
 							mainObj.optJSONObject("addressListList").optString("buildingNumber"));
 					inputParams.put("flatNumber", mainObj.optJSONObject("addressListList").optString("unitNumber"));
-					inputParams.put("districtName", mainObj.optJSONObject("addressListList").optString("district"));
+					inputParams.put("districtName", districtName);
 					inputParams.put("addressCity", mainObj.optJSONObject("addressListList").optString("city"));
 					inputParams.put("postCode", mainObj.optJSONObject("addressListList").optString("postCode"));
 
@@ -430,17 +474,23 @@ public class ScoringEngine implements JavaService2 {
 				try {
 
 					streetVal = mainObj.optJSONArray("addressListList").getJSONObject(0).optString("streetName");
+					districtName = mainObj.optJSONArray("addressListList").getJSONObject(0).optString("district");
+					
 					String upToNCharacters = streetVal.substring(0, Math.min(streetVal.length(), 35));
 
 					if (streetVal.isBlank() || streetVal.isEmpty() || streetVal == null) {
-						streetVal = "";
+						streetVal = "NONE";
 						upToNCharacters = "NONE";
 					}
+					
+					if (districtName.isBlank() || districtName.isEmpty() || districtName == null) {
+						districtName = "NONE";
+					}
+
 
 					inputParams.put("street", upToNCharacters);
 					inputParams.put("StreetEnMfb", streetVal);
-					inputParams.put("districtName",
-							mainObj.optJSONArray("addressListList").getJSONObject(0).optString("district"));
+					inputParams.put("districtName", districtName);
 					inputParams.put("flatNumber",
 							mainObj.optJSONArray("addressListList").getJSONObject(0).optString("unitNumber"));
 					inputParams.put("buildingNumber",
@@ -883,8 +933,8 @@ public class ScoringEngine implements JavaService2 {
 			inputParams.put("CEML", "test@gmail.com");
 			inputParams.put("CADR", "");
 			inputParams.put("CAD1A", "1223");
-			inputParams.put("CAD7", "CAD7Value" /* getNationalAddress.getParamValueByName("postCode") */);
-			inputParams.put("CAD8E", "CAD8EValue" /* getNationalAddress.getParamValueByName("city") */);
+			inputParams.put("CAD7", "CAD7Value");
+			inputParams.put("CAD8E", "CAD8EValue");
 			inputParams.put("CAD9", "SAU");
 			inputParams.put("CCN1", "M");
 			inputParams.put("CCN2", "966");
@@ -1163,15 +1213,15 @@ public class ScoringEngine implements JavaService2 {
 					double calculatedDeductions = 0;
 					if (NATIONALITY.equalsIgnoreCase("SAU") || NATIONALITY.equalsIgnoreCase("SA")) {
 						double minimumAmount = 0.1
-								* (Integer.parseInt(getSalaryCertificate.getParamValueByName("basicWage")) + Integer
-										.parseInt(getSalaryCertificate.getParamValueByName("housingAllowance")));
+								* (Double.parseDouble(getSalaryCertificate.getParamValueByName("basicWage")) 
+										+ Double.parseDouble(getSalaryCertificate.getParamValueByName("housingAllowance")));
 						calculatedDeductions = Math.min(minimumAmount, 4500);
 						LOG.error("calculateMonthlyNetSalary calculatedDeductions :: " + calculatedDeductions);
 					}
 					String pvtNetsalary = String
-							.valueOf((Integer.parseInt(getSalaryCertificate.getParamValueByName("basicWage"))
-									+ Integer.parseInt(getSalaryCertificate.getParamValueByName("housingAllowance"))
-									+ Integer.parseInt(getSalaryCertificate.getParamValueByName("otherAllowance")))
+							.valueOf((Double.parseDouble(getSalaryCertificate.getParamValueByName("basicWage"))
+									+ Double.parseDouble(getSalaryCertificate.getParamValueByName("housingAllowance"))
+									+ Double.parseDouble(getSalaryCertificate.getParamValueByName("otherAllowance")))
 									- calculatedDeductions);
 
 					pvtNetsalary = String.format("%.2f", Double.parseDouble(pvtNetsalary));
@@ -1234,18 +1284,34 @@ public class ScoringEngine implements JavaService2 {
 				for (CIDETAILItem ci_detail : CI_DETAIL) {
 					String productType = ci_detail.getCIPRD();
 					String status = ci_detail.getCISTATUS();
+					// 26/01/2023 Its a logic when the customer has a mortgage product
 					if (Arrays.asList(MORTGAGE_PRODUCT).contains(productType) && status.equalsIgnoreCase("A")) {
-						if (Double.parseDouble(MONTHLY_NET_SALARY) < 3000) {
+						if (Double.parseDouble(MONTHLY_NET_SALARY) <= 3999) {
+							MAX_GLOBAL_DTI = 55;
+						} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 3999
+								&& Double.parseDouble(MONTHLY_NET_SALARY) <= 14999) {
+							MAX_GLOBAL_DTI = 55;
+						} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 14999
+								&& Double.parseDouble(MONTHLY_NET_SALARY) <= 24999) {
 							MAX_GLOBAL_DTI = 65;
-						} else if (Double.parseDouble(MONTHLY_NET_SALARY) < 14999) {
-							MAX_GLOBAL_DTI = 65;
+						} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 24999
+								&& Double.parseDouble(MONTHLY_NET_SALARY) <= 999999) {
+							MAX_GLOBAL_DTI = 70;
 						}
 						break;
 					} else {
-						if (Double.parseDouble(MONTHLY_NET_SALARY) < 3000) {
-							MAX_GLOBAL_DTI = 65;
-						} else if (Double.parseDouble(MONTHLY_NET_SALARY) < 14999) {
-							MAX_GLOBAL_DTI = 65;
+						// 26/01/2023 Its a logic when the customer does not have a mortgage product
+						if (Double.parseDouble(MONTHLY_NET_SALARY) <= 3999) {
+							MAX_GLOBAL_DTI = 45;
+						} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 3999
+								&& Double.parseDouble(MONTHLY_NET_SALARY) <= 14999) {
+							MAX_GLOBAL_DTI = 45;
+						} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 14999
+								&& Double.parseDouble(MONTHLY_NET_SALARY) <= 24999) {
+							MAX_GLOBAL_DTI = 45;
+						} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 24999
+								&& Double.parseDouble(MONTHLY_NET_SALARY) <= 999999) {
+							MAX_GLOBAL_DTI = 70;
 						}
 						break;
 					}
@@ -1256,17 +1322,32 @@ public class ScoringEngine implements JavaService2 {
 						String productType = ci_detail.getCIPRD();
 						String status = ci_detail.getCISTATUS();
 						if (Arrays.asList(MORTGAGE_PRODUCT).contains(productType) && status.equalsIgnoreCase("A")) {
-							if (Double.parseDouble(MONTHLY_NET_SALARY) < 3000) {
+							if (Double.parseDouble(MONTHLY_NET_SALARY) <= 3999) {
+								MAX_GLOBAL_DTI = 55;
+							} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 3999
+									&& Double.parseDouble(MONTHLY_NET_SALARY) <= 14999) {
+								MAX_GLOBAL_DTI = 55;
+							} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 14999
+									&& Double.parseDouble(MONTHLY_NET_SALARY) <= 24999) {
 								MAX_GLOBAL_DTI = 65;
-							} else if (Double.parseDouble(MONTHLY_NET_SALARY) < 14999) {
-								MAX_GLOBAL_DTI = 65;
+							} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 24999
+									&& Double.parseDouble(MONTHLY_NET_SALARY) <= 999999) {
+								MAX_GLOBAL_DTI = 70;
 							}
 							break;
 						} else {
-							if (Double.parseDouble(MONTHLY_NET_SALARY) < 3000) {
-								MAX_GLOBAL_DTI = 65;
-							} else if (Double.parseDouble(MONTHLY_NET_SALARY) < 14999) {
-								MAX_GLOBAL_DTI = 65;
+							// 26/01/2023 Its a logic when the customer does not have a mortgage product
+							if (Double.parseDouble(MONTHLY_NET_SALARY) <= 3999) {
+								MAX_GLOBAL_DTI = 45;
+							} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 3999
+									&& Double.parseDouble(MONTHLY_NET_SALARY) <= 14999) {
+								MAX_GLOBAL_DTI = 45;
+							} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 14999
+									&& Double.parseDouble(MONTHLY_NET_SALARY) <= 24999) {
+								MAX_GLOBAL_DTI = 45;
+							} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 24999
+									&& Double.parseDouble(MONTHLY_NET_SALARY) <= 999999) {
+								MAX_GLOBAL_DTI = 70;
 							}
 							break;
 						}
@@ -1282,21 +1363,49 @@ public class ScoringEngine implements JavaService2 {
 				for (CIDETAILItem ci_detail : CI_DETAIL) {
 					String productType = ci_detail.getCIPRD();
 					String status = ci_detail.getCISTATUS();
+
+					// 26/01/2023 Its a logic when the customer has a mortgage product
 					if (Arrays.asList(MORTGAGE_PRODUCT).contains(productType) && status.equalsIgnoreCase("A")) {
-						if (Double.parseDouble(MONTHLY_NET_SALARY) < 3000) {
-							MAX_INTERNAL_DTI = 25;
-						} else if (Double.parseDouble(MONTHLY_NET_SALARY) < 14999) {
-							MAX_INTERNAL_DTI = 30;
+						if (Double.parseDouble(MONTHLY_NET_SALARY) <= 3999) {
+							MAX_INTERNAL_DTI = 45;
+						} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 3999
+								&& Double.parseDouble(MONTHLY_NET_SALARY) <= 14999) {
+							MAX_INTERNAL_DTI = 45;
+						} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 14999
+								&& Double.parseDouble(MONTHLY_NET_SALARY) <= 24999) {
+							MAX_INTERNAL_DTI = 45;
+						} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 24999
+								&& Double.parseDouble(MONTHLY_NET_SALARY) <= 999999) {
+							MAX_INTERNAL_DTI = 45;
 						}
 						break;
 					} else {
-						if (Double.parseDouble(MONTHLY_NET_SALARY) < 3000) {
+						// 26/01/2023 Its a logic when the customer does not have a mortgage product
+						if (Double.parseDouble(MONTHLY_NET_SALARY) <= 3999) {
 							MAX_INTERNAL_DTI = 25;
-						} else if (Double.parseDouble(MONTHLY_NET_SALARY) < 14999) {
-							MAX_INTERNAL_DTI = 30;
+						} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 3999
+								&& Double.parseDouble(MONTHLY_NET_SALARY) <= 14999) {
+							MAX_INTERNAL_DTI = 33;
+						} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 14999
+								&& Double.parseDouble(MONTHLY_NET_SALARY) <= 24999) {
+							MAX_INTERNAL_DTI = 33;
+						} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 24999
+								&& Double.parseDouble(MONTHLY_NET_SALARY) <= 999999) {
+							MAX_INTERNAL_DTI = 33;
 						}
 						break;
 					}
+
+					// commented on 26/01/2023 Old code
+					/*
+					 * if (Arrays.asList(MORTGAGE_PRODUCT).contains(productType) &&
+					 * status.equalsIgnoreCase("A")) { if (Double.parseDouble(MONTHLY_NET_SALARY) <
+					 * 3000) { MAX_INTERNAL_DTI = 25; } else if
+					 * (Double.parseDouble(MONTHLY_NET_SALARY) < 14999) { MAX_INTERNAL_DTI = 30; }
+					 * break; } else { if (Double.parseDouble(MONTHLY_NET_SALARY) < 3000) {
+					 * MAX_INTERNAL_DTI = 25; } else if (Double.parseDouble(MONTHLY_NET_SALARY) <
+					 * 14999) { MAX_INTERNAL_DTI = 30; } break; }
+					 */
 				}
 			} else {
 				if (CI_DETAIL2 != null && CI_DETAIL2.size() > 0) {
@@ -1304,17 +1413,32 @@ public class ScoringEngine implements JavaService2 {
 						String productType = ci_detail.getCIPRD();
 						String status = ci_detail.getCISTATUS();
 						if (Arrays.asList(MORTGAGE_PRODUCT).contains(productType) && status.equalsIgnoreCase("A")) {
-							if (Double.parseDouble(MONTHLY_NET_SALARY) < 3000) {
-								MAX_INTERNAL_DTI = 25;
-							} else if (Double.parseDouble(MONTHLY_NET_SALARY) < 14999) {
-								MAX_INTERNAL_DTI = 30;
+							if (Double.parseDouble(MONTHLY_NET_SALARY) <= 3999) {
+								MAX_INTERNAL_DTI = 45;
+							} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 3999
+									&& Double.parseDouble(MONTHLY_NET_SALARY) <= 14999) {
+								MAX_INTERNAL_DTI = 45;
+							} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 14999
+									&& Double.parseDouble(MONTHLY_NET_SALARY) <= 24999) {
+								MAX_INTERNAL_DTI = 45;
+							} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 24999
+									&& Double.parseDouble(MONTHLY_NET_SALARY) <= 999999) {
+								MAX_INTERNAL_DTI = 45;
 							}
 							break;
 						} else {
-							if (Double.parseDouble(MONTHLY_NET_SALARY) < 3000) {
+							// 26/01/2023 Its a logic when the customer does not have a mortgage product
+							if (Double.parseDouble(MONTHLY_NET_SALARY) <= 3999) {
 								MAX_INTERNAL_DTI = 25;
-							} else if (Double.parseDouble(MONTHLY_NET_SALARY) < 14999) {
-								MAX_INTERNAL_DTI = 30;
+							} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 3999
+									&& Double.parseDouble(MONTHLY_NET_SALARY) <= 14999) {
+								MAX_INTERNAL_DTI = 33;
+							} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 14999
+									&& Double.parseDouble(MONTHLY_NET_SALARY) <= 24999) {
+								MAX_INTERNAL_DTI = 33;
+							} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 24999
+									&& Double.parseDouble(MONTHLY_NET_SALARY) <= 999999) {
+								MAX_INTERNAL_DTI = 33;
 							}
 							break;
 						}
@@ -1748,12 +1872,12 @@ public class ScoringEngine implements JavaService2 {
 			switch (EMPLOYER_TYPE_ID) {
 			case "1": // Govt
 				basicSalary = Double.parseDouble(getSalaryCertificate.getParamValueByName("basicSalary"));
-				OtherAllowance = Integer.parseInt(getSalaryCertificate.getParamValueByName("totalAllownces"));
+				OtherAllowance = Double.parseDouble(getSalaryCertificate.getParamValueByName("totalAllownces"));
 				break;
 			case "3": // Private
 				basicSalary = Double.parseDouble(getSalaryCertificate.getParamValueByName("basicWage"));
-				OtherAllowance = Integer.parseInt(getSalaryCertificate.getParamValueByName("otherAllowance"));
-				basicSalary += Integer.parseInt(getSalaryCertificate.getParamValueByName("housingAllowance"));
+				OtherAllowance = Double.parseDouble(getSalaryCertificate.getParamValueByName("otherAllowance"));
+				basicSalary += Double.parseDouble(getSalaryCertificate.getParamValueByName("housingAllowance"));
 				break;
 			}
 			if (OtherAllowance >= (basicSalary * 2)) {
