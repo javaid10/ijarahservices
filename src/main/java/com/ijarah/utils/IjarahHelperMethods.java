@@ -257,7 +257,7 @@ public class IjarahHelperMethods {
     }
 
     public static boolean hasSuccessStatus(Result toCheck) {
-        return "success".equals(toCheck.getParamValueByName("status"));
+        return "success".equalsIgnoreCase(toCheck.getParamValueByName("status"));
     }
 
     public static boolean hasSuccessCode(JsonObject toCheck) {

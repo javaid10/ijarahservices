@@ -32,7 +32,24 @@ public enum IjarahErrors {
     ERR_660028("660028", "Knockout Failed, Application has Declined"),
     ERR_GET_VOUCHER_DETAILS_SERVICE_FAILED_018("018", "Get Voucher Details Service Failed."),
     ERR_GET_USER_ID_FAILED_019("019", "Failed to fetch User ID from Session."),
-    ERR_GET_USER_ID_FAILED_020("020", "No voucher found");
+    ERR_GET_USER_ID_FAILED_020("020", "No voucher found"),
+    ERR_CREATE_VOUCHER_SERVICE_FAILED_021("021", "Create Voucher Service Failed."),
+    ERR_GET_RETAILER_SERVICE_FAILED_022("022", "Get Retailer Service Failed."),
+    ERR_NO_RETAILER_FOUND_023("023", "No Retailer Found."),
+    ERR_NO_VOUCHER_FOUND_024("024", "No Voucher Found."),
+    ERR_GET_VOUCHER_DETAILS_SERVICE_FAILED_025("025", "Cancel Voucher Service Failed."),
+    ERR_UPDATE_VOUCHER_STATUS_SERVICE_FAILED_026("026", "Update Voucher Status Service Failed."),
+    ERR_REDEEM_VOUCHER_T24_SERVICE_FAILED_027("027", "Redeem Voucher T24 Service Failed."),
+    ERR_DASHBOARD_SERVICE_FAILED_028("028", "Dashboard Service Failed."),
+    ERR_GET_LOAN_DETAILS_SERVICE_FAILED_029("029", "Loan Details Service Failed."),
+    ERR_NO_LOAN_DETAIL_FOUND_030("030", "No loan detail found"),
+    ERR_CANCEL_VOUCHER_T24_SERVICE_FAILED_031("031", "Cancel Voucher T24 Service Failed."),
+    ERR_CANCEL_VOUCHER_DB_SERVICE_FAILED_032("032", "Cancel Voucher DB Service Failed."),
+    ERR_CONSUMER_ENQUIRY_SERVICE_FAILED_033("033", "Consumer Enquiry Service Failed."),
+    ERR_VOUCHER_EXPIRY_SERVICE_FAILED_034("034", "Voucher Expiry Service Failed."),
+    ERR_EXPIRE_VOUCHER_DB_SERVICE_FAILED_035("035", "Expire Voucher DB Service Failed."),
+    ERR_EXPIRE_VOUCHER_T24_SERVICE_FAILED_036("036", "Expire Voucher T24 Service Failed."),
+    ERR_GET_VOUCHER_DETAILS_FOR_EXPIRY_DB_SERVICE_FAILED_037("037", "Get Voucher Details for Expiry DB Service Failed.");
 
     public static final String ERROR_CODE_KEY = "dbpErrCode";
     public static final String ERROR_MESSAGE_KEY = "dbpErrMsg";

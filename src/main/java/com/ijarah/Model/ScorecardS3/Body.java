@@ -88,6 +88,9 @@ public class Body {
     @SerializedName("aprRate")
     private String aprRate;
 
+    @SerializedName("commission")
+    private String commission;
+
     public void setDataTypeScore1(String dataTypeScore1) {
         this.dataTypeScore1 = dataTypeScore1;
     }
@@ -134,6 +137,14 @@ public class Body {
 
     public String getTenor() {
         return tenor;
+    }
+
+    public void setCommission(String tenor) {
+        this.commission = tenor;
+    }
+
+    public String getCommission() {
+        return commission;
     }
 
     public void setApplicationStatus(String applicationStatus) {
@@ -345,6 +356,7 @@ public class Body {
                         ",validLos = '" + validLos + '\'' +
                         ",loanRate = '" + loanRate + '\'' +
 						",aprRate = '" + aprRate + '\'' +
+                        ",commission = '" + commission + '\'' +
                         "}";
     }
 }

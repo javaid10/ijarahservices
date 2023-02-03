@@ -19,4 +19,7 @@ public class ServiceIDConstants {
     public static final String SANAD_CREATION_SERVICE_ID = "SanadCreation";
     public static final String LOAN_SIMULATION_SCHEDULE_PAYMENT_SERVICE_ID = "LoanSimulationSchedulePayment";
     public static final String MS_DOCUMENT_MORA_SERVICE_ID = "MSDocumentMora";
+    public static final String MURABAHA_T24_JSON_SERVICE_ID = "MurabahaT24JsonServices";
+    public static final String MURABAHA_T24_JSON_2_SERVICE_ID = "MurabahaT24JsonServices2";
+    public static final String RETAILER_DB_2_SERVICE_ID = "RetailerDBService2";
 }
