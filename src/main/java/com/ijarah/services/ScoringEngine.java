@@ -171,6 +171,7 @@ public class ScoringEngine implements JavaService2 {
                          DataControllerResponse dataControllerResponse) throws Exception {
         Result result = StatusEnum.error.setStatus();
         try {
+            initialiseVariables();
             EMPLOYER_TYPE_ID = "1";
             inputParams = HelperMethods.getInputParamMap(objects);
             IjarahErrors.ERR_PREPROCESS_INVALID_INPUT_PARAMS_001.setErrorCode(result);
@@ -2048,7 +2049,7 @@ public class ScoringEngine implements JavaService2 {
         Result result = StatusEnum.error.setStatus();
         try {
             Map<String, String> inputParams = new HashMap<>();
-            inputParams.put("monthlyNetSalary", monthlyNetSalary);
+            inputParams.put("monthlyNetSalary", monthlyNetSalary.split("\\.")[0]);
             inputParams.put("data_type", data_type);
             inputParams.put("MORTGAGE", MORTGAGE);
             return ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID,
@@ -2063,7 +2064,7 @@ public class ScoringEngine implements JavaService2 {
         Result result = StatusEnum.error.setStatus();
         try {
             Map<String, String> inputParams = new HashMap<>();
-            inputParams.put("monthlyNetSalary", monthlyNetSalary);
+            inputParams.put("monthlyNetSalary", monthlyNetSalary.split("\\.")[0]);
             inputParams.put("data_type", data_type);
             inputParams.put("MORTGAGE", MORTGAGE);
             return ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID,
