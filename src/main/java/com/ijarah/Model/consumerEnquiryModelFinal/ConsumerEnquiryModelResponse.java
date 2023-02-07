@@ -8,17 +8,38 @@ public class ConsumerEnquiryModelResponse{
 	@SerializedName("CONTACTS")
 	private List<CONTACTSItem> cONTACTS;
 
-	@SerializedName("PCNAM")
-	private PCNAM pCNAM;
-
 	@SerializedName("SCORE")
 	private SCORE sCORE;
+
+	@SerializedName("HEADER")
+	private HEADER hEADER;
+
+	@SerializedName("BOUNCED_CHECKS")
+	private List<BOUNCEDCHECKSItem> bOUNCEDCHECKS;
+
+	@SerializedName("SUMMARY")
+	private SUMMARY sUMMARY;
+
+	@SerializedName("SC_REASON_CODES")
+	private List<SCREASONCODESItem> sCREASONCODES;
+
+	@SerializedName("RESPONSE")
+	private RESPONSE rESPONSE;
+
+	@SerializedName("DEFAULTS")
+	private List<DEFAULTSItem> dEFAULTS;
+
+	@SerializedName("CID")
+	private CID cID;
+
+	@SerializedName("PCNAM")
+	private PCNAM pCNAM;
 
 	@SerializedName("RSP_REPORT")
 	private RSPREPORT rSPREPORT;
 
-	@SerializedName("HEADER")
-	private HEADER hEADER;
+	@SerializedName("JUDGEMENTS")
+	private List<JUDGEMENTSItem> jUDGEMENTS;
 
 	@SerializedName("PROVIDED")
 	private PROVIDED pROVIDED;
@@ -38,9 +59,6 @@ public class ConsumerEnquiryModelResponse{
 	@SerializedName("ITEM")
 	private ITEM iTEM;
 
-	@SerializedName("SUMMARY")
-	private SUMMARY sUMMARY;
-
 	@SerializedName("DISCLAIMER")
 	private DISCLAIMER dISCLAIMER;
 
@@ -53,42 +71,61 @@ public class ConsumerEnquiryModelResponse{
 	@SerializedName("CI_DETAILS")
 	private List<CIDETAILSItem> cIDETAILS;
 
-	@SerializedName("SC_REASON_CODES")
-	private List<SCREASONCODESItem> sCREASONCODES;
-
 	@SerializedName("ADDRESSES")
 	private List<ADDRESSESItem> aDDRESSES;
 
-	@SerializedName("RESPONSE")
-	private RESPONSE rESPONSE;
-
-	@SerializedName("DEFAULTS")
-	private List<DEFAULTSItem> dEFAULTS;
+	@SerializedName("status")
+	private String status;
 
 	@SerializedName("httpStatusCode")
 	private int httpStatusCode;
 
-	@SerializedName("CID")
-	private CID cID;
-
 	public List<CONTACTSItem> getCONTACTS(){
 		return cONTACTS;
-	}
-
-	public PCNAM getPCNAM(){
-		return pCNAM;
 	}
 
 	public SCORE getSCORE(){
 		return sCORE;
 	}
 
+	public HEADER getHEADER(){
+		return hEADER;
+	}
+
+	public List<BOUNCEDCHECKSItem> getBOUNCEDCHECKS(){
+		return bOUNCEDCHECKS;
+	}
+
+	public SUMMARY getSUMMARY(){
+		return sUMMARY;
+	}
+
+	public List<SCREASONCODESItem> getSCREASONCODES(){
+		return sCREASONCODES;
+	}
+
+	public RESPONSE getRESPONSE(){
+		return rESPONSE;
+	}
+
+	public List<DEFAULTSItem> getDEFAULTS(){
+		return dEFAULTS;
+	}
+
+	public CID getCID(){
+		return cID;
+	}
+
+	public PCNAM getPCNAM(){
+		return pCNAM;
+	}
+
 	public RSPREPORT getRSPREPORT(){
 		return rSPREPORT;
 	}
 
-	public HEADER getHEADER(){
-		return hEADER;
+	public List<JUDGEMENTSItem> getJUDGEMENTS(){
+		return jUDGEMENTS;
 	}
 
 	public PROVIDED getPROVIDED(){
@@ -115,10 +152,6 @@ public class ConsumerEnquiryModelResponse{
 		return iTEM;
 	}
 
-	public SUMMARY getSUMMARY(){
-		return sUMMARY;
-	}
-
 	public DISCLAIMER getDISCLAIMER(){
 		return dISCLAIMER;
 	}
@@ -135,27 +168,15 @@ public class ConsumerEnquiryModelResponse{
 		return cIDETAILS;
 	}
 
-	public List<SCREASONCODESItem> getSCREASONCODES(){
-		return sCREASONCODES;
-	}
-
 	public List<ADDRESSESItem> getADDRESSES(){
 		return aDDRESSES;
 	}
 
-	public RESPONSE getRESPONSE(){
-		return rESPONSE;
-	}
-
-	public List<DEFAULTSItem> getDEFAULTS(){
-		return dEFAULTS;
+	public String getStatus(){
+		return status;
 	}
 
 	public int getHttpStatusCode(){
 		return httpStatusCode;
-	}
-
-	public CID getCID(){
-		return cID;
 	}
 }
