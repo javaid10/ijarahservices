@@ -219,8 +219,13 @@ public class ScoringEngine implements JavaService2 {
 				}
 
 				Result getConsumerEnquiry = getSIMAHConsumerEnquiry(createRequestForConsumerEnquiryService(inputParams,
-						getCustomerData, getSalaryCertificate, dataControllerRequest, getCustomerApplicationData),
+						getCustomerData, getSalaryCertificate, dataControllerRequest, getCustomerApplicationData, getNationalAddress),
 						dataControllerRequest);
+				String status = getConsumerEnquiry.getParamByName("status").getValue();
+				if (status.equalsIgnoreCase("Failure")) {
+					IjarahErrors.ERR_SIMHA_CONSUMER_INQUIRY_FAILED.setErrorCode(result);
+					return result;
+				}
 
 				// Check if consumer has failed with 404 request
 				String jsonObject = ResultToJSON.convert(getConsumerEnquiry);
@@ -974,10 +979,17 @@ public class ScoringEngine implements JavaService2 {
 
 	private Map<String, String> createRequestForConsumerEnquiryService(Map<String, String> globalInputParams,
 			Result getCustomerData, Result getSalaryCertificate, DataControllerRequest request,
-			Result getCustomerApplicationData) {
+			Result getCustomerApplicationData, Result getNationalAddress) {
 		Map<String, String> inputParams = new HashMap<>();
 		try {
 
+			JSONObject resObj = new JSONObject(ResultToJSON.convert(getNationalAddress));
+			JSONObject mainObj = resObj.optJSONObject("CitizenAddressInfoResult");
+			if (mainObj.opt("addressListList") instanceof JSONObject) {
+				inputParams.put("CAD7", mainObj.optJSONObject("addressListList").optString("city"));
+				inputParams.put("CAD8E", String.valueOf(mainObj.optJSONObject("addressListList").optString("postCode")));
+			}
+			
 			String expiryDate = String.valueOf(HelperMethods.getFieldValue(getCustomerData, "IDExpiryDate"));
 			String expiryDateF = expiryDate.replaceAll("-", "/");
 			DOB = String.valueOf(HelperMethods.getFieldValue(getCustomerData, "DateOfBirth"));
@@ -1016,11 +1028,11 @@ public class ScoringEngine implements JavaService2 {
 			inputParams.put("CNM1E", HelperMethods.getFieldValue(getCustomerData, "MiddleName"));
 			inputParams.put("CNM2E", HelperMethods.getFieldValue(getCustomerData, "LastName"));
 			inputParams.put("CNM3E", HelperMethods.getFieldValue(getCustomerData, "FullName"));
-			inputParams.put("CEML", "test@gmail.com");   // Customer email
+			inputParams.put("CEML", HelperMethods.getFieldValue(getCustomerData, "FullName"));   // Customer email
 			inputParams.put("CADR", "");
 			inputParams.put("CAD1A", "1223");
-			inputParams.put("CAD7", "CAD7Value" /* getNationalAddress.getParamValueByName("postCode") */);
-			inputParams.put("CAD8E", "CAD8EValue" /* getNationalAddress.getParamValueByName("city") */);
+			// inputParams.put("CAD7", "CAD7Value" /* getNationalAddress.getParamValueByName("postCode") */);
+			// inputParams.put("CAD8E", "CAD8EValue" /* getNationalAddress.getParamValueByName("city") */);
 			inputParams.put("CAD9", "SAU");
 			inputParams.put("CCN1", "M");
 			inputParams.put("CCN2", "966");
@@ -2336,12 +2348,20 @@ public class ScoringEngine implements JavaService2 {
 		try {
 			Result getConsumerEnquiry = ServiceCaller.internal(SIMAH_SERVICE_ID, CONSUMER_ENQUIRY_OPERATION_ID,
 					inputParams, null, dataControllerRequest);
-			StatusEnum.success.setStatus(getConsumerEnquiry);
 			String inputRequest = (new ObjectMapper()).writeValueAsString(inputParams);
 			String outputResponse = ResultToJSON.convert(getConsumerEnquiry);
 			auditLogData(dataControllerRequest, inputRequest, outputResponse,
 					SIMAH_SERVICE_ID + " : " + CONSUMER_ENQUIRY_OPERATION_ID);
-			return getConsumerEnquiry;
+			
+			String optstatus = getConsumerEnquiry.getParamValueByName("opstatus");
+			String httpstatusCode = getConsumerEnquiry.getParamValueByName("httpStatusCode");
+			if (httpstatusCode.equals("200") && optstatus.equals("0")) {
+				StatusEnum.success.setStatus(getConsumerEnquiry);
+				return getConsumerEnquiry;
+			} else {
+				result = StatusEnum.error.setStatus();
+				return result;
+			}
 		} catch (Exception ex) {
 			LOG.error("ERROR getSIMAHConsumerEnquiry :: " + ex);
 		}

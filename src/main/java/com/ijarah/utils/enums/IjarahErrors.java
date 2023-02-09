@@ -32,7 +32,8 @@ public enum IjarahErrors {
     ERR_660028("660028", "Knockout Failed, Application has Declined"),
     ERR_GET_VOUCHER_DETAILS_SERVICE_FAILED_018("018", "Get Voucher Details Service Failed."),
     ERR_GET_USER_ID_FAILED_019("019", "Failed to fetch User ID from Session."),
-    ERR_GET_USER_ID_FAILED_020("020", "No voucher found");
+    ERR_GET_USER_ID_FAILED_020("020", "No voucher found"),
+    ERR_SIMHA_CONSUMER_INQUIRY_FAILED("017", "Consumer Enquiry Failed");
 
     public static final String ERROR_CODE_KEY = "dbpErrCode";
     public static final String ERROR_MESSAGE_KEY = "dbpErrMsg";
