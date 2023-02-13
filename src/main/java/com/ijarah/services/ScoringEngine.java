@@ -221,11 +221,6 @@ public class ScoringEngine implements JavaService2 {
 				Result getConsumerEnquiry = getSIMAHConsumerEnquiry(createRequestForConsumerEnquiryService(inputParams,
 						getCustomerData, getSalaryCertificate, dataControllerRequest, getCustomerApplicationData, getNationalAddress),
 						dataControllerRequest);
-				String status = getConsumerEnquiry.getParamByName("status").getValue();
-				if (status.equalsIgnoreCase("Failure")) {
-					IjarahErrors.ERR_SIMHA_CONSUMER_INQUIRY_FAILED.setErrorCode(result);
-					return result;
-				}
 
 				// Check if consumer has failed with 404 request
 				String jsonObject = ResultToJSON.convert(getConsumerEnquiry);
