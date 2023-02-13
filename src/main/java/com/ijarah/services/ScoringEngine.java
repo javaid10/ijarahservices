@@ -586,6 +586,8 @@ public class ScoringEngine implements JavaService2 {
 	private Map<String, String> createRequestForT24CustomerEmployeeDetailsService(Result getSalaryCertificate) {
 
 		Map<String, String> inputParams = new HashMap<>();
+		
+		inputParams.put("partyId", PARTY_ID);
 
 		LOG.error("ID =====>>>" + EMPLOYER_TYPE_ID);
 		switch (EMPLOYER_TYPE_ID) {
