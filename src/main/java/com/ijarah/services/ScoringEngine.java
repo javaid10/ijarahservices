@@ -132,7 +132,7 @@ public class ScoringEngine implements JavaService2 {
 		// assigning values to parameters
 
 		try {
-			EMPLOYER_TYPE_ID = "1";
+			EMPLOYER_CATEGORISATION = "";
 			inputParams = HelperMethods.getInputParamMap(objects);
 			IjarahErrors.ERR_PREPROCESS_INVALID_INPUT_PARAMS_001.setErrorCode(result);
 
@@ -151,7 +151,7 @@ public class ScoringEngine implements JavaService2 {
 				if (IjarahHelperMethods.isBlank(getSalaryCertificate.getParamValueByName("payMonth"))) {
 					LOG.error("PRIVATE EMPLOYEE");
 					EMPLOYER_TYPE_ID = "3";
-					EMPLOYER_CATEGORISATION = "NULL";
+					EMPLOYER_CATEGORISATION = "P";
 					getSalaryCertificate = getSIMAHSalaryCertificate(createRequestForSIMAHSALARY(getCustomerData,
 							EMPLOYER_TYPE_ID, dataControllerRequest.getParameter("NationalID")), dataControllerRequest);
 				} else {
@@ -1209,6 +1209,10 @@ public class ScoringEngine implements JavaService2 {
 							Double.parseDouble(inputParams.get("loanAmountInf"))),
 					Double.parseDouble(
 							HelperMethods.getFieldValue(getCustomerApplicationData, "loanAmount").replaceAll(",", "")));
+			
+			
+			
+			
 			// double amountOffer =
 			// Math.min(Double.parseDouble(inputParams.get("loanAmountCap")),
 			// Double.parseDouble(HelperMethods.getFieldValue(getCustomerApplicationData,
@@ -1237,15 +1241,45 @@ public class ScoringEngine implements JavaService2 {
 		inputParams.put("csaApporval", "0");
 		inputParams.put("sanadApproval", "0");
 
+		double dbOfferAmount = fetchProductRangeOfferFromDB();
+		LOG.error("dbOfferAmount :: " + dbOfferAmount);
 		if (inputParams.get("offerAmount").equalsIgnoreCase("0")
-				|| inputParams.get("offerAmount").equalsIgnoreCase("0.0")) {
+				|| inputParams.get("offerAmount").equalsIgnoreCase("0.0")
+				|| Double.parseDouble(inputParams.get("offerAmount")) < dbOfferAmount) {
 			inputParams.put("knockoutStatus", "FAIL");
 			inputParams.put("applicationStatus", "SID_SUSPENDED");
 		}
+		
 
 		return inputParams;
 	}
 
+	private double fetchProductRangeOfferFromDB() {
+		double dbOfferRange = 0.0;
+
+		HashMap<String, Object> inpUpdate = new HashMap();
+
+		try {
+			String res = DBPServiceExecutorBuilder.builder().withServiceId("DBMoraServices")
+					.withOperationId("dbxdb_productrange_get").withRequestParameters(inpUpdate).build().getResponse();
+
+			JSONObject jsonObject = new JSONObject(res);
+			
+			if(jsonObject.optJSONArray("productrange").length() > 0) {
+				String minAmount = jsonObject.optJSONArray("productrange").getJSONObject(0).optString("MinAmount");
+				dbOfferRange = Double.parseDouble(minAmount);
+			}
+
+
+		} catch (DBPApplicationException e) {
+			// TODO Auto-generated catch block
+			dbOfferRange = 0.0;
+			e.printStackTrace();
+		}
+		return dbOfferRange;
+	}
+	
+	
 	private String calculateLoanAmountInf(double loanRate, int tenor, double maxEMI) {
 
 		/*
@@ -2171,6 +2205,7 @@ public class ScoringEngine implements JavaService2 {
 			inputParams.put("employeeName", EMPLOYER_NAME);
 			inputParams.put("salaryNonAllowance", SALARY_WITHOUT_ALLOWANCES);
 			inputParams.put("pensioner", PENSIONER);
+			inputParams.put("employeeCategory", EMPLOYER_CATEGORISATION);
 
 		} catch (Exception ex) {
 			LOG.error("ERROR createRequestForScoreCardS2Service :: " + ex);
@@ -2255,6 +2290,7 @@ public class ScoringEngine implements JavaService2 {
 			inputParams.put("newIndustry", NEW_TO_INDUSTRY);
 			inputParams.put("salaryNonAllowance", SALARY_WITHOUT_ALLOWANCES);
 			inputParams.put("score", SC_SCORE);
+			inputParams.put("employeeCategory", EMPLOYER_CATEGORISATION);
 
 		} catch (Exception ex) {
 			LOG.error("ERROR createRequestForScoreCardS3Service :: " + ex);
