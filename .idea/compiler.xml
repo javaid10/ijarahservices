@@ -7,6 +7,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="IjarahServices" />
+        <module name="ijarahservices" />
       </profile>
     </annotationProcessing>
   </component>

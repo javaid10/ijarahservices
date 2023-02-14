@@ -33,7 +33,11 @@ public enum IjarahErrors {
     ERR_GET_VOUCHER_DETAILS_SERVICE_FAILED_018("018", "Get Voucher Details Service Failed."),
     ERR_GET_USER_ID_FAILED_019("019", "Failed to fetch User ID from Session."),
     ERR_GET_USER_ID_FAILED_020("020", "No voucher found"),
-    ERR_SIMHA_CONSUMER_INQUIRY_FAILED("017", "Consumer Enquiry Failed");
+    ERR_SIMHA_CONSUMER_INQUIRY_FAILED("017", "Consumer Enquiry Failed"),
+
+    ERR_GET_REAPPLY_DATE_SERVICE_FAILED_038("038", "Get Re Apply Date Failed Service Failed."),
+    ERR_GET_CUSTOMER_APPLICATION_SERVICE_FAILED_039("039", "Get Customer Application Journey Service Failed."),
+    ERR_GET_SANAD_ITERATION_SERVICE_FAILED_040("040", "Get Sanad Iteration Failed.");
 
     public static final String ERROR_CODE_KEY = "dbpErrCode";
     public static final String ERROR_MESSAGE_KEY = "dbpErrMsg";

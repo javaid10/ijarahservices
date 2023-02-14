@@ -56,6 +56,13 @@ public class OperationIDConstants {
     public static final String PAYMENT_SCHEDULE_OPERATION_ID = "PaymentScheduleOrch";
     public static final String EMDHA_SIGN_OPERATION_ID = "EmdhaSign";
     public static final String SP_GET_VOUCHER_DETAILS_OPERATION_ID = "sp_get_voucher_details";
+
+    public static final String SP_CREATE_UPDATE_CUSTOMER_BLOCKING_OPERATION_ID = "sp_create_update_customer_blocking";
+    public static final String SP_INCREMENT_CUSTOMER_APPLICATION_JOURNEY_OPERATION_ID = "sp_increment_customer_application_journey_count";
+    public static final String SP_INCREMENT_SANAD_SIGN_COUNT_OPERATION_ID = "sp_increment_sanad_sign_count";
+    public static final String SP_GET_REAPPLY_DATE_OPERATION_ID = "sp_get_reapply_date";
+    public static final String SP_GET_CUSTOMER_APPLICATION_JOURNEY_DATE_OPERATION_ID = "sp_get_customer_application_journey_date";
+    public static final String SP_GET_SANAD_ITERATION_DATE_OPERATION_ID = "sp_get_sanad_iteration_date";
 }
 
 
