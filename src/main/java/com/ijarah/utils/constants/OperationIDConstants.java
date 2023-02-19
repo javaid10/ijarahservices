@@ -63,6 +63,14 @@ public class OperationIDConstants {
     public static final String SP_GET_REAPPLY_DATE_OPERATION_ID = "sp_get_reapply_date";
     public static final String SP_GET_CUSTOMER_APPLICATION_JOURNEY_DATE_OPERATION_ID = "sp_get_customer_application_journey_date";
     public static final String SP_GET_SANAD_ITERATION_DATE_OPERATION_ID = "sp_get_sanad_iteration_date";
+    public static final String VOUCHER_GET_OPERATION_ID = "voucher_get";
+    public static final String NON_FINANCIAL_PRODUCT_GET_OPERATION_ID = "nonfinancialproducts_get";
+    public static final String CREDIT_CARD_PRODUCTS_GET_OPERATION_ID = "creditcardproducts_get";
+    public static final String SP_GET_CUSTOMER_APPLICATION_AND_CUSTOMER_DATA_OPERATION_ID = "sp_get_customer_application_and_customer_data";
+    public static final String SP_CREATE_UPDATE_CUSTOMER_ADDRESS_AND_EMPLOYER_DETAILS_DATA_OPERATION_ID = "sp_create_update_customer_address_and_employer_details";
+    public static final String MIS_REPORT_UPDATE_OPERATION_ID = "mis_report_update";
+    public static final String SP_MAX_GLOBAL_GET_OPERATION_ID = "sp_getDTIValue";
+    public static final String SP_MAX_INTERNAL_GET_OPERATION_ID = "sp_getInternalDTIValue";
 }
 
 

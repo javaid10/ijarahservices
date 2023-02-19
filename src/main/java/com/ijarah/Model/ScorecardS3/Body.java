@@ -22,6 +22,9 @@ public class Body {
     @SerializedName("tenor")
     private String tenor;
 
+    @SerializedName("commission")
+    private String commission;
+
     @SerializedName("applicationStatus")
     private String applicationStatus;
 
@@ -134,6 +137,14 @@ public class Body {
 
     public String getTenor() {
         return tenor;
+    }
+
+    public void setCommission(String tenor) {
+        this.commission = tenor;
+    }
+
+    public String getCommission() {
+        return commission;
     }
 
     public void setApplicationStatus(String applicationStatus) {

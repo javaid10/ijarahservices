@@ -3,16 +3,19 @@ package com.ijarah.services;
 import com.google.common.primitives.Chars;
 import com.google.gson.Gson;
 
+import com.ijarah.Model.CREDIT_CARD_PRODUCTS.CreditCardProductsResponse;
+import com.ijarah.Model.CREDIT_CARD_PRODUCTS.CreditcardproductsItem;
 import com.ijarah.Model.EMPLOYER_NAME_FOR_PENSIONERS.EmployerNameForPensionerResponse;
 import com.ijarah.Model.EMPLOYER_NAME_FOR_PENSIONERS.EmployernamesforpensionerItem;
 import com.ijarah.Model.MORTGAGE_PRODUCT.MortgageProductResponse;
 import com.ijarah.Model.MORTGAGE_PRODUCT.MortgageproductItem;
+import com.ijarah.Model.NON_FINANCIAL_PRODUCTS.NonFinancialProductResponse;
+import com.ijarah.Model.NON_FINANCIAL_PRODUCTS.NonfinancialproductsItem;
 import com.ijarah.Model.ScorecardS2.ScoreCardS2;
 import com.ijarah.Model.ScorecardS3.ScoreCardS3;
 import com.ijarah.Model.consumerEnquiryModel.*;
 import com.ijarah.Model.consumerEnquiryModel.RESPONSEItem;
 
-import com.dbp.core.error.DBPApplicationException;
 import com.dbp.core.fabric.extn.DBPServiceExecutorBuilder;
 import com.ijarah.Model.consumerEnquiryModelFinal.ConsumerEnquiryModelResponse;
 import com.ijarah.utils.IjarahHelperMethods;
@@ -24,7 +27,6 @@ import com.kony.dbputilities.util.HelperMethods;
 import com.konylabs.middleware.common.JavaService2;
 import com.konylabs.middleware.controller.DataControllerRequest;
 import com.konylabs.middleware.controller.DataControllerResponse;
-import com.konylabs.middleware.dataobject.JSONToResult;
 import com.konylabs.middleware.dataobject.Result;
 import com.konylabs.middleware.dataobject.ResultToJSON;
 import org.apache.log4j.Logger;
@@ -42,146 +44,187 @@ import java.util.*;
 import static com.ijarah.utils.IjarahHelperMethods.*;
 import static com.ijarah.utils.ServiceCaller.auditLogData;
 import static com.ijarah.utils.constants.OperationIDConstants.*;
-import static com.ijarah.utils.constants.OperationIDConstants.SP_INCREMENT_SANAD_SIGN_COUNT_OPERATION_ID;
 import static com.ijarah.utils.constants.ServiceIDConstants.*;
+import static com.ijarah.utils.enums.EnvironmentConfig.PAYMENT_SCHEDULE_SLEEP_VALUE;
 
 public class ScoringEngine implements JavaService2 {
 
     private static final Logger LOG = Logger.getLogger(ScoringEngine.class);
-    Map<String, String> inputParams = new HashMap<>();
-    String MONTHLY_NET_SALARY = "0";
-    String CURRENT_LENGTH_OF_SERVICE = "0";
-    String GLOBAL_DTI = "";
-    String INTERNAL_DTI = "";
-    String CURRENT_DELINQUENCY = "1";
-    private String CURRENT_DELINQUENCY_T = "1";
-    String MAX_DELINQUENCY = "0";
-    String NON_FINANCIAL_DEFAULT_AMOUNT = "0";
-    String BOUNCED_CHEQUE = "NB";
-    String COURT_JUDGEMENT = "NJ";
-    String EMPLOYER_CATEGORISATION = "NULL";
-    String MAX_LOAN_AMOUNT_CAPPING = "";
-    String MANAGING_SEASONAL_AND_TEMPORARY_LIFT_IN_SALARY = "0";
-    String NEW_TO_INDUSTRY = "";
-    String SALARY_WITHOUT_ALLOWANCES = "0";
-    String INSIDE_KSA = "";
-    String NATIONALITY = "SA";
-    String AMOUNT_OFFER = "";
+    private Map<String, String> inputParams = new HashMap<>();
+    private String MONTHLY_NET_SALARY;
+    private String CURRENT_LENGTH_OF_SERVICE;
+    private String GLOBAL_DTI;
+    private String INTERNAL_DTI;
+    private String CURRENT_DELINQUENCY;
+    private String CURRENT_DELINQUENCY_T;
+    private String MAX_DELINQUENCY;
+    private String NON_FINANCIAL_DEFAULT_AMOUNT;
+    private String BOUNCED_CHEQUE;
+    private String COURT_JUDGEMENT;
+    private String EMPLOYER_CATEGORISATION;
+    private String MAX_LOAN_AMOUNT_CAPPING;
+    private String MANAGING_SEASONAL_AND_TEMPORARY_LIFT_IN_SALARY;
+    private String NEW_TO_INDUSTRY;
+    private String SALARY_WITHOUT_ALLOWANCES;
+    private String INSIDE_KSA;
+    private String NATIONALITY;
+    private String AMOUNT_OFFER;
+    private String EMPLOYER_TYPE_ID;
+    private String EMPLOYMENT_STATUS;
+    private String[] MORTGAGE_PRODUCT;
+    private String[] CREDIT_CARD_PRODUCT;
+    private String[] EMPLOYER_NAME_FOR_PENSIONERS;
+    private String[] NON_FINANCIAL_PRODUCTS;
+    private char[] CURRENT_DELINQUENCY_VALUES = {'0', 'C', 'D', 'N'};
+    private int MAX_GLOBAL_DTI;
+    private int MAX_INTERNAL_DTI;
+    private String FINANCIAL_DEFAULT_AMOUNT;
+    private String DATA_TYPE;
+    private String TENOR;
+    private String CALCULATE;
+    private String PENSIONER;
+    private String CUSTOMER_AGE;
+    private String APPLICATION_ID;
+    private String LOAN_REF;
+    private String SCORECARD_ID;
+    private String NATIONAL_ID;
+    private String DOB;
+    private String CONTACT_NUMBER;
+    private String LOAN_AMOUNT;
+    private String APROX;
+    private String EMPLOYER_NAME;
+    private List<CIDETAILItem> CI_DETAIL;
+    private List<DEFAULTItem> DEFAULT;
+    private List<BOUNCEDCHECKItem> BOUNCED_CHECK;
+    private List<JUDGEMENTItem> JUDGEMENT;
+    private String CUSTOMER_ID;
+    private double MAX_EMI;
+    private double CUSTOMER_GLOBAL_DTI;
+    private double CUSTOMER_INTERNAL_DTI;
+    private String PARTY_ID;
+    private String EMI;
+    private String SAAD;
+    private String SABB;
+    private String SIMID;
+    private String AAID;
+    private String EFFECTIVE_DATE;
+    private String SC_SCORE;
+    private List<com.ijarah.Model.consumerEnquiryModelFinal.CIDETAILSItem> CI_DETAIL2;
+    private List<com.ijarah.Model.consumerEnquiryModelFinal.DEFAULTSItem> DEFAULT2;
+    private List<com.ijarah.Model.consumerEnquiryModelFinal.BOUNCEDCHECKSItem> BOUNCED_CHEQUE2;
+    private List<com.ijarah.Model.consumerEnquiryModelFinal.JUDGEMENTSItem> JUDGEMENT2;
+    private StringBuilder BOUNCED_CHEQUE_DETAILS;
+    private StringBuilder COURT_JUDGEMENT_DETAILS;
+    private StringBuilder PRODUCT_DETAILS;
+    private StringBuilder SUMMARY_DETAILS;
+    private StringBuilder ALLOWANCE_DETAILS;
 
-    String EMPLOYER_TYPE_ID = "1";
-    String EMPLOYMENT_STATUS = "";
-
-    String[] MORTGAGE_PRODUCT;
-    String[] CREDIT_CARD_PRODUCT = {"CDC", "CHC", "CRC", "LCRC"};
-    String[] EMPLOYER_NAME_FOR_PENSIONERS;
-    String[] NON_FINANCIAL_PRODUCTS = {"MBL", "LND", "DAT", "NET"};
-    char[] CURRENT_DELINQUENCY_VALUES = {'0', 'C', 'D', 'N'};
-
-    int MAX_GLOBAL_DTI = 45;
-    int MAX_INTERNAL_DTI = 33;
-    private String FINANCIAL_DEFAULT_AMOUNT = "0";
-
-    private String DATA_TYPE = "";
-
-    private String TENOR = "0";
-
-    private String CALCULATE = "YES";
-
-    private String PENSIONER = "0";
-
-    private String CUSTOMER_AGE = "";
-
-    private String APPLICATION_ID = "";
-    private String LOAN_REF = "";
-    private String SCORECARD_ID = "";
-    private String NATIONAL_ID = "";
-    private String DOB = "";
-    private String CONTACT_NUMBER = "";
-    private String LOAN_AMOUNT = "";
-
-    private String APROX = "";
-    private String EMPLOYER_NAME = "-";
-    private List<CIDETAILItem> CI_DETAIL = null;
-    private List<DEFAULTItem> DEFAULT = null;
-    private List<BOUNCEDCHECKItem> BOUNCED_CHECK = null;
-    private List<JUDGEMENTItem> JUDGEMENT = null;
-    private String CUSTOMER_ID = "";
-
-    private double MAX_EMI = 0;
-    private double CUSTOMER_GLOBAL_DTI = 0.0;
-    private double CUSTOMER_INTERNAL_DTI = 0.0;
-    private String PARTY_ID = "";
-
-    // Rajath Params for schedule and simulation
-
-    private String EMI = "";
-    private String SAAD = "";
-    private String SABB = "";
-    private String SIMID = "";
-    private String AAID = "";
-    private String SC_SCORE = "0";
-    private List<com.ijarah.Model.consumerEnquiryModelFinal.CIDETAILSItem> CI_DETAIL2 = null;
-    private List<com.ijarah.Model.consumerEnquiryModelFinal.DEFAULTSItem> DEFAULT2 = null;
-    private List<com.ijarah.Model.consumerEnquiryModelFinal.BOUNCEDCHECKSItem> BOUNCED_CHEQUE2 = null;
-    private List<com.ijarah.Model.consumerEnquiryModelFinal.JUDGEMENTSItem> JUDGEMENT2 = null;
+    private void initialiseVariables() {
+        MONTHLY_NET_SALARY = "0";
+        CURRENT_LENGTH_OF_SERVICE = "0";
+        GLOBAL_DTI = "";
+        INTERNAL_DTI = "";
+        CURRENT_DELINQUENCY = "1";
+        CURRENT_DELINQUENCY_T = "1";
+        MAX_DELINQUENCY = "0";
+        NON_FINANCIAL_DEFAULT_AMOUNT = "0";
+        BOUNCED_CHEQUE = "NB";
+        COURT_JUDGEMENT = "NJ";
+        EMPLOYER_CATEGORISATION = "NULL";
+        MAX_LOAN_AMOUNT_CAPPING = "";
+        MANAGING_SEASONAL_AND_TEMPORARY_LIFT_IN_SALARY = "0";
+        NEW_TO_INDUSTRY = "";
+        SALARY_WITHOUT_ALLOWANCES = "0";
+        INSIDE_KSA = "";
+        NATIONALITY = "SA";
+        AMOUNT_OFFER = "";
+        EMPLOYER_TYPE_ID = "1";
+        EMPLOYMENT_STATUS = "";
+        MAX_GLOBAL_DTI = 20;
+        MAX_INTERNAL_DTI = 33;
+        FINANCIAL_DEFAULT_AMOUNT = "0";
+        DATA_TYPE = "";
+        TENOR = "0";
+        CALCULATE = "YES";
+        PENSIONER = "0";
+        CUSTOMER_AGE = "";
+        APPLICATION_ID = "";
+        LOAN_REF = "";
+        SCORECARD_ID = "";
+        NATIONAL_ID = "";
+        DOB = "";
+        CONTACT_NUMBER = "";
+        LOAN_AMOUNT = "";
+        APROX = "";
+        EMPLOYER_NAME = "-";
+        CUSTOMER_ID = "";
+        MAX_EMI = 0;
+        CUSTOMER_GLOBAL_DTI = 0.0;
+        CUSTOMER_INTERNAL_DTI = 0.0;
+        PARTY_ID = "";
+        EMI = "";
+        SAAD = "";
+        SABB = "";
+        SIMID = "";
+        AAID = "";
+        EFFECTIVE_DATE = "";
+        SC_SCORE = "0";
+        BOUNCED_CHEQUE_DETAILS = new StringBuilder();
+        COURT_JUDGEMENT_DETAILS = new StringBuilder();
+        PRODUCT_DETAILS = new StringBuilder();
+        SUMMARY_DETAILS = new StringBuilder();
+        ALLOWANCE_DETAILS = new StringBuilder();
+    }
 
     @Override
     public Object invoke(String s, Object[] objects, DataControllerRequest dataControllerRequest,
                          DataControllerResponse dataControllerResponse) throws Exception {
         Result result = StatusEnum.error.setStatus();
-
-        // assigning values to parameters
-
         try {
+            initialiseVariables();
             EMPLOYER_TYPE_ID = "1";
             inputParams = HelperMethods.getInputParamMap(objects);
             IjarahErrors.ERR_PREPROCESS_INVALID_INPUT_PARAMS_001.setErrorCode(result);
 
             if (preProcess(dataControllerRequest)) {
-                LOG.error("preProcess  :: ");
-                // DB INTEGRATION SERVICES CALLS
-                Result getCustomerApplicationData = getCustomerApplicationData(dataControllerRequest);
 
-                Result getCustomerData = getCustomerData(dataControllerRequest, getCustomerApplicationData);
+                // DB INTEGRATION SERVICES CALLS
+                Result customerApplicationAndCustomerData = getCustomerApplicationAndCustomerData(dataControllerRequest);
+
+                if (HelperMethods.hasRecords(customerApplicationAndCustomerData)) {
+                    extractValuesFromCustomerApplication(customerApplicationAndCustomerData);
+                } else {
+                    StatusEnum.error.setStatus(result);
+                    IjarahErrors.ERR_NO_CUSTOMER_RECORD_FOUND_004.setErrorCode(result);
+                    return result;
+                }
 
                 // 3RD PARTY INTEGRATION SERVICES CALLS
 
                 EMPLOYER_TYPE_ID = "1";
-                Result getSalaryCertificate = getSIMAHSalaryCertificate(createRequestForSIMAHSALARY(getCustomerData,
-                        EMPLOYER_TYPE_ID, dataControllerRequest.getParameter("NationalID")), dataControllerRequest);
+                Result getSalaryCertificate = getSIMAHSalaryCertificate(
+                        createRequestForSIMAHSALARY(customerApplicationAndCustomerData, EMPLOYER_TYPE_ID, NATIONAL_ID),
+                        dataControllerRequest);
                 if (IjarahHelperMethods.isBlank(getSalaryCertificate.getParamValueByName("payMonth"))) {
                     LOG.error("PRIVATE EMPLOYEE");
                     EMPLOYER_TYPE_ID = "3";
                     EMPLOYER_CATEGORISATION = "NULL";
-                    getSalaryCertificate = getSIMAHSalaryCertificate(createRequestForSIMAHSALARY(getCustomerData,
-                            EMPLOYER_TYPE_ID, dataControllerRequest.getParameter("NationalID")), dataControllerRequest);
+                    getSalaryCertificate = getSIMAHSalaryCertificate(
+                            createRequestForSIMAHSALARY(customerApplicationAndCustomerData, EMPLOYER_TYPE_ID, NATIONAL_ID),
+                            dataControllerRequest);
                 } else {
                     LOG.error("GOVT EMPLOYEE");
                     EMPLOYER_TYPE_ID = "1";
                     EMPLOYER_CATEGORISATION = "G";
                 }
 
-                if (Integer.parseInt(getSalaryCertificate.getParamValueByName("opstatus_getToken")) != 0
-                        || !Boolean.parseBoolean(getSalaryCertificate.getParamValueByName("isSuccess"))) {
-                    LOG.error("Simah Failed to fetch Salary  :: ");
-                    result = updateCustomerApplicationData(createRequestForUpdateCustomerApplicationDataServiceS2(
-                            getCustomerApplicationData, dataControllerRequest), dataControllerRequest, "SIMAH", "Simah Failed to Fetch Salary");
-                    return result;
-                }
-
                 Result getNationalAddress = getNationalAddress(inputParams, dataControllerRequest);
-
-                createCustomerAddress(
-                        createRequestForCreateCustomerAddressService(getNationalAddress, dataControllerRequest),
-                        dataControllerRequest);
                 createT24CustomerAddressUpdate(createRequestForT24CustomerAddressUpdateService(getNationalAddress),
-                        dataControllerRequest);
-
-                createEmployerDetails(
-                        createRequestForCreateEmployerDetailsService(getSalaryCertificate, dataControllerRequest),
                         dataControllerRequest);
                 createT24CustomerEmployeeDetails(
                         createRequestForT24CustomerEmployeeDetailsService(getSalaryCertificate), dataControllerRequest);
+
+                createUpdateCustomerAddressAndEmployerDetailsRecord(createRequestForCreateUpdateCustomerAddressAndEmployerDetailsService(getNationalAddress, getSalaryCertificate), dataControllerRequest);
 
                 // CALCULATION OF SCORING ENGINES
                 initEmployerNamesForPensionerArray(dataControllerRequest);
@@ -189,20 +232,17 @@ public class ScoringEngine implements JavaService2 {
                 calculateCurrentLengthOfService(getSalaryCertificate);
                 getEmployerName(getSalaryCertificate);
                 calculateManagingSeasonalAndTemporaryLiftInSalary(getSalaryCertificate);
-                boolean checkSalaryBool = calculateMonthlyNetSalary(getSalaryCertificate);
-                LOG.error("checkSalaryBool :: " + checkSalaryBool);
-                if (!checkSalaryBool) {
-                    LOG.error("Failed due to User Non Active :: ");
-                    result = updateCustomerApplicationData(createRequestForUpdateCustomerApplicationDataServiceS2(
-                            getCustomerApplicationData, dataControllerRequest), dataControllerRequest, "Salary Certificate", "Failed Due To User Non-Active");
-                    return result;
-                }
-
+                calculateMonthlyNetSalary(getSalaryCertificate);
                 calculateSalaryWithoutAllowances(getSalaryCertificate);
 
+                Result voucherDetails = new Result();
+                if (DATA_TYPE.equals("MURABAHA")) {
+                    voucherDetails = getVoucherDetails(HelperMethods.getFieldValue(customerApplicationAndCustomerData, "voucherID"), dataControllerRequest);
+                }
+
                 // 3RD PARTY INTEGRATION SERVICES CALLS
-                Result getScoreCardS2 = calculateScoreCardS2(createRequestForScoreCardS2Service(getSalaryCertificate,
-                        dataControllerRequest, getCustomerApplicationData), dataControllerRequest);
+                Result getScoreCardS2 = calculateScoreCardS2(createRequestForScoreCardS2Service(voucherDetails),
+                        dataControllerRequest);
                 Gson gsonS2 = new Gson();
                 ScoreCardS2 scoreCardS2 = gsonS2.fromJson(ResultToJSON.convert(getScoreCardS2), ScoreCardS2.class);
 
@@ -211,22 +251,16 @@ public class ScoringEngine implements JavaService2 {
                         if (scoreCardS2.getBody().getApplicationCategory().equalsIgnoreCase("0")) {
                             // DB INTEGRATION SERVICES CALLS
                             result = updateCustomerApplicationData(
-                                    createRequestForUpdateCustomerApplicationDataServiceS2(getCustomerApplicationData,
-                                            dataControllerRequest),
-                                    dataControllerRequest, "S2", "Score Card S2 Failed");
+                                    createRequestForUpdateCustomerApplicationDataServiceS2(customerApplicationAndCustomerData),
+                                    dataControllerRequest, "S2", "Application Declined");
                             return result;
                         }
                     }
                 }
 
-                Result getConsumerEnquiry = getSIMAHConsumerEnquiry(createRequestForConsumerEnquiryService(inputParams,
-                                getCustomerData, getSalaryCertificate, dataControllerRequest, getCustomerApplicationData, getNationalAddress),
+                Result getConsumerEnquiry = getSIMAHConsumerEnquiry(
+                        createRequestForConsumerEnquiryService(inputParams, customerApplicationAndCustomerData, getSalaryCertificate),
                         dataControllerRequest);
-                String status = getConsumerEnquiry.getParamByName("status").getValue();
-                if (status.equalsIgnoreCase("Failure")) {
-                    IjarahErrors.ERR_SIMHA_CONSUMER_INQUIRY_FAILED.setErrorCode(result);
-                    return result;
-                }
 
                 // Check if consumer has failed with 404 request
                 String jsonObject = ResultToJSON.convert(getConsumerEnquiry);
@@ -237,73 +271,57 @@ public class ScoringEngine implements JavaService2 {
                 LOG.error("ERROR BEfore consumerEnquiryObj :: " + checkConsumerResp);
                 if (checkConsumerResp != "") {
                     LOG.error("ERROR After consumerEnquiryObj :: " + checkConsumerResp);
-                    result = updateCustomerApplicationData(createRequestForUpdateCustomerApplicationDataServiceS2(
-                            getCustomerApplicationData, dataControllerRequest), dataControllerRequest, "Consumer Enquiry", "Consumer Enquiry 404 Request");
+                    result = updateCustomerApplicationData(
+                            createRequestForUpdateCustomerApplicationDataServiceS2(customerApplicationAndCustomerData),
+                            dataControllerRequest, "S2", "Application Declined");
                     return result;
                 }
-
-                // check if consumer enquiry is failed with some wrong parameters
-                // Gson gson = new Gson();
-                // ConsumerEnquiryModelResponse consumerEnquiryModelResponse = gson
-                // .fromJson(ResultToJSON.convert(getConsumerEnquiry),
-                // ConsumerEnquiryModelResponse.class);
-
-                // String checkErrorResp =
-                // consumerEnquiryModelResponse.getRESPONSE().getSTATUS();
-
-                // LOG.error("ERROR BEfore checkErrorItem :: " + checkErrorResp);
-                // if (!checkErrorResp.equalsIgnoreCase("OK")) {
-                // LOG.error("ERROR After checkErrorItem :: " + checkErrorResp);
-                // result = updateCustomerApplicationData(
-                // createRequestForUpdateCustomerApplicationDataServiceS2(getCustomerApplicationData),
-                // dataControllerRequest);
-                // return result;
-                // }
 
                 extractValuesFromConsumerEnquiryResponse(getConsumerEnquiry);
+                initNonFinancialProductsArray(dataControllerRequest);
                 initMortgageProductArray(dataControllerRequest);
-
-                int calMAXGblDti = calculateMaxGlobalDTI(dataControllerRequest);
-                int calMAXinternalDti = calculateMaxInternalDTI(dataControllerRequest);
-
-
-                JSONObject checkDTIBool = calculateGlobalDTI(calMAXGblDti);
-                LOG.error("checkDTIBool DTI :: " + checkDTIBool);
-                if (!checkDTIBool.optBoolean("check")) {
-                    LOG.error("Failed due to higher DTI :: ");
-                    result = updateCustomerApplicationData(createRequestForUpdateCustomerApplicationDataServiceS2(
-                            getCustomerApplicationData, dataControllerRequest), dataControllerRequest, "DTI Calculation", "Failed due to higher DTI");
-                    return result;
-                }
-                double customerGblDti = checkDTIBool.optDouble("customerGblDti");
-                double customerInternalDti = calculateInternalDTI(calMAXinternalDti);
-
-                LOG.error("check customerInternalDti DTI :: " + customerInternalDti);
-
+                initCreditCardsProductArray(dataControllerRequest);
+                calculateMaxGlobalDTI(dataControllerRequest);
+                calculateMaxInternalDTI(dataControllerRequest);
+                calculateGlobalDTI();
+                calculateInternalDTI();
                 calculateCurrentDelinquencyAndCurrentDelinquencyT();
                 calculateMaxDelinquency();
-
+                calculateFinancialDefaultAmount();
+                calculateNonFinancialDefaultAmount();
+                calculateBouncedCheque();
+                calculateCourtJudgement();
                 calculateMaxLoanAmountCapping();
                 calculateNewToIndustry();
 
-                Result getScoreCardS3 = calculateScoreCardS3(createRequestForScoreCardS3Service(getConsumerEnquiry,
-                        getCustomerApplicationData, getCustomerData, dataControllerRequest), dataControllerRequest);
-
-
-                double maxEMI = calculateMaxEmi(calMAXGblDti, calMAXinternalDti, customerGblDti, customerInternalDti);
+                Result getScoreCardS3 = calculateScoreCardS3(createRequestForScoreCardS3Service(voucherDetails),
+                        dataControllerRequest);
+                calculateMaxEmi();
 
                 // DB INTEGRATION SERVICES CALLS
-                result = updateCustomerApplicationData(
-                        createRequestForUpdateCustomerApplicationDataService(getCustomerApplicationData, getScoreCardS2,
-                                getScoreCardS3, dataControllerRequest, maxEMI),
-                        dataControllerRequest, "S3", "Application Declined");
+                result = updateCustomerApplicationData(createRequestForUpdateCustomerApplicationDataService(
+                        customerApplicationAndCustomerData, getScoreCardS2, getScoreCardS3, dataControllerRequest, voucherDetails), dataControllerRequest, "S3", "Application Declined");
             }
-
             return result;
         } catch (Exception ex) {
-            LOG.error("ERROR invoke :: " + ex.getMessage());
+            LOG.error("ERROR invoke :: " + ex);
             return result;
         }
+    }
+
+    private Result getVoucherDetails(String voucherID, DataControllerRequest dataControllerRequest) {
+        Result result = StatusEnum.error.setStatus();
+        try {
+            Map<String, String> filter = new HashMap<>();
+            filter.put(DBPUtilitiesConstants.FILTER, "id" + DBPUtilitiesConstants.EQUAL + voucherID);
+            Result getCustomerApplicationData = ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID,
+                    VOUCHER_GET_OPERATION_ID, filter, null, dataControllerRequest);
+            StatusEnum.success.setStatus(getCustomerApplicationData);
+            return getCustomerApplicationData;
+        } catch (Exception ex) {
+            LOG.error("ERROR getVoucherDetails :: " + ex);
+        }
+        return result;
     }
 
     private void initMortgageProductArray(DataControllerRequest dataControllerRequest) {
@@ -322,8 +340,6 @@ public class ScoringEngine implements JavaService2 {
             MORTGAGE_PRODUCT[index] = mortgageproductItem.getMortgageProductValue();
             index++;
         }
-
-        LOG.error("MortgageProduct Array:: " + MORTGAGE_PRODUCT);
     }
 
     private Result getMortgageProducts(DataControllerRequest dataControllerRequest) {
@@ -370,6 +386,62 @@ public class ScoringEngine implements JavaService2 {
         return result;
     }
 
+    private void initNonFinancialProductsArray(DataControllerRequest dataControllerRequest) {
+        Result getNonFinancialProductsResponse = getNonFinancialProducts(dataControllerRequest);
+        Gson gson = new Gson();
+        NonFinancialProductResponse nonFinancialProductResponse = gson.fromJson(ResultToJSON.convert(getNonFinancialProductsResponse), NonFinancialProductResponse.class);
+        extractValuesFromNonFinancialProductsResponse(nonFinancialProductResponse);
+    }
+
+    private void extractValuesFromNonFinancialProductsResponse(NonFinancialProductResponse nonFinancialProductResponse) {
+        List<NonfinancialproductsItem> nonFinancialProducts = nonFinancialProductResponse.getNonfinancialproducts();
+        NON_FINANCIAL_PRODUCTS = new String[nonFinancialProducts.size()];
+        int index = 0;
+        for (NonfinancialproductsItem nonfinancialproductsItem : nonFinancialProducts) {
+            NON_FINANCIAL_PRODUCTS[index] = nonfinancialproductsItem.getNonFinancialProductsValue();
+            index++;
+        }
+    }
+
+    private Result getNonFinancialProducts(DataControllerRequest dataControllerRequest) {
+        Result result = StatusEnum.error.setStatus();
+        try {
+            Map<String, String> inputParams = new HashMap<>();
+            return ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, NON_FINANCIAL_PRODUCT_GET_OPERATION_ID, inputParams, null, dataControllerRequest);
+        } catch (Exception ex) {
+            LOG.error("ERROR getNonFinancialProducts :: " + ex);
+        }
+        return result;
+    }
+
+    private void initCreditCardsProductArray(DataControllerRequest dataControllerRequest) {
+        Result creditCardProducts = getCreditCardProducts(dataControllerRequest);
+        Gson gson = new Gson();
+        CreditCardProductsResponse creditCardProductsResponse = gson.fromJson(ResultToJSON.convert(creditCardProducts), CreditCardProductsResponse.class);
+        extractValuesFromCreditCardProductResponse(creditCardProductsResponse);
+    }
+
+    private Result getCreditCardProducts(DataControllerRequest dataControllerRequest) {
+        Result result = StatusEnum.error.setStatus();
+        try {
+            Map<String, String> inputParams = new HashMap<>();
+            return ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, CREDIT_CARD_PRODUCTS_GET_OPERATION_ID, inputParams, null, dataControllerRequest);
+        } catch (Exception ex) {
+            LOG.error("ERROR getCreditCardProducts :: " + ex);
+        }
+        return result;
+    }
+
+    private void extractValuesFromCreditCardProductResponse(CreditCardProductsResponse creditCardProductsResponse) {
+        List<CreditcardproductsItem> creditCardProductsList = creditCardProductsResponse.getCreditcardproducts();
+        CREDIT_CARD_PRODUCT = new String[creditCardProductsList.size()];
+        int index = 0;
+        for (CreditcardproductsItem creditCardProductsItem : creditCardProductsList) {
+            CREDIT_CARD_PRODUCT[index] = creditCardProductsItem.getCreditCardProductsValue();
+            index++;
+        }
+    }
+
     private Result createT24CustomerAddressUpdate(Map<String, String> inputParams,
                                                   DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
@@ -408,20 +480,26 @@ public class ScoringEngine implements JavaService2 {
         return result;
     }
 
-    private String getLoanSimulation(HashMap<String, Object> inputParams) {
+    private String getLoanSimulation(HashMap<String, Object> inputParams, DataControllerRequest dataControllerRequest) {
         String schedRes = "";
+        String serviceName = "LoanSimulationSchedulePayment";
         try {
-            String res = DBPServiceExecutorBuilder.builder().withServiceId("LoanSimulationSchedulePayment")
+            if (DATA_TYPE.equalsIgnoreCase("MURABAHA")) {
+                serviceName = "MurabahaT24JsonServices";
+            }
+
+            String res = DBPServiceExecutorBuilder.builder().withServiceId(serviceName)
                     .withOperationId("LoanSimulation").withRequestParameters(inputParams).build().getResponse();
             LOG.error("====:::::  Response from SIMULATION  :::::" + res);
             JSONObject JsonResponse = new JSONObject(res);
             String simid = JsonResponse.optString("simulationId");
             String aaid = JsonResponse.optString("arrangementId");
+            String effectiveDate = JsonResponse.optString("effectiveDate");
 
             LOG.error("AAID");
 
             if (!simid.isEmpty() && !aaid.isEmpty()) {
-                Thread.sleep(Long.parseLong("20000"));
+                Thread.sleep(Long.parseLong(PAYMENT_SCHEDULE_SLEEP_VALUE.getValue(dataControllerRequest)));
                 LOG.error("====::::: Inside if condition  :::::");
 
                 HashMap<String, Object> schedParam = new HashMap();
@@ -437,13 +515,14 @@ public class ScoringEngine implements JavaService2 {
                 SAAD = jsonSchedule.getJSONArray("body").getJSONObject(0).optString("sadadNumber");
 
                 SABB = jsonSchedule.getJSONArray("body").getJSONObject(0).optString("sabbNumber");
+
                 AAID = aaid;
                 SIMID = simid;
+                EFFECTIVE_DATE = effectiveDate;
                 LOG.error("====:::::  Response from Schedule  :::::" + schedRes);
                 LOG.error("Sabb number ======" + SAAD);
                 LOG.error("Sabb number ======" + EMI);
                 LOG.error("Sabb number ======" + SABB);
-
             }
 
         } catch (Exception ex) {
@@ -460,18 +539,18 @@ public class ScoringEngine implements JavaService2 {
         String streetEnMfb = "NONE";
         String districtName = "";
 
-        JSONObject resObj = new JSONObject(ResultToJSON.convert(getNationalAddress));
+        JSONObject mainObj = new JSONObject(ResultToJSON.convert(getNationalAddress));
         // for PT testing
-        JSONObject mainObj = resObj.optJSONObject("CitizenAddressInfoResult");
+        mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
         LOG.error("mainObj Response " + mainObj);
 
         if (mainObj.opt("addressListList") instanceof JSONObject) {
 
             if (mainObj.opt("addressListList") != null) {
-                LOG.error("addressListList single address ");
+
                 try {
-                    streetVal = mainObj.optJSONObject("addressListList").optString("streetName");
-                    districtName = mainObj.optJSONObject("addressListList").optString("district");
+                    streetVal = mainObj.optJSONObject("addressListList").optString("streetName").trim();
+                    districtName = mainObj.optJSONObject("addressListList").optString("district").trim();
                     String upToNCharacters = streetVal.substring(0, Math.min(streetVal.length(), 35));
 
                     if (streetVal.isEmpty() || streetVal == null) {
@@ -496,7 +575,6 @@ public class ScoringEngine implements JavaService2 {
                 }
 
             } else {
-                LOG.error("addressListList empty single address ");
                 inputParams.put("street", "street");
                 inputParams.put("StreetEnMfb", "StreetEnMfb");
                 inputParams.put("buildingNumber", "buildingNumber");
@@ -510,11 +588,11 @@ public class ScoringEngine implements JavaService2 {
         } else {
 
             if (mainObj.opt("addressListList") != null) {
-                LOG.error("addressListList mulitple address ");
+
                 try {
 
-                    streetVal = mainObj.optJSONArray("addressListList").getJSONObject(0).optString("streetName");
-                    districtName = mainObj.optJSONArray("addressListList").getJSONObject(0).optString("district");
+                    streetVal = mainObj.optJSONArray("addressListList").getJSONObject(0).optString("streetName").trim();
+                    districtName = mainObj.optJSONArray("addressListList").getJSONObject(0).optString("district").trim();
 
                     String upToNCharacters = streetVal.substring(0, Math.min(streetVal.length(), 35));
 
@@ -526,6 +604,7 @@ public class ScoringEngine implements JavaService2 {
                     if (districtName.isEmpty() || districtName == null) {
                         districtName = "NONE";
                     }
+
 
                     inputParams.put("street", upToNCharacters);
                     inputParams.put("StreetEnMfb", streetVal);
@@ -543,61 +622,31 @@ public class ScoringEngine implements JavaService2 {
                 }
 
             } else {
-                LOG.error("addressListList empty multiple address ");
-                inputParams.put("street", "street");
-                inputParams.put("StreetEnMfb", "StreetEnMfb");
-                inputParams.put("buildingNumber", "buildingNumber");
-                inputParams.put("flatNumber", "flatNumber");
-                inputParams.put("districtName", "districtName");
-                inputParams.put("addressCity", "addressCity");
-                inputParams.put("postCode", "postCode");
+                inputParams.put("street", "streetValue");
+                inputParams.put("address", "addressValue");
+                inputParams.put("addressCity", "addressCityValue");
             }
             LOG.error("createRequestForCreateCustomerAddressService Multiple Address " + inputParams);
         }
-
-        /*
-         * HashMap<String, Object> map = new
-         * Gson().fromJson(ResultToJSON.convert(getNationalAddress), new
-         * TypeToken<HashMap<String, Object>>() { }.getType()); String addressListList =
-         * (String) map.get("addressListList"); Gson gson = new Gson(); if
-         * (addressListList.charAt(0) == '{') { NationalAddress nationalAddress =
-         * gson.fromJson(ResultToJSON.convert(getNationalAddress),
-         * NationalAddress.class); if (nationalAddress != null &&
-         * nationalAddress.getCitizenAddressInfoResult() != null &&
-         * nationalAddress.getCitizenAddressInfoResult().getAddressListList() != null) {
-         * AddressListList addressList =
-         * nationalAddress.getCitizenAddressInfoResult().getAddressListList();
-         * inputParams.put("street", addressList.getStreetName());
-         * inputParams.put("address", addressList.getDistrict() + " " +
-         * addressList.getUnitNumber()); inputParams.put("addressCity",
-         * addressList.getCity()); } else { inputParams.put("street", "-");
-         * inputParams.put("address", "-"); inputParams.put("addressCity", "-"); } }
-         * else { NationalAddressList nationalAddress =
-         * gson.fromJson(ResultToJSON.convert(getNationalAddress),
-         * NationalAddressList.class); if (nationalAddress != null &&
-         * nationalAddress.getCitizenAddressInfoResult() != null &&
-         * nationalAddress.getCitizenAddressInfoResult().getAddressListList() != null) {
-         * AddressListListItem addressList =
-         * nationalAddress.getCitizenAddressInfoResult().getAddressListList() .get(0);
-         * inputParams.put("street", addressList.getStreetName());
-         * inputParams.put("address", addressList.getDistrict() + " " +
-         * addressList.getUnitNumber()); inputParams.put("addressCity",
-         * addressList.getCity()); } else { inputParams.put("street", "-");
-         * inputParams.put("address", "-"); inputParams.put("addressCity", "-"); } }
-         */
         return inputParams;
     }
 
     private Map<String, String> createRequestForT24CustomerEmployeeDetailsService(Result getSalaryCertificate) {
 
         Map<String, String> inputParams = new HashMap<>();
+        inputParams.put("partyId", PARTY_ID);
 
+        LOG.error("partyId ::" + PARTY_ID);
+        String empName = "";
+        inputParams.put("salaryCurrency", "SAR");
         LOG.error("ID =====>>>" + EMPLOYER_TYPE_ID);
+
         switch (EMPLOYER_TYPE_ID) {
             case "1":
 
                 String basic = getSalaryCertificate.getParamValueByName("basicSalary");
                 String allowence = getSalaryCertificate.getParamValueByName("totalAllownces");
+                ALLOWANCE_DETAILS.append("totalAllownces : ").append(allowence);
                 String deduc = getSalaryCertificate.getParamValueByName("totalDeductions");
 
                 String netsalary = String
@@ -605,47 +654,36 @@ public class ScoringEngine implements JavaService2 {
 
                 if (!getSalaryCertificate.getParamValueByName("agencyName").isEmpty()) {
                     inputParams.put("employerName", getSalaryCertificate.getParamValueByName("agencyName"));
-                    inputParams.put("lEmpName", getSalaryCertificate.getParamValueByName("agencyName"));
-
                 } else {
                     inputParams.put("employerName", "Employer Name");
-                    inputParams.put("lEmpName", "Employer Name");
                 }
                 inputParams.put("employStatus", "EMPLOYED");
-                // inputParams.put("jobTitleMfb",
-                // getSalaryCertificate.getParamValueByName("employeeJobTitle"));
+                inputParams.put("jobTitleMfb", getSalaryCertificate.getParamValueByName("employeeJobTitle"));
                 // inputParams.put("employerName",
                 // getSalaryCertificate.getParamValueByName("agencyName"));
-                inputParams.put("salaryCurrency", "SAR");
+
                 inputParams.put("employStartDate", getSalaryCertificate.getParamValueByName("agencyEmploymentDate"));
                 inputParams.put("salaryMfb", netsalary);
-                inputParams.put("basicWageMfb", basic);
-                inputParams.put("houseAllowMfb", "0");
-                inputParams.put("othAllowMfb", allowence);
-
+                inputParams.put("basicWageMfb", "0");
                 break;
             case "3":
-                String pvtNetsalary = String
-                        .valueOf((Double.parseDouble(getSalaryCertificate.getParamValueByName("basicWage"))
-                                + Double.parseDouble(getSalaryCertificate.getParamValueByName("housingAllowance"))
-                                + Double.parseDouble(getSalaryCertificate.getParamValueByName("otherAllowance"))));
-
-                pvtNetsalary = String.format("%.2f", Double.parseDouble(pvtNetsalary));
                 // if (!getSalaryCertificate.getParamValueByName("employerName").isEmpty()) {
                 LOG.error("EMPLOYEEE NAMEE=====>>>" + getSalaryCertificate.getParamValueByName("employerName"));
 
                 inputParams.put("employerName", getSalaryCertificate.getParamValueByName("employerName"));
                 inputParams.put("lEmpName", getSalaryCertificate.getParamValueByName("employerName"));
                 inputParams.put("employStatus", "EMPLOYED");
-                inputParams.put("salaryCurrency", "SAR");
                 inputParams.put("houseAllowMfb", getSalaryCertificate.getParamValueByName("housingAllowance"));
                 inputParams.put("othAllowMfb", getSalaryCertificate.getParamValueByName("otherAllowance"));
+
+                ALLOWANCE_DETAILS.append("housingAllowance : ").append(inputParams.get("houseAllowMfb")).append(" - ");
+                ALLOWANCE_DETAILS.append("otherAllowance : ").append(inputParams.get("otherAllowance"));
                 // TODO Salary Pay Date should be YYYYMMDD M0128 for SALARY.DATE.FREQ
 
                 LocalDate dateOfJoining = LocalDate.parse(getSalaryCertificate.getParamValueByName("dateOfJoining"),
                         DateTimeFormatter.ofPattern("dd/MM/yyyy"));
                 inputParams.put("employStartDate", String.valueOf(dateOfJoining));
-                inputParams.put("salaryMfb", pvtNetsalary);
+                inputParams.put("salaryMfb", getSalaryCertificate.getParamValueByName("basicWage"));
                 inputParams.put("basicWageMfb", getSalaryCertificate.getParamValueByName("basicWage"));
                 break;
         }
@@ -653,19 +691,12 @@ public class ScoringEngine implements JavaService2 {
     }
 
     private void extractValuesFromConsumerEnquiryResponse(Result getConsumerEnquiry) {
-        ConsumerEnquiry consumerEnquiry = null;
-        DEFAULT = null;
-        CI_DETAIL = null;
-        BOUNCED_CHECK = null;
-        JUDGEMENT = null;
-        SC_SCORE = null;
 
         Gson gson = new Gson();
+        ConsumerEnquiry consumerEnquiry = gson.fromJson(ResultToJSON.convert(getConsumerEnquiry),
+                ConsumerEnquiry.class);
 
-        consumerEnquiry = gson.fromJson(ResultToJSON.convert(getConsumerEnquiry), ConsumerEnquiry.class);
-
-        CONSUMERItem CONSUMER = null;
-        CONSUMER = new CONSUMERItem();
+        CONSUMERItem CONSUMER = new CONSUMERItem();
         boolean isConsumer = false;
         if (consumerEnquiry.getDATA() != null && consumerEnquiry.getDATA().size() > 0) {
             LOG.error("ConsumerEnquiryModelResponse OLD");
@@ -699,8 +730,6 @@ public class ScoringEngine implements JavaService2 {
                 DEFAULTSItem DEFAULTS = CONSUMER.getDEFAULTS().get(0);
                 if (DEFAULTS.getDEFAULT() != null && DEFAULTS.getDEFAULT().size() > 0) {
                     DEFAULT = DEFAULTS.getDEFAULT();
-                    LOG.error("DEFAULT DATA :: " + DEFAULT.get(0));
-
                 }
             }
         }
@@ -730,17 +759,9 @@ public class ScoringEngine implements JavaService2 {
                 }
             }
         } else {
-            ConsumerEnquiryModelResponse consumerEnquiryModelResponse = null;
-            CI_DETAIL2 = null;
-            SC_SCORE = null;
-            DEFAULT2 = null;
-            BOUNCED_CHEQUE2 = null;
-            JUDGEMENT2 = null;
-
             Gson gson2 = new Gson();
-
-            consumerEnquiryModelResponse = gson2.fromJson(ResultToJSON.convert(getConsumerEnquiry),
-                    ConsumerEnquiryModelResponse.class);
+            ConsumerEnquiryModelResponse consumerEnquiryModelResponse = gson2
+                    .fromJson(ResultToJSON.convert(getConsumerEnquiry), ConsumerEnquiryModelResponse.class);
 
             if (consumerEnquiryModelResponse != null) {
                 LOG.error("ConsumerEnquiryModelResponse FINAL");
@@ -757,52 +778,31 @@ public class ScoringEngine implements JavaService2 {
                         && consumerEnquiryModelResponse.getDEFAULTS().size() > 0) {
                     DEFAULT2 = consumerEnquiryModelResponse.getDEFAULTS();
                 }
-
-                if (consumerEnquiryModelResponse.getBOUNCEDCHECKS() != null
-                        && consumerEnquiryModelResponse.getBOUNCEDCHECKS().size() > 0) {
+                if (consumerEnquiryModelResponse.getBOUNCEDCHECKS() != null && consumerEnquiryModelResponse.getBOUNCEDCHECKS().size() > 0) {
                     BOUNCED_CHEQUE2 = consumerEnquiryModelResponse.getBOUNCEDCHECKS();
                 }
-                if (consumerEnquiryModelResponse.getJUDGEMENTS() != null
-                        && consumerEnquiryModelResponse.getJUDGEMENTS().size() > 0) {
+                if (consumerEnquiryModelResponse.getJUDGEMENTS() != null && consumerEnquiryModelResponse.getJUDGEMENTS().size() > 0) {
                     JUDGEMENT2 = consumerEnquiryModelResponse.getJUDGEMENTS();
                 }
-
             }
         }
     }
 
-    private Map<String, String> createRequestForCreateCustomerAddressService(Result getNationalAddress,
-                                                                             DataControllerRequest request) {
+    private Map<String, String> createRequestForCreateUpdateCustomerAddressAndEmployerDetailsService(Result getNationalAddress, Result getSalaryCertificate) {
         Map<String, String> inputParams = new HashMap<>();
 
-        // String currentDateTime = getDate(LocalDateTime.now(),
-        // DATE_FORMAT_WITH_SECONDS_MS);
+        inputParams.put("customerAddressId", generateUUID());
+        inputParams.put("User_id", NATIONAL_ID);
+        inputParams.put("applicationID", APPLICATION_ID);
 
-        inputParams.put("Region_id", "SAU");
-
-        inputParams.put("country", "SAU");
-        inputParams.put("type", "home");
-        inputParams.put("state", "SAU");
-        inputParams.put("createdby", "Admin");
-        inputParams.put("modifiedby", "Admin");
-        inputParams.put("softdeleteflag", "0");
-        inputParams.put("isPreferredAddress", "true");
-        // inputParams.put("applicationID", APPLICATION_ID);
-        // inputParams.put("User_id", NATIONAL_ID);
-        inputParams.put("User_id", request.getParameter("NationalID"));
-        inputParams.put("applicationID", request.getParameter("ApplicationID"));
-
-        inputParams.put("id", generateUUID());
-
-        JSONObject resObj = new JSONObject(ResultToJSON.convert(getNationalAddress));
+        JSONObject mainObj = new JSONObject(ResultToJSON.convert(getNationalAddress));
 
         // for PT testing
-        JSONObject mainObj = resObj.optJSONObject("CitizenAddressInfoResult");
+        mainObj = mainObj.optJSONObject("CitizenAddressInfoResult");
         LOG.error("mainObj Response " + mainObj);
 
         if (mainObj.opt("addressListList") instanceof JSONObject) {
             inputParams.put("City_id", mainObj.optJSONObject("addressListList").optString("city"));
-            inputParams.put("cityName", mainObj.optJSONObject("addressListList").optString("city"));
             inputParams.put("addressLine1", mainObj.optJSONObject("addressListList").optString("district"));
             inputParams.put("addressLine2", mainObj.optJSONObject("addressListList").optString("streetName"));
             inputParams.put("addressLine3",
@@ -811,12 +811,11 @@ public class ScoringEngine implements JavaService2 {
             inputParams.put("latitude",
                     mainObj.optJSONObject("addressListList").optString("locationCoordinates").split(" ")[0].trim());
             inputParams.put("logitude",
-                    mainObj.optJSONObject("addressListList").optString("locationCoordinates").split(" ")[1].trim());
+                    mainObj.optJSONObject("addressListList").optString("locationCoordinates").split(" ")[0].trim());
 
-            LOG.error("createRequestForCreateCustomerAddressService Single Address " + inputParams);
+            LOG.error("createRequestForCreateUpdateCustomerAddressAndEmployerDetailsService Single Address " + inputParams);
         } else {
             inputParams.put("City_id", mainObj.optJSONArray("addressListList").getJSONObject(0).optString("city"));
-            inputParams.put("cityName", mainObj.optJSONArray("addressListList").getJSONObject(0).optString("city"));
             inputParams.put("addressLine1",
                     mainObj.optJSONArray("addressListList").getJSONObject(0).optString("district"));
             inputParams.put("addressLine2",
@@ -828,80 +827,12 @@ public class ScoringEngine implements JavaService2 {
             inputParams.put("latitude", mainObj.optJSONArray("addressListList").getJSONObject(0)
                     .optString("locationCoordinates").split(" ")[0].trim());
             inputParams.put("logitude", mainObj.optJSONArray("addressListList").getJSONObject(0)
-                    .optString("locationCoordinates").split(" ")[1].trim());
+                    .optString("locationCoordinates").split(" ")[0].trim());
 
-            LOG.error("createRequestForCreateCustomerAddressService Multiple Address " + inputParams);
+            LOG.error("createRequestForCreateUpdateCustomerAddressAndEmployerDetailsService Multiple Address " + inputParams);
         }
 
-        /*
-         * HashMap<String, Object> map = new
-         * Gson().fromJson(ResultToJSON.convert(getNationalAddress), new
-         * TypeToken<HashMap<String, Object>>() { }.getType()); String addressListList =
-         * (String) map.get("addressListList");
-         *
-         * Gson gson = new Gson(); if (addressListList.charAt(0) == '{') {
-         * NationalAddress nationalAddress =
-         * gson.fromJson(ResultToJSON.convert(getNationalAddress),
-         * NationalAddress.class);
-         *
-         * if (nationalAddress != null && nationalAddress.getCitizenAddressInfoResult()
-         * != null && nationalAddress.getCitizenAddressInfoResult().getAddressListList()
-         * != null) {
-         *
-         * AddressListList addressList =
-         * nationalAddress.getCitizenAddressInfoResult().getAddressListList();
-         * inputParams.put("City_id", addressList.getCity());
-         * inputParams.put("cityName", addressList.getCity());
-         * inputParams.put("addressLine1", addressList.getDistrict());
-         * inputParams.put("addressLine2", addressList.getStreetName());
-         * inputParams.put("addressLine3", String.valueOf(addressList.getUnitNumber()));
-         * inputParams.put("zipCode", String.valueOf(addressList.getPostCode()));
-         * inputParams.put("latitude",
-         * (addressList.getLocationCoordinates().split(" ")[0]).trim());
-         * inputParams.put("logitude",
-         * (addressList.getLocationCoordinates().split(" ")[1]).trim()); } else {
-         * inputParams.put("City_id", "-"); inputParams.put("cityName", "-");
-         * inputParams.put("addressLine1", "-"); inputParams.put("addressLine2", "-");
-         * inputParams.put("addressLine3", "-"); inputParams.put("zipCode", "-");
-         * inputParams.put("latitude", "-"); inputParams.put("logitude", "-"); }
-         *
-         * } else { NationalAddressList nationalAddress =
-         * gson.fromJson(ResultToJSON.convert(getNationalAddress),
-         * NationalAddressList.class);
-         *
-         * if (nationalAddress != null &&
-         * nationalAddress.getCitizenAddressInfoResult().getAddressListList() != null &&
-         * nationalAddress.getCitizenAddressInfoResult().getAddressListList().size() >
-         * 0) {
-         *
-         * AddressListListItem addressList =
-         * nationalAddress.getCitizenAddressInfoResult().getAddressListList().get(0);
-         * inputParams.put("City_id", addressList.getCity());
-         * inputParams.put("cityName", addressList.getCity());
-         * inputParams.put("addressLine1", addressList.getDistrict());
-         * inputParams.put("addressLine2", addressList.getStreetName());
-         * inputParams.put("addressLine3", String.valueOf(addressList.getUnitNumber()));
-         * inputParams.put("zipCode", String.valueOf(addressList.getPostCode()));
-         * inputParams.put("latitude",
-         * (addressList.getLocationCoordinates().split(" ")[0]).trim());
-         * inputParams.put("logitude",
-         * (addressList.getLocationCoordinates().split(" ")[1]).trim()); } else {
-         * inputParams.put("City_id", "-"); inputParams.put("cityName", "-");
-         * inputParams.put("addressLine1", "-"); inputParams.put("addressLine2", "-");
-         * inputParams.put("addressLine3", "-"); inputParams.put("zipCode", "-");
-         * inputParams.put("latitude", "-"); inputParams.put("logitude", "-"); } }
-         */
-        return inputParams;
-    }
-
-    // saif
-    private Map<String, String> createRequestForCreateEmployerDetailsService(Result getSalaryCertificate,
-                                                                             DataControllerRequest dataControllerRequest) {
-        Map<String, String> inputParams = new HashMap<>();
-
-        inputParams.put("id", generateUUID());
-        inputParams.put("nationalid", dataControllerRequest.getParameter("NationalID"));
-        inputParams.put("applicationID", dataControllerRequest.getParameter("ApplicationID"));
+        inputParams.put("employerDetailsId", generateUUID());
 
         switch (EMPLOYER_TYPE_ID) {
             case "1":
@@ -942,19 +873,28 @@ public class ScoringEngine implements JavaService2 {
                 inputParams.put("employeejobtitle", "employeejobtitleValue");
                 break;
         }
+
         return inputParams;
     }
 
-    private Map<String, String> createRequestForSIMAHSALARY(Result getCustomerData, String empId, String nanId) {
+    private void createUpdateCustomerAddressAndEmployerDetailsRecord(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
+        try {
+            ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, SP_CREATE_UPDATE_CUSTOMER_ADDRESS_AND_EMPLOYER_DETAILS_DATA_OPERATION_ID, inputParams, null, dataControllerRequest);
+        } catch (Exception ex) {
+            LOG.error("ERROR createUpdateCustomerAddressAndEmployerDetailsRecord :: " + ex);
+        }
+    }
+
+    private Map<String, String> createRequestForSIMAHSALARY(Result customerApplicationAndCustomerData, String empId, String nanId) {
         Map<String, String> inputParams = new HashMap<>();
         try {
-            LOG.error("DOB from DB :: " + HelperMethods.getFieldValue(getCustomerData, "DateOfBirth"));
+            LOG.error("DOB from DB :: " + HelperMethods.getFieldValue(customerApplicationAndCustomerData, "DateOfBirth"));
             LOG.error("DOB from After formatting DB :: "
-                    + dateFormatter(HelperMethods.getFieldValue(getCustomerData, "DateOfBirth"), "dd/MM/yyyy"));
+                    + dateFormatter(HelperMethods.getFieldValue(customerApplicationAndCustomerData, "DateOfBirth"), "dd/MM/yyyy"));
             inputParams.put("employerTypeId", empId);
             inputParams.put("dateOfBirth",
-                    dateFormatter(HelperMethods.getFieldValue(getCustomerData, "DateOfBirth"), "dd/MM/yyyy"));
-            DOB = dateFormatter(HelperMethods.getFieldValue(getCustomerData, "DateOfBirth"), "dd-MM-yyyy").substring(3);
+                    dateFormatter(HelperMethods.getFieldValue(customerApplicationAndCustomerData, "DateOfBirth"), "dd/MM/yyyy"));
+            DOB = dateFormatter(HelperMethods.getFieldValue(customerApplicationAndCustomerData, "DateOfBirth"), "dd-MM-yyyy").substring(3);
             inputParams.put("idNumber", nanId);
         } catch (Exception ex) {
             LOG.error("ERROR createRequestForSIMAHSALARY :: " + ex);
@@ -978,32 +918,20 @@ public class ScoringEngine implements JavaService2 {
     }
 
     private Map<String, String> createRequestForConsumerEnquiryService(Map<String, String> globalInputParams,
-                                                                       Result getCustomerData, Result getSalaryCertificate, DataControllerRequest request,
-                                                                       Result getCustomerApplicationData, Result getNationalAddress) {
+                                                                       Result customerApplicationAndCustomerData, Result getSalaryCertificate) {
         Map<String, String> inputParams = new HashMap<>();
         try {
 
-            JSONObject resObj = new JSONObject(ResultToJSON.convert(getNationalAddress));
-            JSONObject mainObj = resObj.optJSONObject("CitizenAddressInfoResult");
-            if (mainObj.opt("addressListList") instanceof JSONObject) {
-                inputParams.put("CAD7", mainObj.optJSONObject("addressListList").optString("city"));
-                inputParams.put("CAD8E", String.valueOf(mainObj.optJSONObject("addressListList").optString("postCode")));
-            }
-
-            String expiryDate = String.valueOf(HelperMethods.getFieldValue(getCustomerData, "IDExpiryDate"));
+            String expiryDate = String.valueOf(HelperMethods.getFieldValue(customerApplicationAndCustomerData, "IDExpiryDate"));
             String expiryDateF = expiryDate.replaceAll("-", "/");
-            DOB = String.valueOf(HelperMethods.getFieldValue(getCustomerData, "DateOfBirth"));
+            DOB = String.valueOf(HelperMethods.getFieldValue(customerApplicationAndCustomerData, "DateOfBirth"));
 
             String dateOfBirth = DOB.replaceAll("-", "/");
             inputParams.put("PRODUCT_TYPE", "PLN");
             inputParams.put("ENQUIRY_REFERENCE", generateUUID());
-            // inputParams.put("AMOUNT", LOAN_AMOUNT);
-            // inputParams.put("CID1", NATIONAL_ID.startsWith("1") ? "T" : "Q");
-            // inputParams.put("CID2", NATIONAL_ID);
-            inputParams.put("AMOUNT", HelperMethods.getFieldValue(getCustomerApplicationData, "loanAmount"));
-            inputParams.put("CID1", request.getParameter("NationalID").startsWith("1") ? "T" : "Q");
-            inputParams.put("CID2", request.getParameter("NationalID"));
-
+            inputParams.put("AMOUNT", LOAN_AMOUNT);
+            inputParams.put("CID1", NATIONAL_ID.startsWith("1") ? "T" : "Q");
+            inputParams.put("CID2", NATIONAL_ID);
             inputParams.put("CID3", expiryDateF);
             inputParams.put("CID3D", expiryDateF.split("/")[0]);
             inputParams.put("CID3M", expiryDateF.split("/")[1]);
@@ -1014,32 +942,30 @@ public class ScoringEngine implements JavaService2 {
             inputParams.put("CDBY", dateOfBirth.split("/")[0]);
             LOG.error("InputParamse dateOfBirth====>" + inputParams.getOrDefault(expiryDate, dateOfBirth));
             inputParams.put("CGND",
-                    HelperMethods.getFieldValue(getCustomerData, "Gender").equalsIgnoreCase("M") ? "M" : "F");
+                    HelperMethods.getFieldValue(customerApplicationAndCustomerData, "Gender").equalsIgnoreCase("Male") ? "M" : "F");
             inputParams.put("CMAR",
-                    HelperMethods.getFieldValue(getCustomerData, "MartialStatus_id").equalsIgnoreCase("SID_MARRIED")
+                    HelperMethods.getFieldValue(customerApplicationAndCustomerData, "MaritalStatus_id").equalsIgnoreCase("SID_MARRIED")
                             ? "M"
                             : "S");
             inputParams.put("CNAT", getSalaryCertificate.getParamValueByName("nationality"));
-            inputParams.put("CNAM", HelperMethods.getFieldValue(getCustomerData, "ArFullName").split(" ")[3]);
-            inputParams.put("CNM1A", HelperMethods.getFieldValue(getCustomerData, "ArFullName").split(" ")[0]);
-            inputParams.put("CNM2A", HelperMethods.getFieldValue(getCustomerData, "ArFullName").split(" ")[1]);
-            inputParams.put("CNM3A", HelperMethods.getFieldValue(getCustomerData, "ArFullName").split(" ")[2]);
-            inputParams.put("CNMFE", HelperMethods.getFieldValue(getCustomerData, "FirstName"));
-            inputParams.put("CNM1E", HelperMethods.getFieldValue(getCustomerData, "MiddleName"));
-            inputParams.put("CNM2E", HelperMethods.getFieldValue(getCustomerData, "LastName"));
-            inputParams.put("CNM3E", HelperMethods.getFieldValue(getCustomerData, "FullName"));
-            inputParams.put("CEML", HelperMethods.getFieldValue(getCustomerData, "FullName"));   // Customer email
+            inputParams.put("CNAM", HelperMethods.getFieldValue(customerApplicationAndCustomerData, "ArFullName").split(" ")[3]);
+            inputParams.put("CNM1A", HelperMethods.getFieldValue(customerApplicationAndCustomerData, "ArFullName").split(" ")[0]);
+            inputParams.put("CNM2A", HelperMethods.getFieldValue(customerApplicationAndCustomerData, "ArFullName").split(" ")[1]);
+            inputParams.put("CNM3A", HelperMethods.getFieldValue(customerApplicationAndCustomerData, "ArFullName").split(" ")[2]);
+            inputParams.put("CNMFE", HelperMethods.getFieldValue(customerApplicationAndCustomerData, "FirstName"));
+            inputParams.put("CNM1E", HelperMethods.getFieldValue(customerApplicationAndCustomerData, "MiddleName"));
+            inputParams.put("CNM2E", HelperMethods.getFieldValue(customerApplicationAndCustomerData, "LastName"));
+            inputParams.put("CNM3E", HelperMethods.getFieldValue(customerApplicationAndCustomerData, "FullName"));
+            inputParams.put("CEML", "test@gmail.com");
             inputParams.put("CADR", "");
             inputParams.put("CAD1A", "1223");
-            // inputParams.put("CAD7", "CAD7Value" /* getNationalAddress.getParamValueByName("postCode") */);
-            // inputParams.put("CAD8E", "CAD8EValue" /* getNationalAddress.getParamValueByName("city") */);
+            inputParams.put("CAD7", "CAD7Value");
+            inputParams.put("CAD8E", "CAD8EValue");
             inputParams.put("CAD9", "SAU");
             inputParams.put("CCN1", "M");
             inputParams.put("CCN2", "966");
             inputParams.put("CCN3", "0");
-            // inputParams.put("CCN4", CONTACT_NUMBER);
-            inputParams.put("CCN4", request.getParameter("Mobile"));
-
+            inputParams.put("CCN4", CONTACT_NUMBER);
             inputParams.put("EMPLOYER", getSalaryCertificate.getParamValueByName("employerName"));
             inputParams.put("ETYP", "C");
             inputParams.put("EOCA", "Ijarah");
@@ -1078,54 +1004,18 @@ public class ScoringEngine implements JavaService2 {
     }
 
     private Map<String, String> createRequestForUpdateCustomerApplicationDataServiceS2(
-            Result getCustomerApplicationData, DataControllerRequest request) {
+            Result getCustomerApplicationAndCustomerData) {
 
         Map<String, String> inputParams = new HashMap<>();
 
-        inputParams.put("id", HelperMethods.getFieldValue(getCustomerApplicationData, "id"));
-        inputParams.put("Customer_id", HelperMethods.getFieldValue(getCustomerApplicationData, "Customer_id"));
-        inputParams.put("mobile", HelperMethods.getFieldValue(getCustomerApplicationData, "mobile"));
-        // inputParams.put("nationalId", NATIONAL_ID);
-        inputParams.put("nationalId", request.getParameter("NationalID"));
-
-        inputParams.put("productId", HelperMethods.getFieldValue(getCustomerApplicationData, "productId"));
-        inputParams.put("productName", request.getParameter("Product"));
-        inputParams.put("isknockouts1", HelperMethods.getFieldValue(getCustomerApplicationData, "isknockouts1"));
+        inputParams.put("id", HelperMethods.getFieldValue(getCustomerApplicationAndCustomerData, "id"));
         inputParams.put("knockoutStatus", "FAIL");
         inputParams.put("applicationStatus", "SID_SUSPENDED");
-        inputParams.put("applicationID", HelperMethods.getFieldValue(getCustomerApplicationData, "applicationID"));
-        inputParams.put("createdby", HelperMethods.getFieldValue(getCustomerApplicationData, "createdby"));
-        inputParams.put("modifiedby", HelperMethods.getFieldValue(getCustomerApplicationData, "modifiedby"));
-        // inputParams.put("lastmodifiedts",
-        // IjarahHelperMethods.getDate(LocalDateTime.now(),
-        // DATE_FORMAT_WITH_SECONDS_MS));
-        inputParams.put("isknockoutTnC", HelperMethods.getFieldValue(getCustomerApplicationData, "isknockoutTnC"));
-        inputParams.put("loanAmount", HelperMethods.getFieldValue(getCustomerApplicationData, "loanAmount"));
-        // inputParams.put("tenor", TENOR);
-        inputParams.put("tenor", HelperMethods.getFieldValue(getCustomerApplicationData, "tenor"));
-
-        inputParams.put("approx", "0");
-        inputParams.put("scoredCardId", HelperMethods.getFieldValue(getCustomerApplicationData, "scoredCardId"));
-        inputParams.put("loanAmountCap", "0");
-        inputParams.put("loanRate", "0");
-        // inputParams.put("insideKsa", INSIDE_KSA);
-        inputParams.put("insideKsa", HelperMethods.getFieldValue(getCustomerApplicationData, "insideKsa"));
-
-        inputParams.put("customerAge", HelperMethods.getFieldValue(getCustomerApplicationData, "customerAge"));
-        inputParams.put("loanAmountCore", "0");
-        inputParams.put("loanAmountInf", "0");
-        inputParams.put("monthlyRepay", "0");
-        inputParams.put("offerAmount", "0");
-        inputParams.put("csaApporval", "0");
-        inputParams.put("sanadApproval", "0");
-        inputParams.put("tenorCore", "0");
-
         LOG.error(inputParams);
         return inputParams;
     }
 
-    private Map<String, String> createRequestForUpdateCustomerApplicationDataService(Result getCustomerApplicationData,
-                                                                                     Result getScoreCardS2, Result getScoreCardS3, DataControllerRequest request, double maxEMI) {
+    private Map<String, String> createRequestForUpdateCustomerApplicationDataService(Result customerApplicationAndCustomerData, Result getScoreCardS2, Result getScoreCardS3, DataControllerRequest dataControllerRequest, Result voucherDetails) {
         Map<String, String> inputParams = new HashMap<>();
         String knockoutStatus = "FAIL";
         String applicationStatus = "SID_SUSPENDED";
@@ -1133,6 +1023,7 @@ public class ScoringEngine implements JavaService2 {
         String loanRate = "0";
         String loanAmountCap = "0";
         String tenor = "0";
+        String murabahaCommissionRate = "0";
 
         Gson gson = new Gson();
         ScoreCardS3 scoreCardS3 = gson.fromJson(ResultToJSON.convert(getScoreCardS3), ScoreCardS3.class);
@@ -1162,69 +1053,45 @@ public class ScoringEngine implements JavaService2 {
             if (scoreCardS3.getBody().getTenor() != null) {
                 tenor = scoreCardS3.getBody().getTenor();
             }
+            if (DATA_TYPE.equalsIgnoreCase("MURABAHA")) {
+                if (scoreCardS3.getBody().getCommission() != null) {
+                    murabahaCommissionRate = scoreCardS3.getBody().getCommission();
+                }
+            }
         }
 
-        // TODO
-        // Remove static value and add employee name
-        // loanAmountCap = "20000";
+        //TODO
+        //Add Environment variable check for prod env
+        if (loanAmountCap.equalsIgnoreCase("0") || loanAmountCap.equalsIgnoreCase("0.0")) {
+            loanAmountCap = "20000";
+        }
 
-        // inputParams.put("nationalId", NATIONAL_ID);
-        inputParams.put("nationalId", request.getParameter("NationalID"));
+        if (loanRate.equalsIgnoreCase("0") || loanRate.equalsIgnoreCase("0.0")) {
+            loanRate = "20";
+        }
 
-        inputParams.put("id", HelperMethods.getFieldValue(getCustomerApplicationData, "id"));
-        inputParams.put("Customer_id", HelperMethods.getFieldValue(getCustomerApplicationData, "Customer_id"));
-        inputParams.put("mobile", HelperMethods.getFieldValue(getCustomerApplicationData, "mobile"));
-
-        inputParams.put("productId", HelperMethods.getFieldValue(getCustomerApplicationData, "productId"));
-        inputParams.put("productName", request.getParameter("Product"));
-        inputParams.put("isknockouts1", HelperMethods.getFieldValue(getCustomerApplicationData, "isknockouts1"));
+        inputParams.put("id", HelperMethods.getFieldValue(customerApplicationAndCustomerData, "id"));
         inputParams.put("knockoutStatus", knockoutStatus);
         inputParams.put("applicationStatus", applicationStatus);
-        inputParams.put("applicationID", HelperMethods.getFieldValue(getCustomerApplicationData, "applicationID"));
-        inputParams.put("createdby", HelperMethods.getFieldValue(getCustomerApplicationData, "createdby"));
-        inputParams.put("modifiedby", HelperMethods.getFieldValue(getCustomerApplicationData, "modifiedby"));
-
-        // inputParams.put("lastmodifiedts",
-        // IjarahHelperMethods.getDate(LocalDateTime.now(),
-        // DATE_FORMAT_WITH_SECONDS_MS));
-
-        inputParams.put("isknockoutTnC", HelperMethods.getFieldValue(getCustomerApplicationData, "isknockoutTnC"));
-
-        // inputParams.put("loanAmount",
-        // HelperMethods.getFieldValue(getCustomerApplicationData, "loanAmount"));
-        // inputParams.put("tenor", TENOR);
-
         inputParams.put("approx", approx);
-        inputParams.put("scoredCardId", HelperMethods.getFieldValue(getCustomerApplicationData, "scoredCardId"));
         inputParams.put("loanAmountCap", loanAmountCap);
         inputParams.put("loanRate", loanRate);
-        // inputParams.put("insideKsa", INSIDE_KSA);
-        inputParams.put("insideKsa", HelperMethods.getFieldValue(getCustomerApplicationData, "insideKsa"));
-        inputParams.put("customerAge", HelperMethods.getFieldValue(getCustomerApplicationData, "customerAge"));
+        inputParams.put("insideKsa", INSIDE_KSA);
         inputParams.put("loanAmountCore", loanAmountCap);
+        inputParams.put("murabahaCommissionRate", murabahaCommissionRate);
 
         if (!loanRate.equalsIgnoreCase("0")) {
 
-            inputParams.put("loanAmountInf",
-                    calculateLoanAmountInf(Double.parseDouble(loanRate), Integer.parseInt(tenor), maxEMI));
-            double amountOffer = Math.min(
-                    Math.min(Double.parseDouble(inputParams.get("loanAmountCap")),
-                            Double.parseDouble(inputParams.get("loanAmountInf"))),
-                    Double.parseDouble(
-                            HelperMethods.getFieldValue(getCustomerApplicationData, "loanAmount").replaceAll(",", "")));
-            // double amountOffer =
-            // Math.min(Double.parseDouble(inputParams.get("loanAmountCap")),
-            // Double.parseDouble(HelperMethods.getFieldValue(getCustomerApplicationData,
-            // "loanAmount").replaceAll(",", "")));
+            inputParams.put("loanAmountInf", calculateLoanAmountInf(Double.parseDouble(loanRate), Integer.parseInt(tenor)));
+            double amountOffer = Math.min(Math.min(Double.parseDouble(inputParams.get("loanAmountCap")), Double.parseDouble(inputParams.get("loanAmountInf"))), Double.parseDouble(HelperMethods.getFieldValue(customerApplicationAndCustomerData, "loanAmount").replaceAll(",", "")));
 
-            getLoanSimulation(
-                    createRequestForSimulation(String.valueOf(amountOffer), loanRate, getCustomerApplicationData));
+            getLoanSimulation(createRequestForSimulation(String.valueOf(amountOffer), loanRate, HelperMethods.getFieldValue(voucherDetails, "commissionRate")), dataControllerRequest);
 
             inputParams.put("monthlyRepay", EMI);
             inputParams.put("offerAmount", String.valueOf(amountOffer));
-            // adding saad sabab sanad emi
             inputParams.put("sabbNumber", SABB);
             inputParams.put("sadadNumber", SAAD);
+            inputParams.put("effectiveDate", EFFECTIVE_DATE);
             AMOUNT_OFFER = String.valueOf(amountOffer);
 
             LOG.error("Offer Amount :::::======" + AMOUNT_OFFER);
@@ -1246,25 +1113,55 @@ public class ScoringEngine implements JavaService2 {
             inputParams.put("applicationStatus", "SID_SUSPENDED");
         }
 
+        saveMISReportData(createRequestForMISReportDBCall(inputParams), dataControllerRequest);
         return inputParams;
     }
 
-    private String calculateLoanAmountInf(double loanRate, int tenor, double maxEMI) {
+    private Map<String, String> createRequestForMISReportDBCall(Map<String, String> inputParams) {
 
-        /*
-         * double totalPayableAmount = MAX_EMI * tenor; double totalProfitRate =
-         * (loanRate * tenor) / 12; double principalPlusProfitRate = totalProfitRate +
-         * 100; return String.valueOf(Math.floor((totalPayableAmount /
-         * principalPlusProfitRate) * 100));
-         */
+        Map<String, String> inputParam = new HashMap<>();
+        inputParam.put("applicationID", inputParams.get("applicationID"));
+        inputParam.put("nationalId", inputParams.get("nationalId"));
+        inputParam.put("knockoutStatusS2", "PASS, SID_PRO_ACTIVE");
+        inputParam.put("knockoutStatusS3", inputParams.get("knockoutStatus") + ", " + inputParams.get("SID_PRO_ACTIVE"));
+        inputParam.put("maxEmi", String.valueOf(MAX_EMI));
+        inputParam.put("customerGlobalDti", String.valueOf(CUSTOMER_GLOBAL_DTI));
+        inputParam.put("customerInternalDti", String.valueOf(CUSTOMER_INTERNAL_DTI));
+        inputParam.put("maxInternalDti", String.valueOf(MAX_INTERNAL_DTI));
+        inputParam.put("maxGlobalDti", String.valueOf(MAX_GLOBAL_DTI));
+        inputParam.put("bouncedChequeDetails", String.valueOf(BOUNCED_CHEQUE_DETAILS));
+        inputParam.put("courtJudgementDetails", String.valueOf(COURT_JUDGEMENT_DETAILS));
+        inputParam.put("currentDelinquency", CURRENT_DELINQUENCY);
+        inputParam.put("maxDelinquency", MAX_DELINQUENCY);
+        inputParam.put("products", String.valueOf(PRODUCT_DETAILS));
+        inputParam.put("summary", String.valueOf(SUMMARY_DETAILS));
+        inputParam.put("financialDefaultAmount", FINANCIAL_DEFAULT_AMOUNT);
+        inputParam.put("lengthOfService", CURRENT_LENGTH_OF_SERVICE);
+        inputParam.put("temporaryLiftInSalary", MANAGING_SEASONAL_AND_TEMPORARY_LIFT_IN_SALARY);
+        inputParam.put("newToIndustry", NEW_TO_INDUSTRY);
+        inputParam.put("allowance", String.valueOf(ALLOWANCE_DETAILS));
+        inputParam.put("pensioner", PENSIONER);
+        inputParam.put("mortgageProduct", "N/A");
+
+        return inputParam;
+    }
+
+    private void saveMISReportData(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
+        try {
+            ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID,
+                    MIS_REPORT_UPDATE_OPERATION_ID, inputParams, null, dataControllerRequest);
+        } catch (Exception ex) {
+            LOG.error("ERROR saveMISReportData :: " + ex);
+        }
+    }
+
+    private String calculateLoanAmountInf(double loanRate, int tenor) {
+
         loanRate /= 100;
-        //double loanAmount = MAX_EMI * (1 - (1 / Math.pow((1 + loanRate / 12), tenor))) / (loanRate / 12);
-
-        double loanAmount = maxEMI * (1 - (1 / Math.pow((1 + loanRate / 12), tenor))) / (loanRate / 12);
-
+        double loanAmount = MAX_EMI * (1 - (1 / Math.pow((1 + loanRate / 12), tenor))) / (loanRate / 12);
         String calculateLoanAmountInfVal = String.valueOf((Math.floor(loanAmount / 1000)) * 1000);
 
-        LOG.error("calculateLoanAmountInf MAX_EMI :: " + maxEMI);
+        LOG.error("calculateLoanAmountInf MAX_EMI :: " + MAX_EMI);
         LOG.error("calculateLoanAmountInf loanRate :: " + loanRate);
         LOG.error("calculateLoanAmountInf tenor :: " + tenor);
         LOG.error("calculateLoanAmountInf loanAmount :: " + loanAmount);
@@ -1301,10 +1198,7 @@ public class ScoringEngine implements JavaService2 {
         }
     }
 
-    private boolean calculateMonthlyNetSalary(Result getSalaryCertificate) {
-
-        boolean checkSalary = true;
-
+    private void calculateMonthlyNetSalary(Result getSalaryCertificate) {
         try {
             // NATIONALITY = getSalaryCertificate.getParamValueByName("nationality");
             LOG.error("calculateMonthlyNetSalary EMPLOYER_TYPE_ID :: " + EMPLOYER_TYPE_ID);
@@ -1313,21 +1207,16 @@ public class ScoringEngine implements JavaService2 {
                     String basic = getSalaryCertificate.getParamValueByName("basicSalary");
                     String allowence = getSalaryCertificate.getParamValueByName("totalAllownces");
                     String deduc = getSalaryCertificate.getParamValueByName("totalDeductions");
-
                     String netsalary = String
                             .valueOf(Double.parseDouble(basic) + Double.parseDouble(allowence) - Double.parseDouble(deduc));
-
                     netsalary = String.format("%.2f", Double.parseDouble(netsalary));
-
                     MONTHLY_NET_SALARY = netsalary;
                     break;
                 case "3":
-
                     EMPLOYMENT_STATUS = getSalaryCertificate.getParamValueByName("employmentStatus");
                     LOG.error("calculateMonthlyNetSalary EMPLOYMENT_STATUS 1:: " + EMPLOYMENT_STATUS);
                     if (EMPLOYMENT_STATUS.equalsIgnoreCase("نشيط") || EMPLOYMENT_STATUS.equalsIgnoreCase("Active")) {
                         LOG.error("calculateMonthlyNetSalary EMPLOYMENT_STATUS 2:: " + EMPLOYMENT_STATUS);
-
                         double calculatedDeductions = 0;
                         if (NATIONALITY.equalsIgnoreCase("SAU") || NATIONALITY.equalsIgnoreCase("SA")) {
                             double minimumAmount = 0.1
@@ -1341,19 +1230,12 @@ public class ScoringEngine implements JavaService2 {
                                         + Double.parseDouble(getSalaryCertificate.getParamValueByName("housingAllowance"))
                                         + Double.parseDouble(getSalaryCertificate.getParamValueByName("otherAllowance")))
                                         - calculatedDeductions);
-
                         pvtNetsalary = String.format("%.2f", Double.parseDouble(pvtNetsalary));
-
                         MONTHLY_NET_SALARY = pvtNetsalary;
-                        LOG.error("calculateMonthlyNetSalary PVT MONTHLY_NET_SALARY :: " + MONTHLY_NET_SALARY);
-                    } else {
-                        checkSalary = false;
-                        LOG.error("calculateMonthlyNetSalary CAse Customer is non active :: ");
                     }
                     LOG.error("calculateMonthlyNetSalary CAse 3 :: " + MONTHLY_NET_SALARY);
                     break;
                 default:
-                    checkSalary = false;
                     LOG.error("DEFAULT calculateMonthlyNetSalary :: " + MONTHLY_NET_SALARY);
                     MONTHLY_NET_SALARY = "0";
                     break;
@@ -1362,8 +1244,6 @@ public class ScoringEngine implements JavaService2 {
             LOG.error("ERROR calculateMonthlyNetSalary :: " + ex);
         }
         SALARY_WITHOUT_ALLOWANCES = MONTHLY_NET_SALARY;
-
-        return checkSalary;
     }
 
     private void calculateCurrentLengthOfService(Result getSalaryCertificate) {
@@ -1403,247 +1283,94 @@ public class ScoringEngine implements JavaService2 {
         }
     }
 
-    private int calculateMaxGlobalDTI(DataControllerRequest request) {
-        int maxGlobalDti = 45;
-        LOG.error("ERROR Enter in  calculateMaxGlobalDTI :: ");
-        if (request.getParameter("Product").equalsIgnoreCase("TAWARRUQ")) {
+    private void calculateMaxGlobalDTI(DataControllerRequest dataControllerRequest) {
+        if (DATA_TYPE.equalsIgnoreCase("TAWARRUQ") || DATA_TYPE.equalsIgnoreCase("MURABAHA")) {
             if (CI_DETAIL != null && CI_DETAIL.size() > 0) {
                 for (CIDETAILItem ci_detail : CI_DETAIL) {
                     String productType = ci_detail.getCIPRD();
                     String status = ci_detail.getCISTATUS();
-                    // 26/01/2023 Its a logic when the customer has a mortgage product
+                    Result getMaxGlobalDTIResult;
                     if (Arrays.asList(MORTGAGE_PRODUCT).contains(productType) && status.equalsIgnoreCase("A")) {
-                        if (Double.parseDouble(MONTHLY_NET_SALARY) <= 3999) {
-                            // MAX_GLOBAL_DTI = 55;
-                            maxGlobalDti = 55;
-                        } else if (Double.parseDouble(MONTHLY_NET_SALARY) > 3999
-                                && Double.parseDouble(MONTHLY_NET_SALARY) <= 14999) {
-                            // MAX_GLOBAL_DTI = 55;
-                            maxGlobalDti = 55;
-                        } else if (Double.parseDouble(MONTHLY_NET_SALARY) > 14999
-                                && Double.parseDouble(MONTHLY_NET_SALARY) <= 24999) {
-                            // MAX_GLOBAL_DTI = 65;
-                            maxGlobalDti = 65;
-                        } else if (Double.parseDouble(MONTHLY_NET_SALARY) > 24999
-                                && Double.parseDouble(MONTHLY_NET_SALARY) <= 999999) {
-                            // MAX_GLOBAL_DTI = 70;
-                            maxGlobalDti = 70;
-                        }
-                        break;
+                        getMaxGlobalDTIResult = getMaxGlobalDTI(MONTHLY_NET_SALARY, DATA_TYPE, "YES", dataControllerRequest);
                     } else {
-                        // 26/01/2023 Its a logic when the customer does not have a mortgage product
-                        if (Double.parseDouble(MONTHLY_NET_SALARY) <= 3999) {
-                            // MAX_GLOBAL_DTI = 45;
-                            maxGlobalDti = 45;
-                        } else if (Double.parseDouble(MONTHLY_NET_SALARY) > 3999
-                                && Double.parseDouble(MONTHLY_NET_SALARY) <= 14999) {
-                            // MAX_GLOBAL_DTI = 45;
-                            maxGlobalDti = 45;
-                        } else if (Double.parseDouble(MONTHLY_NET_SALARY) > 14999
-                                && Double.parseDouble(MONTHLY_NET_SALARY) <= 24999) {
-                            // MAX_GLOBAL_DTI = 45;
-                            maxGlobalDti = 45;
-                        } else if (Double.parseDouble(MONTHLY_NET_SALARY) > 24999
-                                && Double.parseDouble(MONTHLY_NET_SALARY) <= 999999) {
-                            // MAX_GLOBAL_DTI = 70;
-                            maxGlobalDti = 70;
-                        }
-                        //	break;
+                        getMaxGlobalDTIResult = getMaxGlobalDTI(MONTHLY_NET_SALARY, DATA_TYPE, "NO", dataControllerRequest);
                     }
+                    MAX_GLOBAL_DTI = Integer.parseInt(HelperMethods.getFieldValue(getMaxGlobalDTIResult, "DTI"));
+                    PRODUCT_DETAILS.append(productType).append(" ");
+                    break;
                 }
             } else {
                 if (CI_DETAIL2 != null && CI_DETAIL2.size() > 0) {
                     for (com.ijarah.Model.consumerEnquiryModelFinal.CIDETAILSItem ci_detail : CI_DETAIL2) {
                         String productType = ci_detail.getCIPRD();
                         String status = ci_detail.getCISTATUS();
+                        Result getMaxGlobalDTIResult;
                         if (Arrays.asList(MORTGAGE_PRODUCT).contains(productType) && status.equalsIgnoreCase("A")) {
-                            if (Double.parseDouble(MONTHLY_NET_SALARY) <= 3999) {
-                                // MAX_GLOBAL_DTI = 55;
-                                maxGlobalDti = 55;
-                            } else if (Double.parseDouble(MONTHLY_NET_SALARY) > 3999
-                                    && Double.parseDouble(MONTHLY_NET_SALARY) <= 14999) {
-                                // MAX_GLOBAL_DTI = 55;
-                                maxGlobalDti = 55;
-                            } else if (Double.parseDouble(MONTHLY_NET_SALARY) > 14999
-                                    && Double.parseDouble(MONTHLY_NET_SALARY) <= 24999) {
-                                // MAX_GLOBAL_DTI = 65;
-                                maxGlobalDti = 65;
-                            } else if (Double.parseDouble(MONTHLY_NET_SALARY) > 24999
-                                    && Double.parseDouble(MONTHLY_NET_SALARY) <= 999999) {
-                                // MAX_GLOBAL_DTI = 70;
-                                maxGlobalDti = 70;
-                            }
-                            break;
+                            getMaxGlobalDTIResult = getMaxGlobalDTI(MONTHLY_NET_SALARY, DATA_TYPE, "YES", dataControllerRequest);
                         } else {
-                            // 26/01/2023 Its a logic when the customer does not have a mortgage product
-                            if (Double.parseDouble(MONTHLY_NET_SALARY) <= 3999) {
-                                // MAX_GLOBAL_DTI = 45;
-                                maxGlobalDti = 45;
-                            } else if (Double.parseDouble(MONTHLY_NET_SALARY) > 3999
-                                    && Double.parseDouble(MONTHLY_NET_SALARY) <= 14999) {
-                                // MAX_GLOBAL_DTI = 45;
-                                maxGlobalDti = 45;
-                            } else if (Double.parseDouble(MONTHLY_NET_SALARY) > 14999
-                                    && Double.parseDouble(MONTHLY_NET_SALARY) <= 24999) {
-                                // MAX_GLOBAL_DTI = 45;
-                                maxGlobalDti = 45;
-                            } else if (Double.parseDouble(MONTHLY_NET_SALARY) > 24999
-                                    && Double.parseDouble(MONTHLY_NET_SALARY) <= 999999) {
-                                // MAX_GLOBAL_DTI = 70;
-                                maxGlobalDti = 70;
-                            }
-                            //	break;
+                            getMaxGlobalDTIResult = getMaxGlobalDTI(MONTHLY_NET_SALARY, DATA_TYPE, "NO", dataControllerRequest);
                         }
+                        MAX_GLOBAL_DTI = Integer.parseInt(HelperMethods.getFieldValue(getMaxGlobalDTIResult, "DTI"));
+                        PRODUCT_DETAILS.append(productType).append(" ");
+                        break;
                     }
                 }
             }
         }
-        LOG.error("ERROR Enter in  calculateMaxGlobalDTI maxGlobalDti:: " + maxGlobalDti);
-        return maxGlobalDti;
+        LOG.error("calculateMaxGlobalDTI :: " + MAX_GLOBAL_DTI);
     }
 
-    private int calculateMaxInternalDTI(DataControllerRequest request) {
-        int maxInternalDti = 33;
-        LOG.error("ERROR Enter in  calculateMaxInternalDTI :: ");
-        if (request.getParameter("Product").equalsIgnoreCase("TAWARRUQ")) {
+    private void calculateMaxInternalDTI(DataControllerRequest dataControllerRequest) {
+        if (DATA_TYPE.equalsIgnoreCase("TAWARRUQ") || DATA_TYPE.equalsIgnoreCase("MURABAHA")) {
             if (CI_DETAIL != null && CI_DETAIL.size() > 0) {
                 for (CIDETAILItem ci_detail : CI_DETAIL) {
                     String productType = ci_detail.getCIPRD();
                     String status = ci_detail.getCISTATUS();
-
-                    // 26/01/2023 Its a logic when the customer has a mortgage product
+                    Result getMaxInternalDTIResult;
                     if (Arrays.asList(MORTGAGE_PRODUCT).contains(productType) && status.equalsIgnoreCase("A")) {
-                        if (Double.parseDouble(MONTHLY_NET_SALARY) <= 3999) {
-                            //MAX_INTERNAL_DTI = 45;
-                            maxInternalDti = 45;
-                        } else if (Double.parseDouble(MONTHLY_NET_SALARY) > 3999
-                                && Double.parseDouble(MONTHLY_NET_SALARY) <= 14999) {
-                            //MAX_INTERNAL_DTI = 45;
-                            maxInternalDti = 45;
-                        } else if (Double.parseDouble(MONTHLY_NET_SALARY) > 14999
-                                && Double.parseDouble(MONTHLY_NET_SALARY) <= 24999) {
-                            //MAX_INTERNAL_DTI = 45;
-                            maxInternalDti = 45;
-                        } else if (Double.parseDouble(MONTHLY_NET_SALARY) > 24999
-                                && Double.parseDouble(MONTHLY_NET_SALARY) <= 999999) {
-                            //MAX_INTERNAL_DTI = 45;
-                            maxInternalDti = 45;
-                        }
-                        break;
+                        getMaxInternalDTIResult = getMaxInternalDTI(MONTHLY_NET_SALARY, DATA_TYPE, "YES", dataControllerRequest);
                     } else {
-                        // 26/01/2023 Its a logic when the customer does not have a mortgage product
-                        if (Double.parseDouble(MONTHLY_NET_SALARY) <= 3999) {
-                            //MAX_INTERNAL_DTI = 25;
-                            maxInternalDti = 25;
-                        } else if (Double.parseDouble(MONTHLY_NET_SALARY) > 3999
-                                && Double.parseDouble(MONTHLY_NET_SALARY) <= 14999) {
-                            //MAX_INTERNAL_DTI = 33;
-                            maxInternalDti = 33;
-                        } else if (Double.parseDouble(MONTHLY_NET_SALARY) > 14999
-                                && Double.parseDouble(MONTHLY_NET_SALARY) <= 24999) {
-                            //MAX_INTERNAL_DTI = 33;
-                            maxInternalDti = 33;
-                        } else if (Double.parseDouble(MONTHLY_NET_SALARY) > 24999
-                                && Double.parseDouble(MONTHLY_NET_SALARY) <= 999999) {
-                            //MAX_INTERNAL_DTI = 33;
-                            maxInternalDti = 33;
-                        }
-                        //	break;
+                        getMaxInternalDTIResult = getMaxInternalDTI(MONTHLY_NET_SALARY, DATA_TYPE, "NO", dataControllerRequest);
                     }
+                    MAX_INTERNAL_DTI = Integer.parseInt(HelperMethods.getFieldValue(getMaxInternalDTIResult, "DTI"));
+                    break;
                 }
             } else {
                 if (CI_DETAIL2 != null && CI_DETAIL2.size() > 0) {
                     for (com.ijarah.Model.consumerEnquiryModelFinal.CIDETAILSItem ci_detail : CI_DETAIL2) {
                         String productType = ci_detail.getCIPRD();
                         String status = ci_detail.getCISTATUS();
+                        Result getMaxInternalDTIResult;
                         if (Arrays.asList(MORTGAGE_PRODUCT).contains(productType) && status.equalsIgnoreCase("A")) {
-                            if (Double.parseDouble(MONTHLY_NET_SALARY) <= 3999) {
-                                //MAX_INTERNAL_DTI = 45;
-                                maxInternalDti = 45;
-                            } else if (Double.parseDouble(MONTHLY_NET_SALARY) > 3999
-                                    && Double.parseDouble(MONTHLY_NET_SALARY) <= 14999) {
-                                //MAX_INTERNAL_DTI = 45;
-                                maxInternalDti = 45;
-                            } else if (Double.parseDouble(MONTHLY_NET_SALARY) > 14999
-                                    && Double.parseDouble(MONTHLY_NET_SALARY) <= 24999) {
-                                //MAX_INTERNAL_DTI = 45;
-                                maxInternalDti = 45;
-                            } else if (Double.parseDouble(MONTHLY_NET_SALARY) > 24999
-                                    && Double.parseDouble(MONTHLY_NET_SALARY) <= 999999) {
-                                //MAX_INTERNAL_DTI = 45;
-                                maxInternalDti = 45;
-                            }
-                            break;
+                            getMaxInternalDTIResult = getMaxInternalDTI(MONTHLY_NET_SALARY, DATA_TYPE, "YES", dataControllerRequest);
                         } else {
-                            // 26/01/2023 Its a logic when the customer does not have a mortgage product
-                            if (Double.parseDouble(MONTHLY_NET_SALARY) <= 3999) {
-                                //MAX_INTERNAL_DTI = 25;
-                                maxInternalDti = 25;
-                            } else if (Double.parseDouble(MONTHLY_NET_SALARY) > 3999
-                                    && Double.parseDouble(MONTHLY_NET_SALARY) <= 14999) {
-                                //MAX_INTERNAL_DTI = 33;
-                                maxInternalDti = 33;
-                            } else if (Double.parseDouble(MONTHLY_NET_SALARY) > 14999
-                                    && Double.parseDouble(MONTHLY_NET_SALARY) <= 24999) {
-                                //MAX_INTERNAL_DTI = 33;
-                                maxInternalDti = 33;
-                            } else if (Double.parseDouble(MONTHLY_NET_SALARY) > 24999
-                                    && Double.parseDouble(MONTHLY_NET_SALARY) <= 999999) {
-                                //MAX_INTERNAL_DTI = 33;
-                                maxInternalDti = 33;
-                            }
-                            //	break;
+                            getMaxInternalDTIResult = getMaxInternalDTI(MONTHLY_NET_SALARY, DATA_TYPE, "NO", dataControllerRequest);
                         }
+                        MAX_INTERNAL_DTI = Integer.parseInt(HelperMethods.getFieldValue(getMaxInternalDTIResult, "DTI"));
+                        break;
                     }
                 }
             }
         }
-        LOG.error("ERROR Enter in  calculateMaxInternalDTI maxInternalDti:: " + maxInternalDti);
-        return maxInternalDti;
     }
 
-    private double calculateMaxEmi(int calMAXGblDti, int calMAXinternalDti, double customerGblDti, double customerInternalDti) {
-        double maxEMI = 0.0;
-        LOG.error("# MAX_GLOBAL_DTI :: " + calMAXGblDti);
-        LOG.error("# CUSTOMER_GLOBAL_DTI :: " + customerGblDti);
-
-        LOG.error("# MAX_INETRNAL_DTI :: " + calMAXinternalDti);
-        LOG.error("# CUSTOMER_INTERNAL_DTI :: " + customerInternalDti);
-
-        LOG.error("# calculateMaxEmi :: " + MONTHLY_NET_SALARY);
-
-        int final_max_allowable_dti = Math.min(calculateMaxOverallAllowedDTI(calMAXGblDti, customerGblDti),
-                calculateMaxInternalAllowedDTI(calMAXinternalDti, customerInternalDti));
-		
-		
-		/*MAX_EMI = Double.parseDouble(MONTHLY_NET_SALARY) * final_max_allowable_dti;
-		MAX_EMI = MAX_EMI / 100;*/
-
-        maxEMI = Double.parseDouble(MONTHLY_NET_SALARY) * final_max_allowable_dti;
-        maxEMI = maxEMI / 100;
-
-
-        LOG.error("#final_max_allowable_dti :: " + final_max_allowable_dti);
-        LOG.error("#MAX_EMI :: " + maxEMI);
-
-        return maxEMI;
+    private void calculateMaxEmi() {
+        int final_max_allowable_dti = Math.min(calculateMaxOverallAllowedDTI(), calculateMaxInternalAllowedDTI());
+        MAX_EMI = Double.parseDouble(MONTHLY_NET_SALARY) * final_max_allowable_dti;
+        MAX_EMI = MAX_EMI / 100;
+        LOG.error("#Ghufran final_max_allowable_dti :: " + final_max_allowable_dti);
+        LOG.error("#Ghufran MAX_EMI :: " + MAX_EMI);
     }
 
-    private int calculateMaxOverallAllowedDTI(int calMAXGblDti, double customerGblDti) {
-        //return Math.max(((int) (MAX_GLOBAL_DTI - CUSTOMER_GLOBAL_DTI)), 0);
-        return Math.max(((int) (Double.valueOf(calMAXGblDti) - customerGblDti)), 0);
+    private int calculateMaxOverallAllowedDTI() {
+        return Math.max(((int) (MAX_GLOBAL_DTI - CUSTOMER_GLOBAL_DTI)), 0);
     }
 
-    private int calculateMaxInternalAllowedDTI(int calMAXinternalDti, double customerInternalDti) {
-        //return Math.max(((int) (MAX_INTERNAL_DTI - CUSTOMER_INTERNAL_DTI)), 0);
-        return Math.max(((int) (Double.valueOf(calMAXinternalDti) - customerInternalDti)), 0);
+    private int calculateMaxInternalAllowedDTI() {
+        return Math.max(((int) (MAX_INTERNAL_DTI - CUSTOMER_INTERNAL_DTI)), 0);
     }
 
-    private JSONObject calculateGlobalDTI(int calMAXGblDti) {
-
-        boolean checkAllow = true;
-        double customerGblDti = 0.0;
-        JSONObject jsonObject = new JSONObject();
+    private void calculateGlobalDTI() {
 
         GLOBAL_DTI = "1";
         if (CI_DETAIL != null && CI_DETAIL.size() > 0) {
@@ -1676,16 +1403,10 @@ public class ScoringEngine implements JavaService2 {
                 }
             }
             LOG.error("#Ghufran totalDebtServicing :: " + totalDebtServicing);
-            //CUSTOMER_GLOBAL_DTI = (totalDebtServicing / Double.parseDouble(MONTHLY_NET_SALARY)) * 100;
-            customerGblDti = (totalDebtServicing / Double.parseDouble(MONTHLY_NET_SALARY)) * 100;
-            LOG.error("#Ghufran CUSTOMER_GLOBAL_DTI :: " + customerGblDti);
-			/*if (CUSTOMER_GLOBAL_DTI >= MAX_GLOBAL_DTI) {
-				GLOBAL_DTI = "0";
-				checkAllow = false;
-			}*/
-            if (customerGblDti >= calMAXGblDti) {
+            CUSTOMER_GLOBAL_DTI = (totalDebtServicing / Double.parseDouble(MONTHLY_NET_SALARY)) * 100;
+            LOG.error("#Ghufran CUSTOMER_GLOBAL_DTI :: " + CUSTOMER_GLOBAL_DTI);
+            if (CUSTOMER_GLOBAL_DTI >= MAX_GLOBAL_DTI) {
                 GLOBAL_DTI = "0";
-                checkAllow = false;
             }
         } else {
             if (CI_DETAIL2 != null && CI_DETAIL2.size() > 0) {
@@ -1718,27 +1439,16 @@ public class ScoringEngine implements JavaService2 {
                     }
                 }
                 LOG.error("#Ghufran totalDebtServicing :: " + totalDebtServicing);
-                //CUSTOMER_GLOBAL_DTI = (totalDebtServicing / Double.parseDouble(MONTHLY_NET_SALARY)) * 100;
-                customerGblDti = (totalDebtServicing / Double.parseDouble(MONTHLY_NET_SALARY)) * 100;
-                LOG.error("#Ghufran CUSTOMER_GLOBAL_DTI :: " + customerGblDti);
-				/*if (CUSTOMER_GLOBAL_DTI >= MAX_GLOBAL_DTI) {
-					GLOBAL_DTI = "0";
-					checkAllow = false;
-				}*/
-                if (customerGblDti >= calMAXGblDti) {
+                CUSTOMER_GLOBAL_DTI = (totalDebtServicing / Double.parseDouble(MONTHLY_NET_SALARY)) * 100;
+                LOG.error("#Ghufran CUSTOMER_GLOBAL_DTI :: " + CUSTOMER_GLOBAL_DTI);
+                if (CUSTOMER_GLOBAL_DTI >= MAX_GLOBAL_DTI) {
                     GLOBAL_DTI = "0";
-                    checkAllow = false;
                 }
             }
         }
-
-        jsonObject.put("check", checkAllow);
-        jsonObject.put("customerGblDti", customerGblDti);
-        return jsonObject;
     }
 
-    private double calculateInternalDTI(int calMAXinternalDti) {
-        double customerInternalDti = 0.0;
+    private void calculateInternalDTI() {
         INTERNAL_DTI = "1";
         if (CI_DETAIL != null && CI_DETAIL.size() > 0) {
             double totalDebtServicing = 0;
@@ -1771,12 +1481,8 @@ public class ScoringEngine implements JavaService2 {
                     }
                 }
             }
-            //CUSTOMER_INTERNAL_DTI = (totalDebtServicing / Double.parseDouble(MONTHLY_NET_SALARY)) * 100;
-            customerInternalDti = (totalDebtServicing / Double.parseDouble(MONTHLY_NET_SALARY)) * 100;
-			/*if (CUSTOMER_INTERNAL_DTI >= MAX_INTERNAL_DTI) {
-				INTERNAL_DTI = "0";
-			}*/
-            if (customerInternalDti >= calMAXinternalDti) {
+            CUSTOMER_INTERNAL_DTI = (totalDebtServicing / Double.parseDouble(MONTHLY_NET_SALARY)) * 100;
+            if (CUSTOMER_INTERNAL_DTI >= MAX_INTERNAL_DTI) {
                 INTERNAL_DTI = "0";
             }
         } else {
@@ -1811,18 +1517,12 @@ public class ScoringEngine implements JavaService2 {
                         }
                     }
                 }
-                //CUSTOMER_INTERNAL_DTI = (totalDebtServicing / Double.parseDouble(MONTHLY_NET_SALARY)) * 100;
-                customerInternalDti = (totalDebtServicing / Double.parseDouble(MONTHLY_NET_SALARY)) * 100;
-				/*if (CUSTOMER_INTERNAL_DTI >= MAX_INTERNAL_DTI) {
-					INTERNAL_DTI = "0";
-				}*/
-                if (customerInternalDti >= calMAXinternalDti) {
+                CUSTOMER_INTERNAL_DTI = (totalDebtServicing / Double.parseDouble(MONTHLY_NET_SALARY)) * 100;
+                if (CUSTOMER_INTERNAL_DTI >= MAX_INTERNAL_DTI) {
                     INTERNAL_DTI = "0";
                 }
             }
         }
-
-        return customerInternalDti;
     }
 
     private void calculateCurrentDelinquencyAndCurrentDelinquencyT() {
@@ -1844,6 +1544,7 @@ public class ScoringEngine implements JavaService2 {
                         CURRENT_DELINQUENCY_T = "0";
                     }
                 }
+                SUMMARY_DETAILS.append(summary).append(" ");
             }
         } else {
             if (CI_DETAIL2 != null && CI_DETAIL2.size() > 0) {
@@ -1863,6 +1564,7 @@ public class ScoringEngine implements JavaService2 {
                             CURRENT_DELINQUENCY_T = "0";
                         }
                     }
+                    SUMMARY_DETAILS.append(summary).append(" ");
                 }
             }
         }
@@ -1911,14 +1613,14 @@ public class ScoringEngine implements JavaService2 {
         }
     }
 
-    private String calculateFinancialDefaultAmount() {
-        int FINANCIAL_DEFAULT_AMOUNT_INNER = 0;
+    private void calculateFinancialDefaultAmount() {
+        int FINANCIAL_DEFAULT_AMOUNT = 0;
         if (DEFAULT != null && DEFAULT.size() > 0) {
             for (DEFAULTItem defaultItem : DEFAULT) {
                 String productType = defaultItem.getDFPRD();
                 if (!Arrays.asList(NON_FINANCIAL_PRODUCTS).contains(productType)) {
                     double FINANCIAL_DEFAULT_AMOUNT_TEMP = Double.parseDouble(defaultItem.getDFCUB());
-                    FINANCIAL_DEFAULT_AMOUNT_INNER += FINANCIAL_DEFAULT_AMOUNT_TEMP;
+                    FINANCIAL_DEFAULT_AMOUNT += FINANCIAL_DEFAULT_AMOUNT_TEMP;
                 }
             }
         } else {
@@ -1927,18 +1629,15 @@ public class ScoringEngine implements JavaService2 {
                     String productType = defaultItem.getDFPRD();
                     if (!Arrays.asList(NON_FINANCIAL_PRODUCTS).contains(productType)) {
                         double FINANCIAL_DEFAULT_AMOUNT_TEMP = Double.parseDouble(defaultItem.getDFCUB());
-                        FINANCIAL_DEFAULT_AMOUNT_INNER += FINANCIAL_DEFAULT_AMOUNT_TEMP;
+                        FINANCIAL_DEFAULT_AMOUNT += FINANCIAL_DEFAULT_AMOUNT_TEMP;
                     }
                 }
             }
         }
-
-        LOG.error("calculateFinancialDefaultAmount END :: " + String.valueOf(FINANCIAL_DEFAULT_AMOUNT_INNER));
-
-        return String.valueOf(FINANCIAL_DEFAULT_AMOUNT_INNER);
+        this.FINANCIAL_DEFAULT_AMOUNT = String.valueOf(FINANCIAL_DEFAULT_AMOUNT);
     }
 
-    private String calculateNonFinancialDefaultAmount() {
+    private void calculateNonFinancialDefaultAmount() {
         int NON_FINANCIAL_DEFAULT_AMOUNT = 0;
         if (DEFAULT != null && DEFAULT.size() > 0) {
             for (DEFAULTItem defaultItem : DEFAULT) {
@@ -1959,9 +1658,7 @@ public class ScoringEngine implements JavaService2 {
                 }
             }
         }
-
-        LOG.error("calculateNonFinancialDefaultAmount END :: " + String.valueOf(NON_FINANCIAL_DEFAULT_AMOUNT));
-        return String.valueOf(NON_FINANCIAL_DEFAULT_AMOUNT);
+        this.NON_FINANCIAL_DEFAULT_AMOUNT = String.valueOf(NON_FINANCIAL_DEFAULT_AMOUNT);
     }
 
     private String calculateBouncedCheque() {
@@ -1977,6 +1674,7 @@ public class ScoringEngine implements JavaService2 {
                         checkBC = "UB";
                         break;
                     }
+                    BOUNCED_CHEQUE_DETAILS.append(bouncedcheckItem.toString()).append(" ");
                 }
             }
         } else if (BOUNCED_CHEQUE2 != null && BOUNCED_CHEQUE2.size() > 0) {
@@ -1990,6 +1688,7 @@ public class ScoringEngine implements JavaService2 {
                         checkBC = "UB";
                         break;
                     }
+                    BOUNCED_CHEQUE_DETAILS.append(bouncedCheckItem.toString()).append(" ");
                 }
             }
         } else {
@@ -2015,6 +1714,7 @@ public class ScoringEngine implements JavaService2 {
                         checkCJ = "UJ";
                         break;
                     }
+                    COURT_JUDGEMENT_DETAILS.append(judgementItem.toString()).append(" ");
                 }
             }
         } else if (JUDGEMENT2 != null && JUDGEMENT2.size() > 0) {
@@ -2028,6 +1728,7 @@ public class ScoringEngine implements JavaService2 {
                         checkCJ = "UJ";
                         break;
                     }
+                    COURT_JUDGEMENT_DETAILS.append(judgementItem.toString()).append(" ");
                 }
             }
         } else {
@@ -2156,24 +1857,45 @@ public class ScoringEngine implements JavaService2 {
         }
     }
 
-    private Map<String, String> createRequestForScoreCardS2Service(Result getSalaryCertificate,
-                                                                   DataControllerRequest request, Result getCustomerApplicationData) {
+    private Map<String, String> createRequestForScoreCardS2Service(Result voucherDetails) {
         Map<String, String> inputParams = new HashMap<>();
         try {
 
-            // inputParams.put("scorecardId", SCORECARD_ID);
-            // inputParams.put("customerAge", CUSTOMER_AGE);
-            // inputParams.put("loanRef", APPLICATION_ID);
-            // inputParams.put("tenor", TENOR);
-            // inputParams.put("insideKsa", INSIDE_KSA);
-            inputParams.put("salaryAmount", MONTHLY_NET_SALARY);
-            inputParams.put("tenor", HelperMethods.getFieldValue(getCustomerApplicationData, "tenor"));
-            inputParams.put("scorecardId", HelperMethods.getFieldValue(getCustomerApplicationData, "scoredCardId"));
-            inputParams.put("validLos", CURRENT_LENGTH_OF_SERVICE);
-            inputParams.put("liftSalary", MANAGING_SEASONAL_AND_TEMPORARY_LIFT_IN_SALARY);
-            inputParams.put("employeeName", EMPLOYER_NAME);
-            inputParams.put("salaryNonAllowance", SALARY_WITHOUT_ALLOWANCES);
+            inputParams.put("scorecardId", SCORECARD_ID);
+            inputParams.put("dataType", DATA_TYPE);
+            inputParams.put("customerAge", CUSTOMER_AGE);
+            inputParams.put("insideKsa", INSIDE_KSA);
+            inputParams.put("loanRef", APPLICATION_ID);
+            inputParams.put("validDti", String.valueOf(MAX_GLOBAL_DTI));
+            inputParams.put("currDelinquency", CURRENT_DELINQUENCY);
+            inputParams.put("maxDelinquency", MAX_DELINQUENCY);
+            inputParams.put("bouncedCheck", BOUNCED_CHEQUE);
+            inputParams.put("courtJudgement", COURT_JUDGEMENT);
+            inputParams.put("validUtil", NON_FINANCIAL_DEFAULT_AMOUNT);
+            inputParams.put("validDefaults", FINANCIAL_DEFAULT_AMOUNT);
+            inputParams.put("validInternalDti", INTERNAL_DTI);
+            inputParams.put("currDelinquencyT", CURRENT_DELINQUENCY_T);
+            inputParams.put("loanAmountCap", MAX_LOAN_AMOUNT_CAPPING);
+            inputParams.put("nationality", NATIONALITY);
+            inputParams.put("newIndustry", NEW_TO_INDUSTRY);
+
+            inputParams.put("calculate", CALCULATE);
+            inputParams.put("tenor", TENOR);
             inputParams.put("pensioner", PENSIONER);
+            inputParams.put("validLos", CURRENT_LENGTH_OF_SERVICE);
+            inputParams.put("employeeName", EMPLOYER_NAME);
+
+            // Stop sending the employee categorization
+            // if (EMPLOYER_TYPE_ID == "1") inputParams.put("employeeCategory",
+            // EMPLOYER_CATEGORISATION);
+
+            inputParams.put("liftSalary", MANAGING_SEASONAL_AND_TEMPORARY_LIFT_IN_SALARY);
+            inputParams.put("salaryNonAllowance", SALARY_WITHOUT_ALLOWANCES);
+            inputParams.put("salaryAmount", MONTHLY_NET_SALARY);
+
+            if (DATA_TYPE.equals("MURABAHA")) {
+                inputParams.put("retailerId", HelperMethods.getFieldValue(voucherDetails, "retailerID"));
+            }
 
         } catch (Exception ex) {
             LOG.error("ERROR createRequestForScoreCardS2Service :: " + ex);
@@ -2181,70 +1903,44 @@ public class ScoringEngine implements JavaService2 {
         return inputParams;
     }
 
-    private HashMap<String, Object> createRequestForSimulation(String amoOffer, String loanRate,
-                                                               Result getCustomerApplicationData) {
-        // Map<String, Object> inputParams = new HashMap<>();
+    private HashMap<String, Object> createRequestForSimulation(String amoOffer, String loanRate, String commissionRate) {
 
         HashMap<String, Object> inputParams = new HashMap<>();
         try {
-            String term = HelperMethods.getFieldValue(getCustomerApplicationData, "tenor") + "M";
-            // String term = TENOR + "M";
-
-            // loanAmt= loanAmt.replace(",", "");
             LOG.error("========== AMount Offer sending for simulation is ::" + amoOffer);
-
-            // LOG.error("========== Loan Amount sending for simulation is ::"+);
+            String term = TENOR + "M";
             inputParams.put("amount", amoOffer); // TODO amount offer should be sent
             inputParams.put("term", term);
             inputParams.put("partyId", PARTY_ID);
             inputParams.put("fixedRate", loanRate);
-
+            inputParams.put("charge", commissionRate);
         } catch (Exception ex) {
             LOG.error("ERROR createRequestForSimulation :: " + ex);
         }
         return inputParams;
     }
 
-    private Map<String, String> createRequestForScoreCardS3Service(Result getConsumerEnquiry,
-                                                                   Result getCustomerApplicationData, Result getCustomerData, DataControllerRequest request) {
+    private Map<String, String> createRequestForScoreCardS3Service(Result voucherDetails) {
         Map<String, String> inputParams = new HashMap<>();
         try {
 
-            // inputParams.put("scorecardId", SCORECARD_ID);
-            // inputParams.put("customerAge", CUSTOMER_AGE);
-            // inputParams.put("loanRef", APPLICATION_ID);
-            // inputParams.put("tenor", TENOR);
-            // inputParams.put("insideKsa", INSIDE_KSA);
-            inputParams.put("insideKsa", HelperMethods.getFieldValue(getCustomerApplicationData, "insideKsa"));
-            inputParams.put("customerAge", HelperMethods.getFieldValue(getCustomerApplicationData, "customerAge"));
-            inputParams.put("loanRef", request.getParameter("ApplicationID"));
-            inputParams.put("tenor", HelperMethods.getFieldValue(getCustomerApplicationData, "tenor"));
-            inputParams.put("scorecardId", HelperMethods.getFieldValue(getCustomerApplicationData, "scoredCardId"));
-
-            inputParams.put("dataType", request.getParameter("Product"));
+            inputParams.put("scorecardId", SCORECARD_ID);
+            inputParams.put("dataType", DATA_TYPE);
             inputParams.put("calculate", CALCULATE);
             inputParams.put("pensioner", PENSIONER);
-
+            inputParams.put("customerAge", CUSTOMER_AGE);
             inputParams.put("salaryAmount", MONTHLY_NET_SALARY);
-
+            inputParams.put("insideKsa", INSIDE_KSA);
+            inputParams.put("loanRef", APPLICATION_ID);
             inputParams.put("validLos", CURRENT_LENGTH_OF_SERVICE);
             inputParams.put("validDti", GLOBAL_DTI);
             inputParams.put("currDelinquency", CURRENT_DELINQUENCY);
             inputParams.put("maxDelinquency", MAX_DELINQUENCY);
-            // inputParams.put("bouncedCheck", BOUNCED_CHEQUE);
-            inputParams.put("bouncedCheck", calculateBouncedCheque());
-
-            // inputParams.put("courtJudgement", COURT_JUDGEMENT);
-            inputParams.put("courtJudgement", calculateCourtJudgement());
-
-            // inputParams.put("validUtil", NON_FINANCIAL_DEFAULT_AMOUNT);
-            inputParams.put("validUtil", calculateNonFinancialDefaultAmount());
-
-            // 31/01/2023 Add Financial default amount for validDefaults
-            // inputParams.put("validDefaults", FINANCIAL_DEFAULT_AMOUNT);
-            // inputParams.put("validDefaults", "0");
-            inputParams.put("validDefaults", calculateFinancialDefaultAmount());
-
+            inputParams.put("bouncedCheck", BOUNCED_CHEQUE);
+            inputParams.put("courtJudgement", COURT_JUDGEMENT);
+            inputParams.put("validUtil", NON_FINANCIAL_DEFAULT_AMOUNT);
+            inputParams.put("tenor", TENOR);
+            inputParams.put("validDefaults", "0");
             inputParams.put("validInternalDti", INTERNAL_DTI);
             inputParams.put("currDelinquencyT", CURRENT_DELINQUENCY_T);
             inputParams.put("employeeName", EMPLOYER_NAME);
@@ -2259,6 +1955,11 @@ public class ScoringEngine implements JavaService2 {
             inputParams.put("salaryNonAllowance", SALARY_WITHOUT_ALLOWANCES);
             inputParams.put("score", SC_SCORE);
 
+            if (DATA_TYPE.equals("MURABAHA")) {
+                inputParams.put("retailerId", HelperMethods.getFieldValue(voucherDetails, "retailerID"));
+            }
+
+
         } catch (Exception ex) {
             LOG.error("ERROR createRequestForScoreCardS3Service :: " + ex);
         }
@@ -2266,53 +1967,25 @@ public class ScoringEngine implements JavaService2 {
     }
 
     private boolean preProcess(DataControllerRequest request) {
-        boolean checkValue = true;
         try {
-            LOG.error("ERROR ApplicationID :: " + request.getParameter("ApplicationID"));
-            LOG.error("ERROR NationalID :: " + request.getParameter("NationalID"));
-            LOG.error("ERROR Product :: " + request.getParameter("Product"));
-            LOG.error("ERROR Mobile :: " + request.getParameter("Mobile"));
-            if (request.getParameter("ApplicationID") == null) {
-                checkValue = false;
-
-            }
-            if (request.getParameter("NationalID") == null) {
-                checkValue = false;
-
-            }
-            if (request.getParameter("Product") == null) {
-                checkValue = false;
-
-            }
-            if (request.getParameter("Mobile") == null) {
-                checkValue = false;
-
-            }
-            // APPLICATION_ID = request.getParameter("ApplicationID");
-            // NATIONAL_ID = request.getParameter("NationalID");
-            // DATA_TYPE = request.getParameter("Product");
-            // CONTACT_NUMBER = request.getParameter("Mobile");
-            // this.inputParams.put("ENQUIRY_REFERENCE",
-            // String.valueOf(generateRandomInt()));
-            // this.inputParams.put("employerTypeId", EMPLOYER_TYPE_ID);
+            APPLICATION_ID = request.getParameter("ApplicationID");
+            NATIONAL_ID = request.getParameter("NationalID");
+            DATA_TYPE = request.getParameter("Product");
+            CONTACT_NUMBER = request.getParameter("Mobile");
+            this.inputParams.put("ENQUIRY_REFERENCE", String.valueOf(generateRandomInt()));
+            this.inputParams.put("employerTypeId", EMPLOYER_TYPE_ID);
 
         } catch (Exception ex) {
-            checkValue = false;
             LOG.error("ERROR preProcess :: " + ex);
-
         }
-        return checkValue;
-        // return !inputParams.isEmpty();
+        return !inputParams.isEmpty();
     }
 
     private Result getCustomerApplicationData(DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
         try {
             Map<String, String> filter = new HashMap<>();
-            // filter.put(DBPUtilitiesConstants.FILTER, "applicationID" +
-            // DBPUtilitiesConstants.EQUAL + APPLICATION_ID);
-            filter.put(DBPUtilitiesConstants.FILTER, "applicationID" + DBPUtilitiesConstants.EQUAL
-                    + dataControllerRequest.getParameter("ApplicationID"));
+            filter.put(DBPUtilitiesConstants.FILTER, "applicationID" + DBPUtilitiesConstants.EQUAL + APPLICATION_ID);
             Result getCustomerApplicationData = ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID,
                     CUSTOMER_APPLICATION_GET_OPERATION_ID, filter, null, dataControllerRequest);
             StatusEnum.success.setStatus(getCustomerApplicationData);
@@ -2323,14 +1996,67 @@ public class ScoringEngine implements JavaService2 {
         return result;
     }
 
-    private Result getCustomerData(DataControllerRequest dataControllerRequest, Result getCustomerApplicationData) {
+    private Result getMaxGlobalDTI(String monthlyNetSalary, String data_type, String MORTGAGE, DataControllerRequest dataControllerRequest) {
+        Result result = StatusEnum.error.setStatus();
+        try {
+            Map<String, String> inputParams = new HashMap<>();
+            inputParams.put("monthlyNetSalary", monthlyNetSalary.split("\\.")[0]);
+            inputParams.put("data_type", data_type);
+            inputParams.put("MORTGAGE", MORTGAGE);
+            return ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID,
+                    SP_MAX_GLOBAL_GET_OPERATION_ID, inputParams, null, dataControllerRequest);
+        } catch (Exception ex) {
+            LOG.error("ERROR getMaxGlobalDTI :: " + ex);
+        }
+        return result;
+    }
+
+    private Result getMaxInternalDTI(String monthlyNetSalary, String data_type, String MORTGAGE, DataControllerRequest dataControllerRequest) {
+        Result result = StatusEnum.error.setStatus();
+        try {
+            Map<String, String> inputParams = new HashMap<>();
+            inputParams.put("monthlyNetSalary", monthlyNetSalary.split("\\.")[0]);
+            inputParams.put("data_type", data_type);
+            inputParams.put("MORTGAGE", MORTGAGE);
+            return ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID,
+                    SP_MAX_INTERNAL_GET_OPERATION_ID, inputParams, null, dataControllerRequest);
+        } catch (Exception ex) {
+            LOG.error("ERROR getMaxInternalDTI :: " + ex);
+        }
+        return result;
+    }
+
+    private Result getCustomerApplicationAndCustomerData(DataControllerRequest dataControllerRequest) {
+        Result result = StatusEnum.error.setStatus();
+        try {
+            Map<String, String> inputParam = new HashMap<>();
+            inputParam.put("applicationID", dataControllerRequest.getParameter("ApplicationID"));
+            return ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, SP_GET_CUSTOMER_APPLICATION_AND_CUSTOMER_DATA_OPERATION_ID, inputParam, null, dataControllerRequest);
+        } catch (Exception ex) {
+            LOG.error("ERROR getCustomerApplicationAndCustomerData :: " + ex);
+            return result;
+        }
+    }
+
+    private void extractValuesFromCustomerApplication(Result customerApplicationAndCustomerData) {
+        try {
+            CUSTOMER_AGE = HelperMethods.getFieldValue(customerApplicationAndCustomerData, "customerAge");
+            INSIDE_KSA = HelperMethods.getFieldValue(customerApplicationAndCustomerData, "insideKsa");
+            SCORECARD_ID = HelperMethods.getFieldValue(customerApplicationAndCustomerData, "scoredCardId");
+            LOAN_AMOUNT = HelperMethods.getFieldValue(customerApplicationAndCustomerData, "loanAmount");
+            TENOR = HelperMethods.getFieldValue(customerApplicationAndCustomerData, "tenor");
+            CUSTOMER_ID = HelperMethods.getFieldValue(customerApplicationAndCustomerData, "Customer_id");
+            PARTY_ID = HelperMethods.getFieldValue(customerApplicationAndCustomerData, "partyId");
+        } catch (Exception ex) {
+            LOG.error("ERROR extractValuesFromCustomerApplication :: " + ex);
+        }
+    }
+
+    private Result getCustomerData(DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
         try {
             Map<String, String> filter = new HashMap<>();
-            // filter.put(DBPUtilitiesConstants.FILTER, "id" + DBPUtilitiesConstants.EQUAL +
-            // CUSTOMER_ID);
-            filter.put(DBPUtilitiesConstants.FILTER, "id" + DBPUtilitiesConstants.EQUAL
-                    + HelperMethods.getFieldValue(getCustomerApplicationData, "Customer_id"));
+            filter.put(DBPUtilitiesConstants.FILTER, "id" + DBPUtilitiesConstants.EQUAL + CUSTOMER_ID);
             Result getCustomerData = ServiceCaller.internalDB(DBXDB_SERVICES_SERVICE_ID, CUSTOMER_GET_OPERATION_ID,
                     filter, null, dataControllerRequest);
             StatusEnum.success.setStatus(getCustomerData);
@@ -2348,20 +2074,12 @@ public class ScoringEngine implements JavaService2 {
         try {
             Result getConsumerEnquiry = ServiceCaller.internal(SIMAH_SERVICE_ID, CONSUMER_ENQUIRY_OPERATION_ID,
                     inputParams, null, dataControllerRequest);
+            StatusEnum.success.setStatus(getConsumerEnquiry);
             String inputRequest = (new ObjectMapper()).writeValueAsString(inputParams);
             String outputResponse = ResultToJSON.convert(getConsumerEnquiry);
             auditLogData(dataControllerRequest, inputRequest, outputResponse,
                     SIMAH_SERVICE_ID + " : " + CONSUMER_ENQUIRY_OPERATION_ID);
-
-            String optstatus = getConsumerEnquiry.getParamValueByName("opstatus");
-            String httpstatusCode = getConsumerEnquiry.getParamValueByName("httpStatusCode");
-            if (httpstatusCode.equals("200") && optstatus.equals("0")) {
-                StatusEnum.success.setStatus(getConsumerEnquiry);
-                return getConsumerEnquiry;
-            } else {
-                result = StatusEnum.error.setStatus();
-                return result;
-            }
+            return getConsumerEnquiry;
         } catch (Exception ex) {
             LOG.error("ERROR getSIMAHConsumerEnquiry :: " + ex);
         }
@@ -2389,8 +2107,7 @@ public class ScoringEngine implements JavaService2 {
     private Result getNationalAddress(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
         Result result = StatusEnum.error.setStatus();
         try {
-            // inputParams.put("nin", NATIONAL_ID);
-            inputParams.put("nin", dataControllerRequest.getParameter("NationalID"));
+            inputParams.put("nin", NATIONAL_ID);
             inputParams.put("dateOfBirth", DOB);
             LOG.error("getNationalAddress input param " + inputParams);
             Result getNationalAddress = ServiceCaller.internal(YAKEEN_SOAP_API_SERVICE_ID,
@@ -2478,12 +2195,12 @@ public class ScoringEngine implements JavaService2 {
             } else {
                 ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, TBL_EMPLOYER_DETAILS_CREATE_OPERATION_ID,
                         inputParams, null, dataControllerRequest);
-
             }
         } catch (Exception ex) {
             LOG.error("ERROR createEmployerDetails :: " + ex);
         }
     }
+
 
     private Result updateCustomerApplicationData(Map<String, String> inputParams,
                                                  DataControllerRequest dataControllerRequest, String knockOutStage, String failureReason) {
