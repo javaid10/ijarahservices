@@ -1,5 +1,6 @@
 package com.ijarah.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ijarah.utils.IjarahHelperMethods;
 import com.ijarah.utils.ServiceCaller;
 import com.ijarah.utils.enums.IjarahErrors;
@@ -12,15 +13,18 @@ import com.konylabs.middleware.controller.DataControllerResponse;
 import com.konylabs.middleware.dataobject.Record;
 import com.konylabs.middleware.dataobject.Result;
 import com.konylabs.middleware.dataobject.ResultToJSON;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 import static com.ijarah.utils.IjarahHelperMethods.*;
 import static com.ijarah.utils.ServiceCaller.auditLogData;
@@ -239,6 +243,13 @@ public class ScoringEngine implements JavaService2 {
             String knockoutStatus = getScoreCardS3.getParamValueByName("applicationStatus").equalsIgnoreCase("PASS") ? "success" : "failed";
             String applicationStatus = getScoreCardS3.getParamValueByName("applicationStatus").equalsIgnoreCase("PASS") ? "SID_PRO_ACTIVE" : "SID_SUSPENDED";
 
+            //SUSPEND APPLICATION IF MONTHLY REPAY IS NULL
+            String monthlyRepay = HelperMethods.getFieldValue(getCustomerApplicationData, "monthlyRepay");
+            if (StringUtils.isEmpty(monthlyRepay)) {
+                knockoutStatus = "failed";
+                applicationStatus = "SID_SUSPENDED";
+            }
+
             inputParams.put("isknockoutTnC", HelperMethods.getFieldValue(getCustomerApplicationData, "isknockoutTnC"));
             inputParams.put("lastmodifiedts", IjarahHelperMethods.getDate(LocalDateTime.now(), DATE_FORMAT_WITH_SECONDS_MS));
             inputParams.put("productId", HelperMethods.getFieldValue(getCustomerApplicationData, "productId"));
@@ -254,7 +265,7 @@ public class ScoringEngine implements JavaService2 {
             inputParams.put("tenor", getScoreCardS3.getParamValueByName("tenor"));
             inputParams.put("knockoutStatus", knockoutStatus);
             inputParams.put("applicationStatus", applicationStatus);
-            inputParams.put("monthlyRepay", HelperMethods.getFieldValue(getCustomerApplicationData, "monthlyRepay"));
+            inputParams.put("monthlyRepay", monthlyRepay);
             //inputParams.put("loanAmount", HelperMethods.getFieldValue(getCustomerApplicationData, "loanAmount"));
             inputParams.put("isknockouts1", HelperMethods.getFieldValue(getCustomerApplicationData, "isknockouts1"));
             inputParams.put("approx", HelperMethods.getFieldValue(getCustomerApplicationData, "approx"));
