@@ -27,6 +27,7 @@ import com.konylabs.middleware.controller.DataControllerResponse;
 import com.konylabs.middleware.dataobject.JSONToResult;
 import com.konylabs.middleware.dataobject.Result;
 import com.konylabs.middleware.dataobject.ResultToJSON;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
 
@@ -1250,6 +1251,12 @@ public class ScoringEngine implements JavaService2 {
 			inputParams.put("applicationStatus", "SID_SUSPENDED");
 		}
 		
+
+		//SUSPEND APPLICATION IF MONTHLY REPAY IS NULL OR EMPTY
+		if (StringUtils.isEmpty(EMI)) {
+			inputParams.put("knockoutStatus", "FAIL");
+			inputParams.put("applicationStatus", "SID_SUSPENDED");
+		}
 
 		return inputParams;
 	}
