@@ -37,7 +37,9 @@ public enum IjarahErrors {
 
     ERR_GET_REAPPLY_DATE_SERVICE_FAILED_038("038", "Get Re Apply Date Failed Service Failed."),
     ERR_GET_CUSTOMER_APPLICATION_SERVICE_FAILED_039("039", "Get Customer Application Journey Service Failed."),
-    ERR_GET_SANAD_ITERATION_SERVICE_FAILED_040("040", "Get Sanad Iteration Failed.");
+    ERR_GET_SANAD_ITERATION_SERVICE_FAILED_040("040", "Get Sanad Iteration Failed."),
+    ERR_MIS_REPORT_SERVICE_FAILED_041("041", "MIS Report Service Failed."),
+    ERR_MIS_REPORT_NO_RECORD_AVAILABLE_042("042", "No Record Available.");
 
     public static final String ERROR_CODE_KEY = "dbpErrCode";
     public static final String ERROR_MESSAGE_KEY = "dbpErrMsg";

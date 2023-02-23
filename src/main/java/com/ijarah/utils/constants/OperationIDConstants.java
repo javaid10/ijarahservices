@@ -71,7 +71,10 @@ public class OperationIDConstants {
     public static final String MIS_REPORT_UPDATE_OPERATION_ID = "mis_report_update";
     public static final String SP_MAX_GLOBAL_GET_OPERATION_ID = "sp_getDTIValue";
     public static final String SP_MAX_INTERNAL_GET_OPERATION_ID = "sp_getInternalDTIValue";
+    public static final String SP_GET_CUSTOMER_INFO_FROM_TO_OPERATION_ID = "sp_get_customer_info_from_to";
+    public static final String SP_GET_CUSTOMER_INFO_DATE_OPERATION_ID = "sp_get_customer_info_date";
+    public static final String SP_GET_CUSTOMER_INFO_NATIONAL_ID_OPERATION_ID = "sp_get_customer_info_nationalId";
+    public static final String SP_GET_CUSTOMER_INFO_MOBILE_OPERATION_ID = "sp_get_customer_info_mobile";
+    public static final String SP_GET_CUSTOMER_INFO_APPLICATION_ID_OPERATION_ID = "sp_get_customer_info_applicationID";
+    public static final String SP_CUSTOMER_INFO_VIEW_OPERATION_ID = "customer_info";
 }
-
-
-
