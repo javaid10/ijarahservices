@@ -57,7 +57,10 @@ public class CreateLoan implements JavaService2 {
 	public Object invoke(String s, Object[] objects, DataControllerRequest dataControllerRequest,
 			DataControllerResponse dataControllerResponse) throws Exception {
 		LOG.debug("======> CreateLoan - Begin ");
+		// 14/02/2023 Fetch token from DB
 		String accessToken = "";
+		accessToken = fetchNafaesTokenFromDB();
+		
 		Result result = StatusEnum.error.setStatus();
 		IjarahErrors.ERR_CREATE_LOAN_002.setErrorCode(result);
 
@@ -81,13 +84,15 @@ public class CreateLoan implements JavaService2 {
 						if (!nafaesData.get("transferOrderStatus").equals("2")
 								&& !nafaesData.get("transferOrderStatus").equals("1")) {
 
-							// 06/01/2022 revert back to the old token
-							//accessToken = getAccessToken(dataControllerRequest);
-							accessToken = nafaesData.get("accessToken");
+							// 14/02/2023 Fetch token from DB
+							//accessToken = fetchNafaesTokenFromDB();
+							//accessToken = nafaesData.get("accessToken");
 							LOG.debug("======> accessToken:  " + accessToken);
 
 							transferOrder = callTransferOrder(accessToken, nafaesData.get("referenceId"),
 									dataControllerRequest);
+							
+							
 						}
 						LOG.debug("======> Transfer Order Result 1 " + ResultToJSON.convert(transferOrder));
 
@@ -98,11 +103,11 @@ public class CreateLoan implements JavaService2 {
 
 						if (nafaesData.get("transferOrderStatus").equals("2")
 								|| StringUtils.equalsAnyIgnoreCase("success", transferOrderStatus)) {
-							Result transferOrderresult = callTransferOrderResult(nafaesData.get("accessToken"),
+							Result transferOrderresult = callTransferOrderResult(accessToken,
 									nafaesData.get("referenceId"), dataControllerRequest);
 							LOG.debug("======> Transfer Order Result 2 " + ResultToJSON.convert(transferOrderresult));
 							String transferOrderResult_Status = transferOrderresult.getParamValueByName("status");
-							if (!StringUtils.equalsAnyIgnoreCase("success", transferOrderResult_Status)) {
+							if (!transferOrderResult_Status.equalsIgnoreCase("success")) {
 								// Updating the transfer Order status to 2 in Nafaes Table. So that it will pick
 								// the record again in the next batch process
 								updateTransferOrder(nafaesData.get("id"), "2");
@@ -357,7 +362,7 @@ public class CreateLoan implements JavaService2 {
 			inputParams.put("amount",
 					customerApplicationData.getRecord(index).getParamValueByName("offerAmount").replace(",", ""));
 			inputParams.put("fixed", customerApplicationData.getRecord(index).getParamValueByName("loanRate"));
-			inputParams.put("term", customerApplicationData.getRecord(index).getParamValueByName("tenor") + "M");
+			inputParams.put("maturityDate", customerApplicationData.getRecord(index).getParamValueByName("maturityDate"));
 			inputParams.put("sabbNumber",
 					StringUtils.isNotBlank(customerApplicationData.getRecord(index).getParamValueByName("sabbNumber"))
 							? customerApplicationData.getRecord(index).getParamValueByName("sabbNumber")
@@ -619,27 +624,25 @@ public class CreateLoan implements JavaService2 {
 		}
 	}
 
-	private static String getAccessToken(DataControllerRequest dataControllerRequest) {
-		LOG.debug("==========> Nafaes - excuteLogin - Begin");
-		String authToken = null;
+	private static String fetchNafaesTokenFromDB() {
+		String nafToken = "";
 
-		String loginURL = EnvironmentConfig.CUSTOM_NAFAES_URL.getValue(dataControllerRequest)
-				+ "oauth/token?grant_type=password" + "&username="
-				+ EnvironmentConfig.NAFAES_USERNAME.getValue(dataControllerRequest) + "&client_id="
-				+ EnvironmentConfig.NAFAES_CLIENT_ID.getValue(dataControllerRequest);
-		LOG.debug("==========> Login URL  :: " + loginURL);
-		HashMap<String, String> paramsMap = new HashMap<>();
-		paramsMap.put("password", EnvironmentConfig.NAFAES_PASSWORD.getValue(dataControllerRequest));
-		paramsMap.put("client_secret", EnvironmentConfig.NAFAES_CLIENT_SECRET.getValue(dataControllerRequest));
+		HashMap<String, Object> inpUpdate = new HashMap();
 
-		HashMap<String, String> headersMap = new HashMap<String, String>();
+		try {
+			String res = DBPServiceExecutorBuilder.builder().withServiceId("DBMoraServices")
+					.withOperationId("dbxdb_nafaesToken_get").withRequestParameters(inpUpdate).build().getResponse();
 
-		String endPointResponse = HTTPOperations.hitPOSTServiceAndGetResponse(loginURL, paramsMap, null, headersMap);
-		JSONObject responseJson = getStringAsJSONObject(endPointResponse);
-		LOG.debug("==========> responseJson :: " + responseJson);
-		authToken = responseJson.getString("access_token");
-		LOG.debug("==========> authToken :: " + authToken);
-		LOG.debug("==========> Nafaes - excuteLogin - End");
-		return authToken;
+			JSONObject jsonObject = new JSONObject(res);
+
+			if (jsonObject != null && jsonObject.optJSONArray("nafaesToken").length() > 0)
+				nafToken = jsonObject.optJSONArray("nafaesToken").optJSONObject(0).optString("token");
+
+		} catch (DBPApplicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		LOG.debug("======>fetchNafaesTokenFromDB: " + nafToken);
+		return nafToken;
 	}
 }

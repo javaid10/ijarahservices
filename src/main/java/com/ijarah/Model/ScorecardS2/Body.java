@@ -39,6 +39,9 @@ public class Body{
 
 	@SerializedName("loanRate")
 	private double loanRate;
+	
+	@SerializedName("employeeCategory")
+	private String employeeCategory;
 
 	public String getApplicationCategory(){
 		return applicationCategory;
@@ -86,5 +89,9 @@ public class Body{
 
 	public double getLoanRate(){
 		return loanRate;
+	}
+	
+	public String getEmployeeCAtegory(){
+		return employeeCategory;
 	}
 }

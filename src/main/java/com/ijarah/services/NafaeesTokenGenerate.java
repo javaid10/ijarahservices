@@ -90,7 +90,7 @@ public class NafaeesTokenGenerate implements JavaService2 {
 
 		try {
 			String res = DBPServiceExecutorBuilder.builder().withServiceId("DBMoraServices")
-					.withOperationId("dbxdb_nafaesToken_create").withRequestParameters(inpUpdate).build().getResponse();
+					.withOperationId("dbxdb_nafaesToken_update").withRequestParameters(inpUpdate).build().getResponse();
 
 			JSONObject jsonObject = new JSONObject(res);
 
