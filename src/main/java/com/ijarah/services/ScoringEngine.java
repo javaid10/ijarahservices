@@ -1253,7 +1253,7 @@ public class ScoringEngine implements JavaService2 {
 		
 
 		//SUSPEND APPLICATION IF MONTHLY REPAY IS NULL OR EMPTY
-		if (StringUtils.isEmpty(EMI)) {
+		if (StringUtils.isEmpty(EMI) || EMI.equalsIgnoreCase("0")) {
 			inputParams.put("knockoutStatus", "FAIL");
 			inputParams.put("applicationStatus", "SID_SUSPENDED");
 		}
