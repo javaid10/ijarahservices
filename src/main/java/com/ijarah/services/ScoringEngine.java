@@ -27,6 +27,7 @@ import com.konylabs.middleware.controller.DataControllerResponse;
 import com.konylabs.middleware.dataobject.JSONToResult;
 import com.konylabs.middleware.dataobject.Result;
 import com.konylabs.middleware.dataobject.ResultToJSON;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
 
@@ -152,6 +153,7 @@ public class ScoringEngine implements JavaService2 {
 		MONTHLY_NET_SALARY = "0";
 		SALARY_WITHOUT_ALLOWANCES = "0";
 		DOB = "";
+		EMI = "";
 
 		try {
 			EMPLOYER_CATEGORISATION = "";
@@ -1291,6 +1293,13 @@ public class ScoringEngine implements JavaService2 {
 			inputParams.put("applicationStatus", "SID_SUSPENDED");
 		}
 
+		//SUSPEND APPLICATION IF MONTHLY REPAY IS NULL OR EMPTY
+		if (StringUtils.isEmpty(EMI) || EMI.equalsIgnoreCase("0")) {
+			inputParams.put("knockoutStatus", "FAIL");
+			inputParams.put("applicationStatus", "SID_SUSPENDED");
+		}
+		
+		
 		saveMISReportData(createRequestForMISReportDBCall(inputParams.get("knockoutStatus").toString(), maxEMI,
 				customerGblDti, customerInternalDti, calMAXGblDti, calMAXinternalDti, request), request);
 		return inputParams;
