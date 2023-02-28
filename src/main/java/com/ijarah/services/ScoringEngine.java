@@ -29,6 +29,7 @@ import com.konylabs.middleware.dataobject.Result;
 import com.konylabs.middleware.dataobject.ResultToJSON;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -50,8 +51,8 @@ public class ScoringEngine implements JavaService2 {
 
 	private static final Logger LOG = Logger.getLogger(ScoringEngine.class);
 	Map<String, String> inputParams = new HashMap<>();
-	String MONTHLY_NET_SALARY = "0";
-	String CURRENT_LENGTH_OF_SERVICE = "0";
+	// String MONTHLY_NET_SALARY = "0";
+	// String CURRENT_LENGTH_OF_SERVICE = "0";
 	String GLOBAL_DTI = "";
 	String INTERNAL_DTI = "";
 	String CURRENT_DELINQUENCY = "1";
@@ -60,17 +61,17 @@ public class ScoringEngine implements JavaService2 {
 	String NON_FINANCIAL_DEFAULT_AMOUNT = "0";
 	String BOUNCED_CHEQUE = "NB";
 	String COURT_JUDGEMENT = "NJ";
-	String EMPLOYER_CATEGORISATION = "NULL";
+	// String EMPLOYER_CATEGORISATION = "NULL";
 	String MAX_LOAN_AMOUNT_CAPPING = "";
-	String MANAGING_SEASONAL_AND_TEMPORARY_LIFT_IN_SALARY = "0";
+	// String MANAGING_SEASONAL_AND_TEMPORARY_LIFT_IN_SALARY = "0";
 	String NEW_TO_INDUSTRY = "";
-	String SALARY_WITHOUT_ALLOWANCES = "0";
+	// String SALARY_WITHOUT_ALLOWANCES = "0";
 	String INSIDE_KSA = "";
 	String NATIONALITY = "SA";
 	String AMOUNT_OFFER = "";
 
-	String EMPLOYER_TYPE_ID = "1";
-	String EMPLOYMENT_STATUS = "";
+	// String EMPLOYER_TYPE_ID = "1";
+	// String EMPLOYMENT_STATUS = "";
 
 	String[] MORTGAGE_PRODUCT;
 	String[] CREDIT_CARD_PRODUCT = { "CDC", "CHC", "CRC", "LCRC" };
@@ -88,7 +89,7 @@ public class ScoringEngine implements JavaService2 {
 
 	private String CALCULATE = "YES";
 
-	private String PENSIONER = "0";
+	// private String PENSIONER = "0";
 
 	private String CUSTOMER_AGE = "";
 
@@ -101,7 +102,7 @@ public class ScoringEngine implements JavaService2 {
 	private String LOAN_AMOUNT = "";
 
 	private String APROX = "";
-	private String EMPLOYER_NAME = "-";
+	// private String EMPLOYER_NAME = "-";
 	private List<CIDETAILItem> CI_DETAIL = null;
 	private List<DEFAULTItem> DEFAULT = null;
 	private List<BOUNCEDCHECKItem> BOUNCED_CHECK = null;
@@ -150,13 +151,14 @@ public class ScoringEngine implements JavaService2 {
 		INSTALLMENT_AMOUNT = new StringBuilder();
 		LIMIT_AMOUNT = new StringBuilder();
 		CI_SUMMARY = new StringBuilder();
-		MONTHLY_NET_SALARY = "0";
-		SALARY_WITHOUT_ALLOWANCES = "0";
+		// MONTHLY_NET_SALARY = "0";
+		// SALARY_WITHOUT_ALLOWANCES = "0";
 		DOB = "";
 		EMI = "";
-
+		JSONObject mainSalaryObject = new JSONObject();
+		mainSalaryObject.put("Monthly_Net_Salary", "0");
 		try {
-			EMPLOYER_CATEGORISATION = "";
+			// EMPLOYER_CATEGORISATION = "";
 			inputParams = HelperMethods.getInputParamMap(objects);
 			IjarahErrors.ERR_PREPROCESS_INVALID_INPUT_PARAMS_001.setErrorCode(result);
 
@@ -164,28 +166,24 @@ public class ScoringEngine implements JavaService2 {
 				LOG.error("preProcess  :: ");
 				// DB INTEGRATION SERVICES CALLS
 				Result getCustomerApplicationData = getCustomerApplicationData(dataControllerRequest);
-
 				Result getCustomerData = getCustomerData(dataControllerRequest, getCustomerApplicationData);
 
 				// 3RD PARTY INTEGRATION SERVICES CALLS
-
-				EMPLOYER_TYPE_ID = "1";
 				Result getSalaryCertificate = getSIMAHSalaryCertificate(createRequestForSIMAHSALARY(getCustomerData,
-						EMPLOYER_TYPE_ID, dataControllerRequest.getParameter("NationalID")), dataControllerRequest);
+						"1", dataControllerRequest.getParameter("NationalID")), dataControllerRequest);
+
 				if (IjarahHelperMethods.isBlank(getSalaryCertificate.getParamValueByName("payMonth"))) {
 					LOG.error("PRIVATE EMPLOYEE");
-					EMPLOYER_TYPE_ID = "3";
-					EMPLOYER_CATEGORISATION = "P";
-					getSalaryCertificate = getSIMAHSalaryCertificate(createRequestForSIMAHSALARY(getCustomerData,
-							EMPLOYER_TYPE_ID, dataControllerRequest.getParameter("NationalID")), dataControllerRequest);
+				//	mainSalaryObject.put("CustomerCategory", "P");
+					getSalaryCertificate = getSIMAHSalaryCertificate(createRequestForSIMAHSALARY(getCustomerData, "3",
+							dataControllerRequest.getParameter("NationalID")), dataControllerRequest);
 				} else {
 					LOG.error("GOVT EMPLOYEE");
-					EMPLOYER_TYPE_ID = "1";
-					EMPLOYER_CATEGORISATION = "G";
+					mainSalaryObject.put("CustomerCategory", "G");
 				}
 
-				if (Integer.parseInt(getSalaryCertificate.getParamValueByName("opstatus_getToken")) != 0
-						|| !Boolean.parseBoolean(getSalaryCertificate.getParamValueByName("isSuccess"))) {
+				// check salary is come or not
+				if (!checkSalaryIsCameOrNot(getSalaryCertificate)) {
 					LOG.error("Simah Failed to fetch Salary  :: ");
 					result = updateCustomerApplicationData(
 							createRequestForUpdateCustomerApplicationDataServiceS2(getCustomerApplicationData,
@@ -193,24 +191,45 @@ public class ScoringEngine implements JavaService2 {
 							dataControllerRequest, "SIMAH", "Simah Failed to Fetch Salary");
 					return result;
 				}
-				// CALCULATION OF SCORING ENGINES
-				initEmployerNamesForPensionerArray(dataControllerRequest);
-				calculatePensioner(getSalaryCertificate);
-				calculateCurrentLengthOfService(getSalaryCertificate);
-				getEmployerName(getSalaryCertificate);
-				calculateManagingSeasonalAndTemporaryLiftInSalary(getSalaryCertificate);
-				boolean checkSalaryBool = calculateMonthlyNetSalary(getSalaryCertificate);
-				LOG.error("checkSalaryBool :: " + checkSalaryBool);
-				if (!checkSalaryBool) {
-					LOG.error("Failed due to User Non Active :: ");
-					result = updateCustomerApplicationData(
-							createRequestForUpdateCustomerApplicationDataServiceS2(getCustomerApplicationData,
-									dataControllerRequest),
-							dataControllerRequest, "Salary Certificate", "Failed Due To User Non-Active");
-					return result;
+
+				JSONObject jsonObjectSal = new JSONObject(ResultToJSON.convert(getSalaryCertificate));
+				LOG.error("Salary Certificate json = " + jsonObjectSal);
+
+				JSONObject jsonDataObj = jsonObjectSal.optJSONObject("data");
+				if (mainSalaryObject.optString("CustomerCategory").equalsIgnoreCase("G")) {
+					// Add government salary
+					mainSalaryObject.put("SalaryObject",
+							jsonObjectSal.optJSONArray("governmentSector").optJSONObject(0));
+					String lengthOfService = calculateCurrentGovernmentLengthOfService(mainSalaryObject);
+					mainSalaryObject.put("los", lengthOfService);
+				} else {
+
+					if (!calculationOnPvtSalary(jsonObjectSal, mainSalaryObject)) {
+						// Customer has no pvt salary and pension
+						LOG.error("Simah has no Pvt & pension salary :: ");
+						result = updateCustomerApplicationData(
+								createRequestForUpdateCustomerApplicationDataServiceS2(getCustomerApplicationData,
+										dataControllerRequest),
+								dataControllerRequest, "SIMAH", "No Salary is present");
+						return result;
+					}
+
+				}
+				String employerName = getEmployerName(mainSalaryObject);
+				mainSalaryObject.put("Employer_Name", employerName);
+
+				String manageLiftSalary = calculateManagingSeasonalAndTemporaryLiftInSalary(mainSalaryObject);
+				mainSalaryObject.put("Manage_Lift_Salary", manageLiftSalary);
+
+				JSONObject calculatedSalObj = calculateMonthlyNetSalary(mainSalaryObject);
+				if (calculatedSalObj.optBoolean("check")) {
+					mainSalaryObject.put("Monthly_Net_Salary", calculatedSalObj.optString("Monthly_Net_Salary"));
+				} else {
+					// return the application
 				}
 
-				calculateSalaryWithoutAllowances(getSalaryCertificate);
+				String salaryWithoutAllowance = calculateSalaryWithoutAllowances(mainSalaryObject);
+				mainSalaryObject.put("Salary_Without_Allowence", salaryWithoutAllowance);
 
 				Result getNationalAddress = getNationalAddress(inputParams, dataControllerRequest);
 
@@ -221,13 +240,77 @@ public class ScoringEngine implements JavaService2 {
 						dataControllerRequest);
 
 				createEmployerDetails(
-						createRequestForCreateEmployerDetailsService(getSalaryCertificate, dataControllerRequest),
+						createRequestForCreateEmployerDetailsService(mainSalaryObject, dataControllerRequest),
 						dataControllerRequest);
-				createT24CustomerEmployeeDetails(
-						createRequestForT24CustomerEmployeeDetailsService(getSalaryCertificate), dataControllerRequest);
+				createT24CustomerEmployeeDetails(createRequestForT24CustomerEmployeeDetailsService(mainSalaryObject),
+						dataControllerRequest);
+
+				/**************************************************************************************/
+//				EMPLOYER_TYPE_ID = "1";
+//				Result getSalaryCertificate = getSIMAHSalaryCertificate(createRequestForSIMAHSALARY(getCustomerData,
+//						EMPLOYER_TYPE_ID, dataControllerRequest.getParameter("NationalID")), dataControllerRequest);
+//				if (IjarahHelperMethods.isBlank(getSalaryCertificate.getParamValueByName("payMonth"))) {
+//					LOG.error("PRIVATE EMPLOYEE");
+//					EMPLOYER_TYPE_ID = "3";
+//					EMPLOYER_CATEGORISATION = "P";
+//					getSalaryCertificate = getSIMAHSalaryCertificate(createRequestForSIMAHSALARY(getCustomerData,
+//							EMPLOYER_TYPE_ID, dataControllerRequest.getParameter("NationalID")), dataControllerRequest);
+//				} else {
+//					LOG.error("GOVT EMPLOYEE");
+//					EMPLOYER_TYPE_ID = "1";
+//					EMPLOYER_CATEGORISATION = "G";
+//				}
+//
+//				if (Integer.parseInt(getSalaryCertificate.getParamValueByName("opstatus_getToken")) != 0
+//						|| !Boolean.parseBoolean(getSalaryCertificate.getParamValueByName("isSuccess"))) {
+//					LOG.error("Simah Failed to fetch Salary  :: ");
+//					result = updateCustomerApplicationData(
+//							createRequestForUpdateCustomerApplicationDataServiceS2(getCustomerApplicationData,
+//									dataControllerRequest),
+//							dataControllerRequest, "SIMAH", "Simah Failed to Fetch Salary");
+//					return result;
+//				}
+//				// CALCULATION OF SCORING ENGINES
+//				initEmployerNamesForPensionerArray(dataControllerRequest);
+//				calculatePensioner(getSalaryCertificate);
+//				calculateCurrentLengthOfService(getSalaryCertificate);
+//				getEmployerName(getSalaryCertificate);
+//				calculateManagingSeasonalAndTemporaryLiftInSalary(getSalaryCertificate);
+//				boolean checkSalaryBool = calculateMonthlyNetSalary(getSalaryCertificate);
+//				LOG.error("checkSalaryBool :: " + checkSalaryBool);
+//				if (!checkSalaryBool) {
+//					LOG.error("Failed due to User Non Active :: ");
+//					result = updateCustomerApplicationData(
+//							createRequestForUpdateCustomerApplicationDataServiceS2(getCustomerApplicationData,
+//									dataControllerRequest),
+//							dataControllerRequest, "Salary Certificate", "Failed Due To User Non-Active");
+//					return result;
+//				}
+//
+//				calculateSalaryWithoutAllowances(getSalaryCertificate);
+//				
+//				
+//				
+//		
+//
+//				Result getNationalAddress = getNationalAddress(inputParams, dataControllerRequest);
+//
+//				createCustomerAddress(
+//						createRequestForCreateCustomerAddressService(getNationalAddress, dataControllerRequest),
+//						dataControllerRequest);
+//				createT24CustomerAddressUpdate(createRequestForT24CustomerAddressUpdateService(getNationalAddress),
+//						dataControllerRequest);
+//
+//				createEmployerDetails(
+//						createRequestForCreateEmployerDetailsService(getSalaryCertificate, dataControllerRequest),
+//						dataControllerRequest);
+//				createT24CustomerEmployeeDetails(
+//						createRequestForT24CustomerEmployeeDetailsService(getSalaryCertificate), dataControllerRequest);
+
+				/*******************************************************************************/
 
 				// 3RD PARTY INTEGRATION SERVICES CALLS
-				Result getScoreCardS2 = calculateScoreCardS2(createRequestForScoreCardS2Service(getSalaryCertificate,
+				Result getScoreCardS2 = calculateScoreCardS2(createRequestForScoreCardS2Service(mainSalaryObject,
 						dataControllerRequest, getCustomerApplicationData), dataControllerRequest);
 				Gson gsonS2 = new Gson();
 				ScoreCardS2 scoreCardS2 = gsonS2.fromJson(ResultToJSON.convert(getScoreCardS2), ScoreCardS2.class);
@@ -240,19 +323,19 @@ public class ScoringEngine implements JavaService2 {
 									createRequestForUpdateCustomerApplicationDataServiceS2(getCustomerApplicationData,
 											dataControllerRequest),
 									dataControllerRequest, "S2", "Score Card S2 Failed");
-							saveMISReportData(createRequestForMISReportDBCallSCorecard2(dataControllerRequest, "FAIL", scoreCardS2.getBody().getEmployeeCAtegory()),
-									dataControllerRequest);
+							saveMISReportData(createRequestForMISReportDBCallSCorecard2(dataControllerRequest, "FAIL",
+									scoreCardS2.getBody().getEmployeeCAtegory(), mainSalaryObject), dataControllerRequest);
 							return result;
 
 						} else {
-							saveMISReportData(createRequestForMISReportDBCallSCorecard2(dataControllerRequest, "PASS", scoreCardS2.getBody().getEmployeeCAtegory()),
-									dataControllerRequest);
+							saveMISReportData(createRequestForMISReportDBCallSCorecard2(dataControllerRequest, "PASS",
+									scoreCardS2.getBody().getEmployeeCAtegory(), mainSalaryObject), dataControllerRequest);
 						}
 					}
 				}
 
 				Result getConsumerEnquiry = getSIMAHConsumerEnquiry(
-						createRequestForConsumerEnquiryService(inputParams, getCustomerData, getSalaryCertificate,
+						createRequestForConsumerEnquiryService(inputParams, getCustomerData, mainSalaryObject,
 								dataControllerRequest, getCustomerApplicationData, getNationalAddress),
 						dataControllerRequest);
 
@@ -296,18 +379,45 @@ public class ScoringEngine implements JavaService2 {
 				calculateCurrentDelinquencyAndCurrentDelinquencyT();
 				calculateMaxDelinquency();
 
-				calculateMaxLoanAmountCapping();
+				calculateMaxLoanAmountCapping(mainSalaryObject);
 				calculateNewToIndustry();
 
-				int calMAXGblDti = calculateMaxGlobalDTI(dataControllerRequest);
-				int calMAXinternalDti = calculateMaxInternalDTI(dataControllerRequest);
+				JSONObject checkDTIBool = new JSONObject();
+				int calMAXGblDti = 0;
+				int calMAXinternalDti = 0;
+				double customerInternalDti = 0.0;
+				double customerGblDti = 0.0;
+				
+				String pensionerEMI = "0";
+				String pvtPensEMI = "0";
+				String totalEMI = "0";
+				if (mainSalaryObject.optString("isPensioner").equals("1")) {
+					 pensionerEMI = calculatePensionerEMI(mainSalaryObject.optJSONObject("pensionerSalary"));
+					
+					if(mainSalaryObject.optBoolean("Other_Salary_Present")) {
+						pvtPensEMI = calculateEMIForPvtAndPensioner(mainSalaryObject);
+					}
+					
+					
+					 totalEMI = String.valueOf(Double.parseDouble(pensionerEMI) + Double.parseDouble(pvtPensEMI));
+					
+					
+					
+				} else {
+					calMAXGblDti = calculateMaxGlobalDTI(dataControllerRequest, mainSalaryObject);
+					calMAXinternalDti = calculateMaxInternalDTI(dataControllerRequest, mainSalaryObject);
+					
+					
+				}
+				customerInternalDti = calculateInternalDTI(calMAXinternalDti, mainSalaryObject);
+				checkDTIBool = calculateGlobalDTI(calMAXGblDti, mainSalaryObject);
+				customerGblDti = checkDTIBool.optDouble("customerGblDti");
+				 
 
-				double customerInternalDti = calculateInternalDTI(calMAXinternalDti);
+			    
+				
 
-				JSONObject checkDTIBool = calculateGlobalDTI(calMAXGblDti);
-				double customerGblDti = checkDTIBool.optDouble("customerGblDti");
-
-				double maxEMI = calculateMaxEmi(calMAXGblDti, calMAXinternalDti, customerGblDti, customerInternalDti);
+				double maxEMI = calculateMaxEmi(calMAXGblDti, calMAXinternalDti, customerGblDti, customerInternalDti, mainSalaryObject);
 
 				LOG.error("check customerInternalDti DTI :: " + customerInternalDti);
 				LOG.error("checkDTIBool DTI :: " + checkDTIBool);
@@ -318,21 +428,20 @@ public class ScoringEngine implements JavaService2 {
 									dataControllerRequest),
 							dataControllerRequest, "DTI Calculation", "Failed due to higher DTI");
 
-					saveMISReportData(createRequestForMISReportDBCall(null, maxEMI, customerGblDti,
-							customerInternalDti, calMAXGblDti, calMAXinternalDti, dataControllerRequest),
-							dataControllerRequest);
+					saveMISReportData(createRequestForMISReportDBCall(null, maxEMI, customerGblDti, customerInternalDti,
+							calMAXGblDti, calMAXinternalDti, dataControllerRequest, mainSalaryObject), dataControllerRequest);
 
 					return result;
 				}
 
 				Result getScoreCardS3 = calculateScoreCardS3(createRequestForScoreCardS3Service(getConsumerEnquiry,
-						getCustomerApplicationData, getCustomerData, dataControllerRequest), dataControllerRequest);
+						getCustomerApplicationData, getCustomerData, dataControllerRequest, mainSalaryObject), dataControllerRequest);
 
 				// DB INTEGRATION SERVICES CALLS
 				result = updateCustomerApplicationData(
 						createRequestForUpdateCustomerApplicationDataService(getCustomerApplicationData, getScoreCardS2,
 								getScoreCardS3, dataControllerRequest, maxEMI, calMAXGblDti, calMAXinternalDti,
-								customerGblDti, customerInternalDti),
+								customerGblDti, customerInternalDti, mainSalaryObject),
 						dataControllerRequest, "S3", "Application Declined");
 			}
 
@@ -341,6 +450,16 @@ public class ScoringEngine implements JavaService2 {
 			LOG.error("ERROR invoke :: " + ex.getMessage());
 			return result;
 		}
+	}
+
+	private boolean checkSalaryIsCameOrNot(Result getSalaryCertificate) {
+		boolean check = true;
+		if (Integer.parseInt(getSalaryCertificate.getParamValueByName("opstatus_getToken")) != 0
+				|| !Boolean.parseBoolean(getSalaryCertificate.getParamValueByName("isSuccess"))) {
+			check = false;
+		}
+
+		return check;
 	}
 
 	private void initMortgageProductArray(DataControllerRequest dataControllerRequest) {
@@ -625,26 +744,32 @@ public class ScoringEngine implements JavaService2 {
 		return inputParams;
 	}
 
-	private Map<String, String> createRequestForT24CustomerEmployeeDetailsService(Result getSalaryCertificate) {
+	private Map<String, String> createRequestForT24CustomerEmployeeDetailsService(JSONObject getSalaryCertificate) {
 
 		Map<String, String> inputParams = new HashMap<>();
 
 		inputParams.put("partyId", PARTY_ID);
 
-		LOG.error("ID =====>>>" + EMPLOYER_TYPE_ID);
-		switch (EMPLOYER_TYPE_ID) {
-		case "1":
+		LOG.error("ID =====>>>" + getSalaryCertificate.optString("CustomerCategory"));
+		switch (getSalaryCertificate.optString("CustomerCategory")) {
+		case "G":
 
-			String basic = getSalaryCertificate.getParamValueByName("basicSalary");
-			String allowence = getSalaryCertificate.getParamValueByName("totalAllownces");
-			String deduc = getSalaryCertificate.getParamValueByName("totalDeductions");
+			String basic = getSalaryCertificate.optJSONObject("SalaryObject").optJSONObject("employerInfo")
+					.optString("basicSalary");
+			String allowence = getSalaryCertificate.optJSONObject("SalaryObject").optJSONObject("employerInfo")
+					.optString("totalAllownces");
+			String deduc = getSalaryCertificate.optJSONObject("SalaryObject").optJSONObject("employerInfo")
+					.optString("totalDeductions");
 
 			String netsalary = String
 					.valueOf(Double.parseDouble(basic) + Double.parseDouble(allowence) - Double.parseDouble(deduc));
 
-			if (!getSalaryCertificate.getParamValueByName("agencyName").isEmpty()) {
-				inputParams.put("employerName", getSalaryCertificate.getParamValueByName("agencyName"));
-				inputParams.put("lEmpName", getSalaryCertificate.getParamValueByName("agencyName"));
+			if (!getSalaryCertificate.optJSONObject("SalaryObject").optJSONObject("employerInfo")
+					.optString("agencyName").isEmpty()) {
+				inputParams.put("employerName", getSalaryCertificate.optJSONObject("SalaryObject")
+						.optJSONObject("employerInfo").optString("agencyName"));
+				inputParams.put("lEmpName", getSalaryCertificate.optJSONObject("SalaryObject")
+						.optJSONObject("employerInfo").optString("agencyName"));
 
 			} else {
 				inputParams.put("employerName", "Employer Name");
@@ -656,38 +781,47 @@ public class ScoringEngine implements JavaService2 {
 			// inputParams.put("employerName",
 			// getSalaryCertificate.getParamValueByName("agencyName"));
 			inputParams.put("salaryCurrency", "SAR");
-			inputParams.put("employStartDate", getSalaryCertificate.getParamValueByName("agencyEmploymentDate"));
+			inputParams.put("employStartDate", getSalaryCertificate.optJSONObject("SalaryObject")
+					.optJSONObject("employmentInfo").optString("agencyEmploymentDate"));
 			inputParams.put("salaryMfb", netsalary);
 			inputParams.put("basicWageMfb", basic);
 			inputParams.put("houseAllowMfb", "0");
 			inputParams.put("othAllowMfb", allowence);
 
 			break;
-		case "3":
-			String pvtNetsalary = String
-					.valueOf((Double.parseDouble(getSalaryCertificate.getParamValueByName("basicWage"))
-							+ Double.parseDouble(getSalaryCertificate.getParamValueByName("housingAllowance"))
-							+ Double.parseDouble(getSalaryCertificate.getParamValueByName("otherAllowance"))));
+		case "P":
+			String pvtNetsalary = String.valueOf(
+					(Double.parseDouble(getSalaryCertificate.optJSONObject("SalaryObject").optString("basicWage"))
+							+ Double.parseDouble(
+									getSalaryCertificate.optJSONObject("SalaryObject").optString("housingAllowance"))
+							+ Double.parseDouble(
+									getSalaryCertificate.optJSONObject("SalaryObject").optString("otherAllowance"))));
 
 			pvtNetsalary = String.format("%.2f", Double.parseDouble(pvtNetsalary));
 			// if (!getSalaryCertificate.getParamValueByName("employerName").isEmpty()) {
-			LOG.error("EMPLOYEEE NAMEE=====>>>" + getSalaryCertificate.getParamValueByName("employerName"));
+			LOG.error("EMPLOYEEE NAMEE=====>>>" + getSalaryCertificate.optString("Employer_Name"));
 
-			inputParams.put("employerName", getSalaryCertificate.getParamValueByName("employerName"));
-			inputParams.put("lEmpName", getSalaryCertificate.getParamValueByName("employerName"));
+			inputParams.put("employerName", getSalaryCertificate.optString("Employer_Name"));
+			inputParams.put("lEmpName", getSalaryCertificate.optString("Employer_Name"));
 			inputParams.put("employStatus", "EMPLOYED");
 			inputParams.put("salaryCurrency", "SAR");
-			inputParams.put("houseAllowMfb", getSalaryCertificate.getParamValueByName("housingAllowance"));
-			inputParams.put("othAllowMfb", getSalaryCertificate.getParamValueByName("otherAllowance"));
+			inputParams.put("houseAllowMfb",
+					getSalaryCertificate.optJSONObject("SalaryObject").optString("housingAllowance"));
+			inputParams.put("othAllowMfb",
+					getSalaryCertificate.optJSONObject("SalaryObject").optString("otherAllowance"));
 			// TODO Salary Pay Date should be YYYYMMDD M0128 for SALARY.DATE.FREQ
 
-			LocalDate dateOfJoining = LocalDate.parse(getSalaryCertificate.getParamValueByName("dateOfJoining"),
+			LocalDate dateOfJoining = LocalDate.parse(
+					getSalaryCertificate.optJSONObject("SalaryObject").optString("dateOfJoining"),
 					DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 			inputParams.put("employStartDate", String.valueOf(dateOfJoining));
 			inputParams.put("salaryMfb", pvtNetsalary);
-			inputParams.put("basicWageMfb", getSalaryCertificate.getParamValueByName("basicWage"));
+			inputParams.put("basicWageMfb", getSalaryCertificate.optJSONObject("SalaryObject").optString("basicWage"));
 			break;
 		}
+
+		LOG.error("INPUT  createRequestForT24CustomerEmployeeDetailsService :: = " + inputParams);
+
 		return inputParams;
 	}
 
@@ -934,7 +1068,7 @@ public class ScoringEngine implements JavaService2 {
 	}
 
 	// saif
-	private Map<String, String> createRequestForCreateEmployerDetailsService(Result getSalaryCertificate,
+	private Map<String, String> createRequestForCreateEmployerDetailsService(JSONObject getSalaryCertificate,
 			DataControllerRequest dataControllerRequest) {
 		Map<String, String> inputParams = new HashMap<>();
 
@@ -942,45 +1076,72 @@ public class ScoringEngine implements JavaService2 {
 		inputParams.put("nationalid", dataControllerRequest.getParameter("NationalID"));
 		inputParams.put("applicationID", dataControllerRequest.getParameter("ApplicationID"));
 
-		switch (EMPLOYER_TYPE_ID) {
-		case "1":
-			String basic = getSalaryCertificate.getParamValueByName("basicSalary");
-			String allowence = getSalaryCertificate.getParamValueByName("totalAllownces");
-			String deduc = getSalaryCertificate.getParamValueByName("totalDeductions");
+		switch (getSalaryCertificate.optString("CustomerCategory")) {
+		case "G":
+			String basic = getSalaryCertificate.optJSONObject("SalaryObject").optJSONObject("employerInfo")
+					.optString("basicSalary");
+			String allowence = getSalaryCertificate.optJSONObject("SalaryObject").optJSONObject("employerInfo")
+					.optString("totalAllownces");
+			String deduc = getSalaryCertificate.optJSONObject("SalaryObject").optJSONObject("employerInfo")
+					.optString("totalDeductions");
 
 			String netsalary = String
 					.valueOf(Double.parseDouble(basic) + Double.parseDouble(allowence) - Double.parseDouble(deduc));
 
-			inputParams.put("agencycode", getSalaryCertificate.getParamValueByName("agencyCode"));
-			inputParams.put("accountnumber", getSalaryCertificate.getParamValueByName("accountNumber"));
-			inputParams.put("employeejobnumber", getSalaryCertificate.getParamValueByName("employeeJobNumber"));
-			inputParams.put("agencyname", getSalaryCertificate.getParamValueByName("agencyName"));
-			inputParams.put("govsalary", getSalaryCertificate.getParamValueByName("govSalary"));
-			inputParams.put("agencyemploymentdate", getSalaryCertificate.getParamValueByName("agencyEmploymentDate"));
-			inputParams.put("paymonth", getSalaryCertificate.getParamValueByName("payMonth"));
-			inputParams.put("employeenamear", getSalaryCertificate.getParamValueByName("employeeNameAr"));
-			inputParams.put("totalallownces", getSalaryCertificate.getParamValueByName("totalAllownces"));
-			inputParams.put("basicsalary", getSalaryCertificate.getParamValueByName("basicSalary"));
-			inputParams.put("netsalary", MONTHLY_NET_SALARY);
-			inputParams.put("employeenameen", getSalaryCertificate.getParamValueByName("employeeNameEn"));
-			inputParams.put("employeejobtitle", getSalaryCertificate.getParamValueByName("employeeJobTitle"));
+			inputParams.put("agencycode", getSalaryCertificate.optJSONObject("SalaryObject")
+					.optJSONObject("employerInfo").optString("agencyCode"));
+			inputParams.put("agencyname", getSalaryCertificate.optJSONObject("SalaryObject")
+					.optJSONObject("employerInfo").optString("agencyName"));
+			inputParams.put("agencyemploymentdate", getSalaryCertificate.optJSONObject("SalaryObject")
+					.optJSONObject("employmentInfo").optString("agencyEmploymentDate"));
+			inputParams.put("employeejobtitle", getSalaryCertificate.optJSONObject("SalaryObject")
+					.optJSONObject("employmentInfo").optString("employeeJobTitle"));
+			inputParams.put("employeejobnumber", getSalaryCertificate.optJSONObject("SalaryObject")
+					.optJSONObject("employmentInfo").optString("employeeJobNumber"));
+			inputParams.put("accountnumber", getSalaryCertificate.optJSONObject("SalaryObject")
+					.optJSONObject("bankInfo").optString("accountNumber"));
+			inputParams.put("govsalary", getSalaryCertificate.optJSONObject("SalaryObject").optJSONObject("payslipInfo")
+					.optString("netSalary"));
+			inputParams.put("paymonth", getSalaryCertificate.optJSONObject("SalaryObject").optJSONObject("payslipInfo")
+					.optString("payMonth"));
+			inputParams.put("totalallownces", allowence);
+			inputParams.put("basicsalary", basic);
+			inputParams.put("netsalary", netsalary);
+			inputParams.put("employeenamear", getSalaryCertificate.optJSONObject("SalaryObject")
+					.optJSONObject("personalInfo").optString("employeeNameAr"));
+			inputParams.put("employeenameen", getSalaryCertificate.optJSONObject("SalaryObject")
+					.optJSONObject("personalInfo").optString("employeeNameEn"));
+
 			break;
-		case "3":
+		case "PEN":
+		case "P":
+			
+			String pvtNetSalary = "0";
+			if(getSalaryCertificate.optBoolean("Other_Salary_Present")) {
+				pvtNetSalary = 
+			}
+			
+			
 			inputParams.put("agencycode", "agencycodeValue");
 			inputParams.put("accountnumber", "accountnumberValue");
 			inputParams.put("employeejobnumber", "employeejobnumberValue");
-			inputParams.put("agencyname", getSalaryCertificate.getParamValueByName("employerName"));
-			inputParams.put("govsalary", getSalaryCertificate.getParamValueByName("basicWage"));
-			inputParams.put("agencyemploymentdate", getSalaryCertificate.getParamValueByName("dateOfJoining"));
 			inputParams.put("paymonth", "paymonthValue");
 			inputParams.put("employeenamear", "employeenamearValue");
-			inputParams.put("totalallownces", getSalaryCertificate.getParamValueByName("otherAllowance"));
-			inputParams.put("basicsalary", getSalaryCertificate.getParamValueByName("basicWage"));
-			inputParams.put("netsalary", MONTHLY_NET_SALARY);
-			inputParams.put("employeenameen", getSalaryCertificate.getParamValueByName("fullName"));
 			inputParams.put("employeejobtitle", "employeejobtitleValue");
+			inputParams.put("agencyname", getSalaryCertificate.optString("Employer_Name"));
+			inputParams.put("govsalary", getSalaryCertificate.optJSONObject("SalaryObject").optString("basicWage"));
+			inputParams.put("agencyemploymentdate",
+					getSalaryCertificate.optJSONObject("SalaryObject").optString("dateOfJoining"));
+			inputParams.put("totalallownces",
+					getSalaryCertificate.optJSONObject("SalaryObject").optString("housingAllowance"));
+			inputParams.put("basicsalary", getSalaryCertificate.optJSONObject("SalaryObject").optString("basicWage"));
+			inputParams.put("netsalary", getSalaryCertificate.optString("Monthly_Net_Salary"));
+			inputParams.put("employeenameen", getSalaryCertificate.optJSONObject("SalaryObject").optString("fullName"));
+
 			break;
 		}
+
+		LOG.error("INPUT createRequestForCreateEmployerDetailsService :: " + inputParams);
 		return inputParams;
 	}
 
@@ -1017,7 +1178,7 @@ public class ScoringEngine implements JavaService2 {
 	}
 
 	private Map<String, String> createRequestForConsumerEnquiryService(Map<String, String> globalInputParams,
-			Result getCustomerData, Result getSalaryCertificate, DataControllerRequest request,
+			Result getCustomerData, JSONObject getSalaryCertificate, DataControllerRequest request,
 			Result getCustomerApplicationData, Result getNationalAddress) {
 		Map<String, String> inputParams = new HashMap<>();
 		try {
@@ -1059,7 +1220,7 @@ public class ScoringEngine implements JavaService2 {
 					HelperMethods.getFieldValue(getCustomerData, "MartialStatus_id").equalsIgnoreCase("SID_MARRIED")
 							? "M"
 							: "S");
-			inputParams.put("CNAT", getSalaryCertificate.getParamValueByName("nationality"));
+			inputParams.put("CNAT", NATIONALITY);
 			inputParams.put("CNAM", HelperMethods.getFieldValue(getCustomerData, "ArFullName").split(" ")[3]);
 			inputParams.put("CNM1A", HelperMethods.getFieldValue(getCustomerData, "ArFullName").split(" ")[0]);
 			inputParams.put("CNM2A", HelperMethods.getFieldValue(getCustomerData, "ArFullName").split(" ")[1]);
@@ -1082,12 +1243,12 @@ public class ScoringEngine implements JavaService2 {
 			// inputParams.put("CCN4", CONTACT_NUMBER);
 			inputParams.put("CCN4", request.getParameter("Mobile"));
 
-			inputParams.put("EMPLOYER", getSalaryCertificate.getParamValueByName("employerName"));
+			inputParams.put("EMPLOYER", getSalaryCertificate.optString("Employer_Name"));
 			inputParams.put("ETYP", "C");
 			inputParams.put("EOCA", "Ijarah");
 			inputParams.put("EOCE", "سعيد");
-			inputParams.put("ELEN", CURRENT_LENGTH_OF_SERVICE);
-			inputParams.put("EMBS", MONTHLY_NET_SALARY);
+			inputParams.put("ELEN", getSalaryCertificate.optString("los"));
+			inputParams.put("EMBS", getSalaryCertificate.optString("Monthly_Net_Salary"));
 			inputParams.put("ESLF", "N");
 			inputParams.put("ENME", "Ijarah");
 			inputParams.put("ENMA", "الإجارة");
@@ -1096,6 +1257,8 @@ public class ScoringEngine implements JavaService2 {
 			inputParams.put("EAD7", "3333");
 			inputParams.put("EAD8E", "RIY");
 			inputParams.put("EAD9", "SAU");
+
+			LOG.error("INPUT createRequestForConsumerEnquiryService :: " + inputParams);
 
 		} catch (Exception ex) {
 			LOG.error("ERROR createRequestForConsumerEnquiryService :: " + ex);
@@ -1168,7 +1331,7 @@ public class ScoringEngine implements JavaService2 {
 
 	private Map<String, String> createRequestForUpdateCustomerApplicationDataService(Result getCustomerApplicationData,
 			Result getScoreCardS2, Result getScoreCardS3, DataControllerRequest request, double maxEMI,
-			int calMAXGblDti, int calMAXinternalDti, double customerGblDti, double customerInternalDti) {
+			int calMAXGblDti, int calMAXinternalDti, double customerGblDti, double customerInternalDti, JSONObject getSalaryCertificate) {
 		Map<String, String> inputParams = new HashMap<>();
 		String knockoutStatus = "FAIL";
 		String applicationStatus = "SID_SUSPENDED";
@@ -1293,15 +1456,14 @@ public class ScoringEngine implements JavaService2 {
 			inputParams.put("applicationStatus", "SID_SUSPENDED");
 		}
 
-		//SUSPEND APPLICATION IF MONTHLY REPAY IS NULL OR EMPTY
+		// SUSPEND APPLICATION IF MONTHLY REPAY IS NULL OR EMPTY
 		if (StringUtils.isEmpty(EMI) || EMI.equalsIgnoreCase("0")) {
 			inputParams.put("knockoutStatus", "FAIL");
 			inputParams.put("applicationStatus", "SID_SUSPENDED");
 		}
-		
-		
+
 		saveMISReportData(createRequestForMISReportDBCall(inputParams.get("knockoutStatus").toString(), maxEMI,
-				customerGblDti, customerInternalDti, calMAXGblDti, calMAXinternalDti, request), request);
+				customerGblDti, customerInternalDti, calMAXGblDti, calMAXinternalDti, request, getSalaryCertificate), request);
 		return inputParams;
 	}
 
@@ -1358,133 +1520,133 @@ public class ScoringEngine implements JavaService2 {
 		return String.valueOf(Math.floor((amountOffer + (amountOffer * (loanRate / 100) * tenor / 12)) / tenor));
 	}
 
-	private void calculatePensioner(Result getSalaryCertificate) {
-		try {
-			switch (EMPLOYER_TYPE_ID) {
-			case "1":
-				if (Arrays.asList(EMPLOYER_NAME_FOR_PENSIONERS)
-						.contains(getSalaryCertificate.getParamValueByName("agencyName"))) {
-					PENSIONER = "1";
-				}
-				break;
-			case "3":
-				if (Arrays.asList(EMPLOYER_NAME_FOR_PENSIONERS)
-						.contains(getSalaryCertificate.getParamValueByName("employerName"))) {
-					PENSIONER = "1";
-				}
-				break;
-			default:
-				PENSIONER = "0";
-				break;
-			}
-		} catch (Exception ex) {
-			LOG.error("ERROR calculatePensioner :: " + ex);
-		}
-	}
+	private JSONObject calculateMonthlyNetSalary(JSONObject getSalaryCertificate) {
 
-	private boolean calculateMonthlyNetSalary(Result getSalaryCertificate) {
-
-		boolean checkSalary = true;
+		JSONObject jsonObject = new JSONObject();
+		jsonObject.put("check", true);
 
 		try {
 			// NATIONALITY = getSalaryCertificate.getParamValueByName("nationality");
-			LOG.error("calculateMonthlyNetSalary EMPLOYER_TYPE_ID :: " + EMPLOYER_TYPE_ID);
-			switch (EMPLOYER_TYPE_ID) {
-			case "1":
-				String basic = getSalaryCertificate.getParamValueByName("basicSalary");
-				String allowence = getSalaryCertificate.getParamValueByName("totalAllownces");
-				String deduc = getSalaryCertificate.getParamValueByName("totalDeductions");
+			LOG.error("calculateMonthlyNetSalary EMPLOYER_TYPE_ID :: "
+					+ getSalaryCertificate.optString("CustomerCategory"));
+			switch (getSalaryCertificate.optString("CustomerCategory")) {
+			case "G":
+				String basic = getSalaryCertificate.optJSONObject("SalaryObject").optJSONObject("employerInfo")
+						.optString("basicSalary");
+				String allowence = getSalaryCertificate.optJSONObject("SalaryObject").optJSONObject("employerInfo")
+						.optString("totalAllownces");
+				String deduc = getSalaryCertificate.optJSONObject("SalaryObject").optJSONObject("employerInfo")
+						.optString("totalDeductions");
 
 				String netsalary = String
 						.valueOf(Double.parseDouble(basic) + Double.parseDouble(allowence) - Double.parseDouble(deduc));
 
 				netsalary = String.format("%.2f", Double.parseDouble(netsalary));
 
-				MONTHLY_NET_SALARY = netsalary;
+				jsonObject.put("Monthly_Net_Salary", netsalary);
+				LOG.error("calculateMonthlyNetSalary GVT MONTHLY_NET_SALARY :: " + netsalary);
 				break;
-			case "3":
-
-				EMPLOYMENT_STATUS = getSalaryCertificate.getParamValueByName("employmentStatus");
-				LOG.error("calculateMonthlyNetSalary EMPLOYMENT_STATUS 1:: " + EMPLOYMENT_STATUS);
-				if (EMPLOYMENT_STATUS.equalsIgnoreCase("نشيط") || EMPLOYMENT_STATUS.equalsIgnoreCase("Active")) {
-					LOG.error("calculateMonthlyNetSalary EMPLOYMENT_STATUS 2:: " + EMPLOYMENT_STATUS);
-
-					double calculatedDeductions = 0;
-					if (NATIONALITY.equalsIgnoreCase("SAU") || NATIONALITY.equalsIgnoreCase("SA")) {
-						double minimumAmount = 0.1
-								* (Double.parseDouble(getSalaryCertificate.getParamValueByName("basicWage")) + Double
-										.parseDouble(getSalaryCertificate.getParamValueByName("housingAllowance")));
-						calculatedDeductions = Math.min(minimumAmount, 4500);
-						LOG.error("calculateMonthlyNetSalary calculatedDeductions :: " + calculatedDeductions);
-					}
-					String pvtNetsalary = String
-							.valueOf((Double.parseDouble(getSalaryCertificate.getParamValueByName("basicWage"))
-									+ Double.parseDouble(getSalaryCertificate.getParamValueByName("housingAllowance"))
-									+ Double.parseDouble(getSalaryCertificate.getParamValueByName("otherAllowance")))
-									- calculatedDeductions);
-
-					pvtNetsalary = String.format("%.2f", Double.parseDouble(pvtNetsalary));
-
-					MONTHLY_NET_SALARY = pvtNetsalary;
-					LOG.error("calculateMonthlyNetSalary PVT MONTHLY_NET_SALARY :: " + MONTHLY_NET_SALARY);
-				} else {
-					checkSalary = false;
-					LOG.error("calculateMonthlyNetSalary CAse Customer is non active :: ");
+			case "P":
+				double calculatedDeductions = 0;
+				if (NATIONALITY.equalsIgnoreCase("SAU") || NATIONALITY.equalsIgnoreCase("SA")) {
+					double minimumAmount = 0.1 * (Double
+							.parseDouble(getSalaryCertificate.optJSONObject("SalaryObject").optString("basicWage"))
+							+ Double.parseDouble(
+									getSalaryCertificate.optJSONObject("SalaryObject").optString("housingAllowance")));
+					calculatedDeductions = Math.min(minimumAmount, 4500);
+					LOG.error("calculateMonthlyNetSalary calculatedDeductions :: " + calculatedDeductions);
 				}
-				LOG.error("calculateMonthlyNetSalary CAse 3 :: " + MONTHLY_NET_SALARY);
+				String pvtNetsalary = String.valueOf(
+						(Double.parseDouble(getSalaryCertificate.optJSONObject("SalaryObject").optString("basicWage"))
+								+ Double.parseDouble(getSalaryCertificate.optJSONObject("SalaryObject")
+										.optString("housingAllowance"))
+								+ Double.parseDouble(
+										getSalaryCertificate.optJSONObject("SalaryObject").optString("otherAllowance")))
+								- calculatedDeductions);
+
+				pvtNetsalary = String.format("%.2f", Double.parseDouble(pvtNetsalary));
+
+				jsonObject.put("Monthly_Net_Salary", pvtNetsalary);
+				LOG.error("calculateMonthlyNetSalary PVT MONTHLY_NET_SALARY :: " + pvtNetsalary);
+
 				break;
+				
+			case "PEN":
+				
+				String pensionerNetsalary = String.format("%.2f", Double.parseDouble(getSalaryCertificate.optJSONObject("SalaryObject").optString("basicWage")));
+				jsonObject.put("Monthly_Net_Salary", pensionerNetsalary);
+				
+				LOG.error("calculateMonthlyNetSalary PENSIONER MONTHLY_NET_SALARY :: " + pensionerNetsalary);
+				
+				break;
+				
 			default:
-				checkSalary = false;
-				LOG.error("DEFAULT calculateMonthlyNetSalary :: " + MONTHLY_NET_SALARY);
-				MONTHLY_NET_SALARY = "0";
+				jsonObject.put("check", false);
 				break;
 			}
 		} catch (Exception ex) {
+			jsonObject.put("check", false);
 			LOG.error("ERROR calculateMonthlyNetSalary :: " + ex);
 		}
-		SALARY_WITHOUT_ALLOWANCES = MONTHLY_NET_SALARY;
-
-		return checkSalary;
+		return jsonObject;
 	}
 
-	private void calculateCurrentLengthOfService(Result getSalaryCertificate) {
+	private String calculateCurrentLengthOfService(JSONObject getSalaryCertificate) {
+		String lengthOfService = "";
 		try {
-			LOG.error("calculateCurrentLengthOfService EMPLOYER_TYPE_ID :: " + EMPLOYER_TYPE_ID);
+
 			int currentLengthOfService = 0;
-			switch (EMPLOYER_TYPE_ID) {
-			case "1":
-				LocalDate agencyEmploymentDate = LocalDate.parse(
-						getSalaryCertificate.getParamValueByName("agencyEmploymentDate"),
-						DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-				LocalDate currentDate = LocalDate.now();
-				currentLengthOfService = Math.toIntExact(
-						ChronoUnit.MONTHS.between(YearMonth.from(agencyEmploymentDate), YearMonth.from(currentDate)));
-				int employmentDay = agencyEmploymentDate.getDayOfMonth();
-				int currentDay = currentDate.getDayOfMonth();
-				if (currentDay < employmentDay) {
-					currentLengthOfService -= 1;
-				}
-				break;
-			case "3":
-				LocalDate dateOfJoining = LocalDate.parse(getSalaryCertificate.getParamValueByName("dateOfJoining"),
-						DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-				LocalDate currentDateNow = LocalDate.now();
-				currentLengthOfService = Math.toIntExact(
-						ChronoUnit.MONTHS.between(YearMonth.from(dateOfJoining), YearMonth.from(currentDateNow)));
-				int dayOfJoining = dateOfJoining.getDayOfMonth();
-				int currentDayNow = currentDateNow.getDayOfMonth();
-				if (currentDayNow < dayOfJoining) {
-					currentLengthOfService -= 1;
-				}
-				break;
+			LocalDate dateOfJoining = LocalDate.parse(getSalaryCertificate.optString("dateOfJoining"),
+					DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+			LocalDate currentDateNow = LocalDate.now();
+			currentLengthOfService = Math.toIntExact(
+					ChronoUnit.MONTHS.between(YearMonth.from(dateOfJoining), YearMonth.from(currentDateNow)));
+			int dayOfJoining = dateOfJoining.getDayOfMonth();
+			int currentDayNow = currentDateNow.getDayOfMonth();
+			if (currentDayNow < dayOfJoining) {
+				currentLengthOfService -= 1;
 			}
-			CURRENT_LENGTH_OF_SERVICE = String.valueOf(currentLengthOfService);
-		} catch (Exception ex) {
-			LOG.error("ERROR calculateCurrentLengthOfService :: " + ex);
+
+			lengthOfService = String.valueOf(currentLengthOfService);
+			LOG.error("Length of service " + lengthOfService);
+
+			return String.valueOf(currentLengthOfService);
+		} catch (Exception e) {
+			LOG.error("Error calculateCurrentLengthOfService = " + e.getMessage());
 		}
+
+		return lengthOfService;
 	}
 
-	private int calculateMaxGlobalDTI(DataControllerRequest request) {
+	private String calculateCurrentGovernmentLengthOfService(JSONObject getSalaryCertificate) {
+		String lengthOfService = "";
+		try {
+
+			int currentLengthOfService = 0;
+			LocalDate dateOfJoining = LocalDate.parse(getSalaryCertificate.optJSONObject("SalaryObject")
+					.optJSONObject("employmentInfo").optString("agencyEmploymentDate"),
+					DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+			LocalDate currentDateNow = LocalDate.now();
+			currentLengthOfService = Math.toIntExact(
+					ChronoUnit.MONTHS.between(YearMonth.from(dateOfJoining), YearMonth.from(currentDateNow)));
+			int dayOfJoining = dateOfJoining.getDayOfMonth();
+			int currentDayNow = currentDateNow.getDayOfMonth();
+			if (currentDayNow < dayOfJoining) {
+				currentLengthOfService -= 1;
+			}
+
+			lengthOfService = String.valueOf(currentLengthOfService);
+			LOG.error("Length of service " + lengthOfService);
+
+			return String.valueOf(currentLengthOfService);
+		} catch (Exception e) {
+			LOG.error("Error calculateCurrentLengthOfService = " + e.getMessage());
+		}
+
+		return lengthOfService;
+	}
+
+	private int calculateMaxGlobalDTI(DataControllerRequest request, JSONObject getSalaryCertificate) {
 		int maxGlobalDti = 45;
 		LOG.error("ERROR Enter in  calculateMaxGlobalDTI :: ");
 		if (request.getParameter("Product").equalsIgnoreCase("TAWARRUQ")) {
@@ -1494,38 +1656,38 @@ public class ScoringEngine implements JavaService2 {
 					String status = ci_detail.getCISTATUS();
 					// 26/01/2023 Its a logic when the customer has a mortgage product
 					if (Arrays.asList(MORTGAGE_PRODUCT).contains(productType) && status.equalsIgnoreCase("A")) {
-						if (Double.parseDouble(MONTHLY_NET_SALARY) <= 3999) {
+						if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 3999) {
 							// MAX_GLOBAL_DTI = 55;
 							maxGlobalDti = 55;
-						} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 3999
-								&& Double.parseDouble(MONTHLY_NET_SALARY) <= 14999) {
+						} else if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) > 3999
+								&& Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 14999) {
 							// MAX_GLOBAL_DTI = 55;
 							maxGlobalDti = 55;
-						} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 14999
-								&& Double.parseDouble(MONTHLY_NET_SALARY) <= 24999) {
+						} else if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) > 14999
+								&& Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 24999) {
 							// MAX_GLOBAL_DTI = 65;
 							maxGlobalDti = 65;
-						} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 24999
-								&& Double.parseDouble(MONTHLY_NET_SALARY) <= 999999) {
+						} else if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) > 24999
+								&& Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 999999) {
 							// MAX_GLOBAL_DTI = 70;
 							maxGlobalDti = 70;
 						}
 						break;
 					} else {
 						// 26/01/2023 Its a logic when the customer does not have a mortgage product
-						if (Double.parseDouble(MONTHLY_NET_SALARY) <= 3999) {
+						if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 3999) {
 							// MAX_GLOBAL_DTI = 45;
 							maxGlobalDti = 45;
-						} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 3999
-								&& Double.parseDouble(MONTHLY_NET_SALARY) <= 14999) {
+						} else if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) > 3999
+								&& Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 14999) {
 							// MAX_GLOBAL_DTI = 45;
 							maxGlobalDti = 45;
-						} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 14999
-								&& Double.parseDouble(MONTHLY_NET_SALARY) <= 24999) {
+						} else if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) > 14999
+								&& Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 24999) {
 							// MAX_GLOBAL_DTI = 45;
 							maxGlobalDti = 45;
-						} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 24999
-								&& Double.parseDouble(MONTHLY_NET_SALARY) <= 999999) {
+						} else if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) > 24999
+								&& Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 999999) {
 							// MAX_GLOBAL_DTI = 70;
 							maxGlobalDti = 70;
 						}
@@ -1538,38 +1700,38 @@ public class ScoringEngine implements JavaService2 {
 						String productType = ci_detail.getCIPRD();
 						String status = ci_detail.getCISTATUS();
 						if (Arrays.asList(MORTGAGE_PRODUCT).contains(productType) && status.equalsIgnoreCase("A")) {
-							if (Double.parseDouble(MONTHLY_NET_SALARY) <= 3999) {
+							if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 3999) {
 								// MAX_GLOBAL_DTI = 55;
 								maxGlobalDti = 55;
-							} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 3999
-									&& Double.parseDouble(MONTHLY_NET_SALARY) <= 14999) {
+							} else if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) > 3999
+									&& Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 14999) {
 								// MAX_GLOBAL_DTI = 55;
 								maxGlobalDti = 55;
-							} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 14999
-									&& Double.parseDouble(MONTHLY_NET_SALARY) <= 24999) {
+							} else if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) > 14999
+									&& Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 24999) {
 								// MAX_GLOBAL_DTI = 65;
 								maxGlobalDti = 65;
-							} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 24999
-									&& Double.parseDouble(MONTHLY_NET_SALARY) <= 999999) {
+							} else if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) > 24999
+									&& Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 999999) {
 								// MAX_GLOBAL_DTI = 70;
 								maxGlobalDti = 70;
 							}
 							break;
 						} else {
 							// 26/01/2023 Its a logic when the customer does not have a mortgage product
-							if (Double.parseDouble(MONTHLY_NET_SALARY) <= 3999) {
+							if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 3999) {
 								// MAX_GLOBAL_DTI = 45;
 								maxGlobalDti = 45;
-							} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 3999
-									&& Double.parseDouble(MONTHLY_NET_SALARY) <= 14999) {
+							} else if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) > 3999
+									&& Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 14999) {
 								// MAX_GLOBAL_DTI = 45;
 								maxGlobalDti = 45;
-							} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 14999
-									&& Double.parseDouble(MONTHLY_NET_SALARY) <= 24999) {
+							} else if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) > 14999
+									&& Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 24999) {
 								// MAX_GLOBAL_DTI = 45;
 								maxGlobalDti = 45;
-							} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 24999
-									&& Double.parseDouble(MONTHLY_NET_SALARY) <= 999999) {
+							} else if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) > 24999
+									&& Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 999999) {
 								// MAX_GLOBAL_DTI = 70;
 								maxGlobalDti = 70;
 							}
@@ -1583,7 +1745,7 @@ public class ScoringEngine implements JavaService2 {
 		return maxGlobalDti;
 	}
 
-	private int calculateMaxInternalDTI(DataControllerRequest request) {
+	private int calculateMaxInternalDTI(DataControllerRequest request, JSONObject getSalaryCertificate) {
 		int maxInternalDti = 33;
 		LOG.error("ERROR Enter in  calculateMaxInternalDTI :: ");
 		if (request.getParameter("Product").equalsIgnoreCase("TAWARRUQ")) {
@@ -1594,38 +1756,38 @@ public class ScoringEngine implements JavaService2 {
 
 					// 26/01/2023 Its a logic when the customer has a mortgage product
 					if (Arrays.asList(MORTGAGE_PRODUCT).contains(productType) && status.equalsIgnoreCase("A")) {
-						if (Double.parseDouble(MONTHLY_NET_SALARY) <= 3999) {
+						if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 3999) {
 							// MAX_INTERNAL_DTI = 45;
 							maxInternalDti = 45;
-						} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 3999
-								&& Double.parseDouble(MONTHLY_NET_SALARY) <= 14999) {
+						} else if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) > 3999
+								&& Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 14999) {
 							// MAX_INTERNAL_DTI = 45;
 							maxInternalDti = 45;
-						} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 14999
-								&& Double.parseDouble(MONTHLY_NET_SALARY) <= 24999) {
+						} else if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) > 14999
+								&& Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 24999) {
 							// MAX_INTERNAL_DTI = 45;
 							maxInternalDti = 45;
-						} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 24999
-								&& Double.parseDouble(MONTHLY_NET_SALARY) <= 999999) {
+						} else if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) > 24999
+								&& Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 999999) {
 							// MAX_INTERNAL_DTI = 45;
 							maxInternalDti = 45;
 						}
 						break;
 					} else {
 						// 26/01/2023 Its a logic when the customer does not have a mortgage product
-						if (Double.parseDouble(MONTHLY_NET_SALARY) <= 3999) {
+						if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 3999) {
 							// MAX_INTERNAL_DTI = 25;
 							maxInternalDti = 25;
-						} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 3999
-								&& Double.parseDouble(MONTHLY_NET_SALARY) <= 14999) {
+						} else if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) > 3999
+								&& Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 14999) {
 							// MAX_INTERNAL_DTI = 33;
 							maxInternalDti = 33;
-						} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 14999
-								&& Double.parseDouble(MONTHLY_NET_SALARY) <= 24999) {
+						} else if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) > 14999
+								&& Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 24999) {
 							// MAX_INTERNAL_DTI = 33;
 							maxInternalDti = 33;
-						} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 24999
-								&& Double.parseDouble(MONTHLY_NET_SALARY) <= 999999) {
+						} else if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) > 24999
+								&& Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 999999) {
 							// MAX_INTERNAL_DTI = 33;
 							maxInternalDti = 33;
 						}
@@ -1638,38 +1800,38 @@ public class ScoringEngine implements JavaService2 {
 						String productType = ci_detail.getCIPRD();
 						String status = ci_detail.getCISTATUS();
 						if (Arrays.asList(MORTGAGE_PRODUCT).contains(productType) && status.equalsIgnoreCase("A")) {
-							if (Double.parseDouble(MONTHLY_NET_SALARY) <= 3999) {
+							if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 3999) {
 								// MAX_INTERNAL_DTI = 45;
 								maxInternalDti = 45;
-							} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 3999
-									&& Double.parseDouble(MONTHLY_NET_SALARY) <= 14999) {
+							} else if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) > 3999
+									&& Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 14999) {
 								// MAX_INTERNAL_DTI = 45;
 								maxInternalDti = 45;
-							} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 14999
-									&& Double.parseDouble(MONTHLY_NET_SALARY) <= 24999) {
+							} else if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) > 14999
+									&& Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 24999) {
 								// MAX_INTERNAL_DTI = 45;
 								maxInternalDti = 45;
-							} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 24999
-									&& Double.parseDouble(MONTHLY_NET_SALARY) <= 999999) {
+							} else if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) > 24999
+									&& Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 999999) {
 								// MAX_INTERNAL_DTI = 45;
 								maxInternalDti = 45;
 							}
 							break;
 						} else {
 							// 26/01/2023 Its a logic when the customer does not have a mortgage product
-							if (Double.parseDouble(MONTHLY_NET_SALARY) <= 3999) {
+							if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 3999) {
 								// MAX_INTERNAL_DTI = 25;
 								maxInternalDti = 25;
-							} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 3999
-									&& Double.parseDouble(MONTHLY_NET_SALARY) <= 14999) {
+							} else if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) > 3999
+									&& Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 14999) {
 								// MAX_INTERNAL_DTI = 33;
 								maxInternalDti = 33;
-							} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 14999
-									&& Double.parseDouble(MONTHLY_NET_SALARY) <= 24999) {
+							} else if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) > 14999
+									&& Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 24999) {
 								// MAX_INTERNAL_DTI = 33;
 								maxInternalDti = 33;
-							} else if (Double.parseDouble(MONTHLY_NET_SALARY) > 24999
-									&& Double.parseDouble(MONTHLY_NET_SALARY) <= 999999) {
+							} else if (Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) > 24999
+									&& Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) <= 999999) {
 								// MAX_INTERNAL_DTI = 33;
 								maxInternalDti = 33;
 							}
@@ -1684,7 +1846,7 @@ public class ScoringEngine implements JavaService2 {
 	}
 
 	private double calculateMaxEmi(int calMAXGblDti, int calMAXinternalDti, double customerGblDti,
-			double customerInternalDti) {
+			double customerInternalDti, JSONObject getSalaryCertificate) {
 		double maxEMI = 0.0;
 		LOG.error("# MAX_GLOBAL_DTI :: " + calMAXGblDti);
 		LOG.error("# CUSTOMER_GLOBAL_DTI :: " + customerGblDti);
@@ -1692,7 +1854,7 @@ public class ScoringEngine implements JavaService2 {
 		LOG.error("# MAX_INETRNAL_DTI :: " + calMAXinternalDti);
 		LOG.error("# CUSTOMER_INTERNAL_DTI :: " + customerInternalDti);
 
-		LOG.error("# calculateMaxEmi :: " + MONTHLY_NET_SALARY);
+		LOG.error("# calculateMaxEmi :: " + getSalaryCertificate.optString("Monthly_Net_Salary"));
 
 		int final_max_allowable_dti = Math.min(calculateMaxOverallAllowedDTI(calMAXGblDti, customerGblDti),
 				calculateMaxInternalAllowedDTI(calMAXinternalDti, customerInternalDti));
@@ -1702,7 +1864,10 @@ public class ScoringEngine implements JavaService2 {
 		 * MAX_EMI = MAX_EMI / 100;
 		 */
 
-		maxEMI = Double.parseDouble(MONTHLY_NET_SALARY) * final_max_allowable_dti;
+		maxEMI = Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) * final_max_allowable_dti;
+		
+		LOG.error("#MAX_EMI before:: " + maxEMI);
+		
 		maxEMI = maxEMI / 100;
 
 		LOG.error("#final_max_allowable_dti :: " + final_max_allowable_dti);
@@ -1721,8 +1886,7 @@ public class ScoringEngine implements JavaService2 {
 		return Math.max(((int) (Double.valueOf(calMAXinternalDti) - customerInternalDti)), 0);
 	}
 
-	
-	private JSONObject calculateGlobalDTI(int calMAXGblDti) {
+	private JSONObject calculateGlobalDTI(int calMAXGblDti, JSONObject getSalaryCertificate) {
 
 		boolean checkAllow = true;
 		double customerGblDti = 0.0;
@@ -1757,7 +1921,7 @@ public class ScoringEngine implements JavaService2 {
 							INSTALLMENT_AMOUNT.append(installment / 6 + ",");
 						} else if (frequency.equalsIgnoreCase("Y")) {
 							totalDebtServicing += installment / 12;
-							INSTALLMENT_AMOUNT.append(installment / 12+ ",");
+							INSTALLMENT_AMOUNT.append(installment / 12 + ",");
 						} else {
 							totalDebtServicing += installment;
 							INSTALLMENT_AMOUNT.append(installment + ",");
@@ -1772,7 +1936,7 @@ public class ScoringEngine implements JavaService2 {
 			LOG.error("#Ghufran totalDebtServicing :: " + totalDebtServicing);
 			// CUSTOMER_GLOBAL_DTI = (totalDebtServicing /
 			// Double.parseDouble(MONTHLY_NET_SALARY)) * 100;
-			customerGblDti = (totalDebtServicing / Double.parseDouble(MONTHLY_NET_SALARY)) * 100;
+			customerGblDti = (totalDebtServicing / Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary"))) * 100;
 			LOG.error("#Ghufran CUSTOMER_GLOBAL_DTI :: " + customerGblDti);
 			/*
 			 * if (CUSTOMER_GLOBAL_DTI >= MAX_GLOBAL_DTI) { GLOBAL_DTI = "0"; checkAllow =
@@ -1795,7 +1959,7 @@ public class ScoringEngine implements JavaService2 {
 						double installment = Double.parseDouble(ci_detail.getCIINSTL());
 						String creditLimit = ci_detail.getCILIMIT();
 						String ci_summary = ci_detail.getCISUMMRY();
-						
+
 						if (Arrays.asList(CREDIT_CARD_PRODUCT).contains(productType)) {
 							totalDebtServicing += 0.05 * Double.parseDouble(creditLimit);
 							INSTALLMENT_AMOUNT.append(Double.parseDouble(creditLimit) + ",");
@@ -1825,7 +1989,7 @@ public class ScoringEngine implements JavaService2 {
 				LOG.error("#Ghufran totalDebtServicing :: " + totalDebtServicing);
 				// CUSTOMER_GLOBAL_DTI = (totalDebtServicing /
 				// Double.parseDouble(MONTHLY_NET_SALARY)) * 100;
-				customerGblDti = (totalDebtServicing / Double.parseDouble(MONTHLY_NET_SALARY)) * 100;
+				customerGblDti = (totalDebtServicing / Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary"))) * 100;
 				LOG.error("#Ghufran CUSTOMER_GLOBAL_DTI :: " + customerGblDti);
 				/*
 				 * if (CUSTOMER_GLOBAL_DTI >= MAX_GLOBAL_DTI) { GLOBAL_DTI = "0"; checkAllow =
@@ -1843,7 +2007,7 @@ public class ScoringEngine implements JavaService2 {
 		return jsonObject;
 	}
 
-	private double calculateInternalDTI(int calMAXinternalDti) {
+	private double calculateInternalDTI(int calMAXinternalDti, JSONObject getSalaryCertificate) {
 		double customerInternalDti = 0.0;
 		INTERNAL_DTI = "1";
 		if (CI_DETAIL != null && CI_DETAIL.size() > 0) {
@@ -1889,7 +2053,7 @@ public class ScoringEngine implements JavaService2 {
 			}
 			// CUSTOMER_INTERNAL_DTI = (totalDebtServicing /
 			// Double.parseDouble(MONTHLY_NET_SALARY)) * 100;
-			customerInternalDti = (totalDebtServicing / Double.parseDouble(MONTHLY_NET_SALARY)) * 100;
+			customerInternalDti = (totalDebtServicing / Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary"))) * 100;
 			/*
 			 * if (CUSTOMER_INTERNAL_DTI >= MAX_INTERNAL_DTI) { INTERNAL_DTI = "0"; }
 			 */
@@ -1941,7 +2105,7 @@ public class ScoringEngine implements JavaService2 {
 				}
 				// CUSTOMER_INTERNAL_DTI = (totalDebtServicing /
 				// Double.parseDouble(MONTHLY_NET_SALARY)) * 100;
-				customerInternalDti = (totalDebtServicing / Double.parseDouble(MONTHLY_NET_SALARY)) * 100;
+				customerInternalDti = (totalDebtServicing / Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary"))) * 100;
 				/*
 				 * if (CUSTOMER_INTERNAL_DTI >= MAX_INTERNAL_DTI) { INTERNAL_DTI = "0"; }
 				 */
@@ -2168,38 +2332,45 @@ public class ScoringEngine implements JavaService2 {
 		return checkCJ;
 	}
 
-	private void getEmployerName(Result getSalaryCertificate) {
+	private String getEmployerName(JSONObject getSalaryCertificate) {
 
+		String employerName = "EMPLOYER_NAME_VALUE";
 		try {
-			switch (EMPLOYER_TYPE_ID) {
-			case "1":
-				if (getSalaryCertificate.getParamValueByName("agencyName") != null) {
-					EMPLOYER_NAME = getSalaryCertificate.getParamValueByName("agencyName");
+			switch (getSalaryCertificate.optString("CustomerCategory")) {
+			case "G":
+				if (getSalaryCertificate.optJSONObject("SalaryObject").optJSONObject("employerInfo")
+						.optString("agencyName") != null) {
+					employerName = getSalaryCertificate.optJSONObject("SalaryObject").optJSONObject("employerInfo")
+							.optString("agencyName");
 				} else {
-					EMPLOYER_NAME = "EMPLOYER_NAME_VALUE";
+					employerName = "EMPLOYER_NAME_VALUE";
 				}
 				break;
-			case "3":
-				if (getSalaryCertificate.getParamValueByName("employerName") != null) {
-					EMPLOYER_NAME = getSalaryCertificate.getParamValueByName("employerName");
+			case "P":
+				if (getSalaryCertificate.optJSONObject("SalaryObject").optString("employerName") != null) {
+					employerName = getSalaryCertificate.optJSONObject("SalaryObject").optString("employerName");
 				} else {
-					EMPLOYER_NAME = "EMPLOYER_NAME_VALUE";
+					employerName = "EMPLOYER_NAME_VALUE";
+				}
+				break;
+				
+			case "PEN":
+				if (getSalaryCertificate.optJSONObject("SalaryObject").optString("employerName") != null) {
+					employerName = getSalaryCertificate.optJSONObject("SalaryObject").optString("employerName");
+				} else {
+					employerName = "EMPLOYER_NAME_VALUE";
 				}
 				break;
 			default:
-				EMPLOYER_NAME = "EMPLOYER_NAME_VALUE";
+				employerName = "EMPLOYER_NAME_VALUE";
 				break;
 			}
-
-			/*
-			 * int currentLengthOfService = Integer.parseInt(CURRENT_LENGTH_OF_SERVICE); if
-			 * (currentLengthOfService <= 3) { EMPLOYER_CATEGORISATION = "G"; } else if
-			 * (currentLengthOfService <= 6) { EMPLOYER_CATEGORISATION = "C"; } else {
-			 * EMPLOYER_CATEGORISATION = "U"; }
-			 */
 		} catch (Exception ex) {
 			LOG.error("ERROR getEmployerName :: " + ex);
 		}
+
+		return employerName;
+
 	}
 
 	private void calculateNewToIndustry() {
@@ -2229,11 +2400,11 @@ public class ScoringEngine implements JavaService2 {
 		}
 	}
 
-	private void calculateMaxLoanAmountCapping() {
+	private void calculateMaxLoanAmountCapping(JSONObject getSalaryCertificate) {
 		try {
-			if (NEW_TO_INDUSTRY.equalsIgnoreCase("Y") && Double.parseDouble(MONTHLY_NET_SALARY) < 4500) {
+			if (NEW_TO_INDUSTRY.equalsIgnoreCase("Y") && Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) < 4500) {
 				MAX_LOAN_AMOUNT_CAPPING = "100000";
-			} else if (NEW_TO_INDUSTRY.equalsIgnoreCase("N") && Double.parseDouble(MONTHLY_NET_SALARY) < 7500) {
+			} else if (NEW_TO_INDUSTRY.equalsIgnoreCase("N") && Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) < 7500) {
 				MAX_LOAN_AMOUNT_CAPPING = "200000";
 			}
 		} catch (Exception ex) {
@@ -2241,51 +2412,74 @@ public class ScoringEngine implements JavaService2 {
 		}
 	}
 
-	private void calculateManagingSeasonalAndTemporaryLiftInSalary(Result getSalaryCertificate) {
+	private String calculateManagingSeasonalAndTemporaryLiftInSalary(JSONObject getSalaryCertificate) {
+		String manageLiftSalary = "1";
 		try {
 			double basicSalary = 0;
 			double OtherAllowance = 0;
-			MANAGING_SEASONAL_AND_TEMPORARY_LIFT_IN_SALARY = "1";
-			switch (EMPLOYER_TYPE_ID) {
-			case "1": // Govt
-				basicSalary = Double.parseDouble(getSalaryCertificate.getParamValueByName("basicSalary"));
-				OtherAllowance = Double.parseDouble(getSalaryCertificate.getParamValueByName("totalAllownces"));
+			// MANAGING_SEASONAL_AND_TEMPORARY_LIFT_IN_SALARY = "1";
+			switch (getSalaryCertificate.optString("CustomerCategory")) {
+			case "G": // Govt
+				basicSalary = Double.parseDouble(getSalaryCertificate.optJSONObject("SalaryObject")
+						.optJSONObject("employerInfo").optString("basicSalary"));
+				OtherAllowance = Double.parseDouble(getSalaryCertificate.optJSONObject("SalaryObject")
+						.optJSONObject("employerInfo").optString("totalAllownces"));
 				break;
-			case "3": // Private
-				basicSalary = Double.parseDouble(getSalaryCertificate.getParamValueByName("basicWage"));
-				OtherAllowance = Double.parseDouble(getSalaryCertificate.getParamValueByName("otherAllowance"));
-				basicSalary += Double.parseDouble(getSalaryCertificate.getParamValueByName("housingAllowance"));
+			case "P": // Private
+				basicSalary = Double
+						.parseDouble(getSalaryCertificate.optJSONObject("SalaryObject").optString("basicWage"));
+				OtherAllowance = Double
+						.parseDouble(getSalaryCertificate.optJSONObject("SalaryObject").optString("otherAllowance"));
+				basicSalary += Double
+						.parseDouble(getSalaryCertificate.optJSONObject("SalaryObject").optString("housingAllowance"));
+				break;
+				
+			default:
+				manageLiftSalary = "1";
+				
 				break;
 			}
 			if (OtherAllowance >= (basicSalary * 2)) {
-				MANAGING_SEASONAL_AND_TEMPORARY_LIFT_IN_SALARY = "0";
+				manageLiftSalary = "0";
 			}
 		} catch (Exception ex) {
 			LOG.error("ERROR calculateManagingSeasonalAndTemporaryLiftInSalary :: " + ex);
 		}
+
+		return manageLiftSalary;
 	}
 
-	private void calculateSalaryWithoutAllowances(Result getSalaryCertificate) {
+	private String calculateSalaryWithoutAllowances(JSONObject getSalaryCertificate) {
+		String salaryWthAllow = "0";
+
 		try {
-			switch (EMPLOYER_TYPE_ID) {
-			case "1": // Govt
-				SALARY_WITHOUT_ALLOWANCES = String.valueOf(Double.parseDouble(MONTHLY_NET_SALARY)
-						- Double.parseDouble(getSalaryCertificate.getParamValueByName("totalAllownces")));
-				SALARY_WITHOUT_ALLOWANCES = String.format("%.2f", Double.parseDouble(SALARY_WITHOUT_ALLOWANCES));
+			switch (getSalaryCertificate.optString("CustomerCategory")) {
+			case "G": // Govt
+				salaryWthAllow = String.valueOf(Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary"))
+						- Double.parseDouble(getSalaryCertificate.optJSONObject("SalaryObject")
+								.optJSONObject("employerInfo").optString("totalAllownces")));
+				salaryWthAllow = String.format("%.2f", Double.parseDouble(salaryWthAllow));
 				break;
-			case "3": // Private
-				SALARY_WITHOUT_ALLOWANCES = String.valueOf(Double.parseDouble(MONTHLY_NET_SALARY)
-						- Double.parseDouble(getSalaryCertificate.getParamValueByName("otherAllowance")));
-				SALARY_WITHOUT_ALLOWANCES = String.format("%.2f", Double.parseDouble(SALARY_WITHOUT_ALLOWANCES));
+			case "P": // Private
+				salaryWthAllow = String.valueOf(
+						Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")) - Double.parseDouble(
+								getSalaryCertificate.optJSONObject("SalaryObject").optString("otherAllowance")));
+				salaryWthAllow = String.format("%.2f", Double.parseDouble(salaryWthAllow));
+				break;
+				
+			case "PEN":
+				salaryWthAllow = String.format("%.2f", Double.parseDouble(getSalaryCertificate.optString("Monthly_Net_Salary")));
 				break;
 			}
 
 		} catch (Exception ex) {
 			LOG.error("ERROR calculateSalaryWithoutAllowances :: " + ex);
 		}
+
+		return salaryWthAllow;
 	}
 
-	private Map<String, String> createRequestForScoreCardS2Service(Result getSalaryCertificate,
+	private Map<String, String> createRequestForScoreCardS2Service(JSONObject getSalaryCertificate,
 			DataControllerRequest request, Result getCustomerApplicationData) {
 		Map<String, String> inputParams = new HashMap<>();
 		try {
@@ -2295,15 +2489,17 @@ public class ScoringEngine implements JavaService2 {
 			// inputParams.put("loanRef", APPLICATION_ID);
 			// inputParams.put("tenor", TENOR);
 			// inputParams.put("insideKsa", INSIDE_KSA);
-			inputParams.put("salaryAmount", MONTHLY_NET_SALARY);
+			inputParams.put("salaryAmount", getSalaryCertificate.optString("Monthly_Net_Salary"));
 			inputParams.put("tenor", HelperMethods.getFieldValue(getCustomerApplicationData, "tenor"));
 			inputParams.put("scorecardId", HelperMethods.getFieldValue(getCustomerApplicationData, "scoredCardId"));
-			inputParams.put("validLos", CURRENT_LENGTH_OF_SERVICE);
-			inputParams.put("liftSalary", MANAGING_SEASONAL_AND_TEMPORARY_LIFT_IN_SALARY);
-			inputParams.put("employeeName", EMPLOYER_NAME);
-			inputParams.put("salaryNonAllowance", SALARY_WITHOUT_ALLOWANCES);
-			inputParams.put("pensioner", PENSIONER);
-			inputParams.put("employeeCategory", EMPLOYER_CATEGORISATION);
+			inputParams.put("validLos", getSalaryCertificate.optString("los"));
+			inputParams.put("liftSalary", getSalaryCertificate.optString("Manage_Lift_Salary"));
+			inputParams.put("employeeName", getSalaryCertificate.optString("Employer_Name"));
+			inputParams.put("salaryNonAllowance", getSalaryCertificate.optString("Salary_Without_Allowence"));
+			inputParams.put("pensioner", getSalaryCertificate.optString("isPensioner"));
+			inputParams.put("employeeCategory", getSalaryCertificate.optString("CustomerCategory"));
+
+			LOG.error("INPUT createRequestForScoreCardS2Service :: " + inputParams);
 
 		} catch (Exception ex) {
 			LOG.error("ERROR createRequestForScoreCardS2Service :: " + ex);
@@ -2336,7 +2532,7 @@ public class ScoringEngine implements JavaService2 {
 	}
 
 	private Map<String, String> createRequestForScoreCardS3Service(Result getConsumerEnquiry,
-			Result getCustomerApplicationData, Result getCustomerData, DataControllerRequest request) {
+			Result getCustomerApplicationData, Result getCustomerData, DataControllerRequest request, JSONObject getSalaryCertificate) {
 		Map<String, String> inputParams = new HashMap<>();
 		try {
 
@@ -2353,11 +2549,11 @@ public class ScoringEngine implements JavaService2 {
 
 			inputParams.put("dataType", request.getParameter("Product"));
 			inputParams.put("calculate", CALCULATE);
-			inputParams.put("pensioner", PENSIONER);
+			inputParams.put("pensioner", getSalaryCertificate.optString("isPensioner"));
 
-			inputParams.put("salaryAmount", MONTHLY_NET_SALARY);
+			inputParams.put("salaryAmount", getSalaryCertificate.optString("Monthly_Net_Salary"));
 
-			inputParams.put("validLos", CURRENT_LENGTH_OF_SERVICE);
+			inputParams.put("validLos", getSalaryCertificate.optString("los"));
 			inputParams.put("validDti", GLOBAL_DTI);
 			inputParams.put("currDelinquency", CURRENT_DELINQUENCY);
 			inputParams.put("maxDelinquency", MAX_DELINQUENCY);
@@ -2377,18 +2573,18 @@ public class ScoringEngine implements JavaService2 {
 
 			inputParams.put("validInternalDti", INTERNAL_DTI);
 			inputParams.put("currDelinquencyT", CURRENT_DELINQUENCY_T);
-			inputParams.put("employeeName", EMPLOYER_NAME);
+			inputParams.put("employeeName", getSalaryCertificate.optString("Employer_Name"));
 			//// Stop sending the employee categorization
 			// if (EMPLOYER_TYPE_ID == "1") inputParams.put("employeeCategory",
 			//// EMPLOYER_CATEGORISATION);
 
 			inputParams.put("loanAmountCap", MAX_LOAN_AMOUNT_CAPPING);
-			inputParams.put("liftSalary", MANAGING_SEASONAL_AND_TEMPORARY_LIFT_IN_SALARY);
+			inputParams.put("liftSalary", getSalaryCertificate.optString("Manage_Lift_Salary"));
 			inputParams.put("nationality", NATIONALITY);
 			inputParams.put("newIndustry", NEW_TO_INDUSTRY);
-			inputParams.put("salaryNonAllowance", SALARY_WITHOUT_ALLOWANCES);
+			inputParams.put("salaryNonAllowance", getSalaryCertificate.optString("Salary_Without_Allowence"));
 			inputParams.put("score", SC_SCORE);
-			inputParams.put("employeeCategory", EMPLOYER_CATEGORISATION);
+			inputParams.put("employeeCategory", getSalaryCertificate.optString("CustomerCategory"));
 
 		} catch (Exception ex) {
 			LOG.error("ERROR createRequestForScoreCardS3Service :: " + ex);
@@ -2626,8 +2822,9 @@ public class ScoringEngine implements JavaService2 {
 				|| inputParams.get("applicationStatus").equalsIgnoreCase("SID_SUSPENDED")) {
 			updateCustomerApplicationData = StatusEnum.error.setStatus();
 			IjarahErrors.ERR_660028.setErrorCode(updateCustomerApplicationData);
-			customerBlockingDBCall(dataControllerRequest.getParameter("NationalID"), dataControllerRequest.getParameter("ApplicationID"), knockOutStage,
-					failureReason, dataControllerRequest);
+			customerBlockingDBCall(dataControllerRequest.getParameter("NationalID"),
+					dataControllerRequest.getParameter("ApplicationID"), knockOutStage, failureReason,
+					dataControllerRequest);
 		}
 		return updateCustomerApplicationData;
 	}
@@ -2636,10 +2833,10 @@ public class ScoringEngine implements JavaService2 {
 			String FailureReason, DataControllerRequest dataControllerRequest) {
 		try {
 			Map<String, String> inputParams = new HashMap<>();
-		    inputParams.put("nationalid", nationalId);
-		    inputParams.put("applicationid", applicationID);
-		    inputParams.put("scorestage", scoreStage);
-		    inputParams.put("failurereason", FailureReason);
+			inputParams.put("nationalid", nationalId);
+			inputParams.put("applicationid", applicationID);
+			inputParams.put("scorestage", scoreStage);
+			inputParams.put("failurereason", FailureReason);
 			ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, SP_CREATE_UPDATE_CUSTOMER_BLOCKING_OPERATION_ID,
 					inputParams, null, dataControllerRequest);
 		} catch (Exception ex) {
@@ -2648,7 +2845,7 @@ public class ScoringEngine implements JavaService2 {
 	}
 
 	private Map<String, String> createRequestForMISReportDBCall(String status, double maxEMI, double customerGblDti,
-			double customerInternalDti, int calMAXGblDti, int calMAXinternalDti, DataControllerRequest request) {
+			double customerInternalDti, int calMAXGblDti, int calMAXinternalDti, DataControllerRequest request, JSONObject getSalaryCertificate) {
 
 		Map<String, String> inputParam = new HashMap<>();
 		inputParam.put("applicationID", request.getParameter("ApplicationID"));
@@ -2668,12 +2865,12 @@ public class ScoringEngine implements JavaService2 {
 		inputParam.put("summary", String.valueOf(SUMMARY_DETAILS));
 		inputParam.put("financialDefaultAmount", calculateFinancialDefaultAmount());
 		inputParam.put("valid_util", calculateNonFinancialDefaultAmount());
-		
-		inputParam.put("lengthOfService", CURRENT_LENGTH_OF_SERVICE);
-		inputParam.put("temporaryLiftInSalary", MANAGING_SEASONAL_AND_TEMPORARY_LIFT_IN_SALARY);
+
+		inputParam.put("lengthOfService", getSalaryCertificate.optString("los"));
+		inputParam.put("temporaryLiftInSalary", getSalaryCertificate.optString("Manage_Lift_Salary"));
 		inputParam.put("newToIndustry", NEW_TO_INDUSTRY);
 		inputParam.put("allowance", String.valueOf(ALLOWANCE_DETAILS));
-		inputParam.put("pensioner", PENSIONER);
+		inputParam.put("pensioner", getSalaryCertificate.optString("isPensioner"));
 		inputParam.put("score", SC_SCORE);
 		inputParam.put("ci_installment", String.valueOf(INSTALLMENT_AMOUNT));
 		inputParam.put("ci_limit", String.valueOf(LIMIT_AMOUNT));
@@ -2684,19 +2881,19 @@ public class ScoringEngine implements JavaService2 {
 		return inputParam;
 	}
 
-	private Map<String, String> createRequestForMISReportDBCallSCorecard2(DataControllerRequest request,
-			String status, String employerCategory) {
+	private Map<String, String> createRequestForMISReportDBCallSCorecard2(DataControllerRequest request, String status,
+			String employerCategory, JSONObject getSalaryCertificate) {
 
 		Map<String, String> inputParam = new HashMap<>();
 		inputParam.put("applicationID", request.getParameter("ApplicationID"));
 		inputParam.put("nationalId", request.getParameter("NationalID"));
 		inputParam.put("knockoutStatusS2", status);
-		inputParam.put("lengthOfService", CURRENT_LENGTH_OF_SERVICE);
-		inputParam.put("temporaryLiftInSalary", MANAGING_SEASONAL_AND_TEMPORARY_LIFT_IN_SALARY);
+		inputParam.put("lengthOfService", getSalaryCertificate.optString("los"));
+		inputParam.put("temporaryLiftInSalary", getSalaryCertificate.optString("Manage_Lift_Salary"));
 		inputParam.put("newToIndustry", NEW_TO_INDUSTRY);
 		inputParam.put("allowance", String.valueOf(ALLOWANCE_DETAILS));
-		inputParam.put("pensioner", PENSIONER);
-		inputParam.put("category", EMPLOYER_CATEGORISATION);
+		inputParam.put("pensioner", getSalaryCertificate.optString("isPensioner"));
+		inputParam.put("category", getSalaryCertificate.optString("CustomerCategory"));
 		inputParam.put("ci_installment", String.valueOf(INSTALLMENT_AMOUNT));
 		inputParam.put("ci_limit", String.valueOf(LIMIT_AMOUNT));
 		inputParam.put("ci_summary", String.valueOf(CI_SUMMARY));
@@ -2715,4 +2912,146 @@ public class ScoringEngine implements JavaService2 {
 			LOG.error("saveMISReportData :: " + ex);
 		}
 	}
+
+	/************************** New HS Deploytment **********************/
+	private String checkCustomerIsGovernmentOrPrivate(JSONObject jsonObject) {
+		String customerType = "";
+		try {
+
+			if (jsonObject.optJSONArray("governmentSector") != null
+					&& jsonObject.optJSONArray("governmentSector").length() > 0
+					&& !jsonObject.optJSONArray("governmentSector").optJSONObject(0).optJSONObject("payslipInfo")
+							.optString("payMonth").isBlank()) {
+				customerType = "G";
+			} else {
+				customerType = "P";
+			}
+
+		} catch (Exception e) {
+			LOG.error("Error checkCustomerIsGovernmentOrPrivate = " + e.getMessage());
+			customerType = "";
+		}
+
+		LOG.error("checkCustomerIsGovernmentOrPrivate = " + customerType);
+		return customerType;
+	}
+
+	private boolean calculationOnPvtSalary(JSONObject jsonObject, JSONObject mainSalaryObject) {
+		boolean check = false;
+
+		JSONArray pvtEmploymentStatusArr = jsonObject.optJSONObject("data").optJSONObject("privateSector")
+				.optJSONArray("employmentStatusInfo");
+
+		if (pvtEmploymentStatusArr.length() > 0) {
+
+			//String pensionerEMI = "";
+			String isPensioner = "0";
+
+			// calculate pension
+			JSONObject pensionerObj = checkPensioner(pvtEmploymentStatusArr);
+
+			if (pensionerObj.has("check")) {
+				if (pensionerObj.optBoolean("check")) {
+					// Customer is pensioner
+					//pensionerEMI = calculatePensionerEMI(pensionerObj);
+					isPensioner = "1";
+
+					mainSalaryObject.put("isPensioner", isPensioner);
+					mainSalaryObject.put("PensionSalaryObject", pensionerObj);
+					mainSalaryObject.put("CustomerCategory", "PEN");
+					check = true;
+				}
+			}
+			// checkWhichSalaryToPick
+			JSONObject salaryObj = checkWhichSalaryToPickOther(pvtEmploymentStatusArr);
+			if (salaryObj.optBoolean("check")) {
+				mainSalaryObject.put("SalaryObject", salaryObj);
+				mainSalaryObject.put("los", salaryObj.optString("LengthOfService"));
+				mainSalaryObject.put("Other_Salary_Present", true);
+				mainSalaryObject.put("CustomerCategory", "P");
+				check = true;
+			}else {
+				mainSalaryObject.put("Other_Salary_Present", false);
+			}
+			LOG.error("Final Customer Salary = " + salaryObj);
+
+		}
+
+		return check;
+	}
+
+	private JSONObject checkPensioner(JSONArray pvtEmploymentStatusArr) {
+		JSONObject returnObject = new JSONObject();
+
+		try {
+
+			for (int i = 0; i < pvtEmploymentStatusArr.length(); i++) {
+
+				JSONObject jsonObject = pvtEmploymentStatusArr.getJSONObject(i);
+
+				if (jsonObject.optString("employmentStatus").equalsIgnoreCase("Public Pension")
+						|| jsonObject.optString("employmentStatus").equalsIgnoreCase("Private Pension")) {
+					returnObject = jsonObject;
+					returnObject.put("check", true);
+					break;
+				}
+			}
+
+		} catch (Exception e) {
+			LOG.error("Error checkPensioner = " + e.getMessage());
+			returnObject.put("check", false);
+		}
+
+		LOG.error("checkPensioner = " + returnObject);
+		return returnObject;
+	}
+
+	private JSONObject checkWhichSalaryToPickOther(JSONArray pvtEmploymentStatusArr) {
+		JSONObject returnObject = new JSONObject();
+		returnObject.put("check", false);
+		String los = "0";
+
+		try {
+			for (int i = 0; i < pvtEmploymentStatusArr.length(); i++) {
+				JSONObject jsonObject = pvtEmploymentStatusArr.getJSONObject(i);
+
+				if (!jsonObject.optString("employmentStatus").equalsIgnoreCase("نشيط")) {
+					continue;
+				} else {
+					if (Integer.parseInt(calculateCurrentLengthOfService(jsonObject)) >= Integer.parseInt(los)) {
+						los = calculateCurrentLengthOfService(jsonObject);
+						returnObject.put("SalaryObject", jsonObject);
+						returnObject.put("LengthOfService", los);
+						returnObject.put("check", true);
+					}
+				}
+
+			}
+
+		} catch (Exception e) {
+			returnObject.put("check", false);
+			LOG.error("Error checkWhichSalaryToPickOther = " + e.getMessage());
+		}
+		LOG.error("checkWhichSalaryToPickOther = " + returnObject);
+		return returnObject;
+	}
+
+	private String calculatePensionerEMI(JSONObject pensionerObj) {
+		String globalDTI = "25";
+		String pensionerWage = pensionerObj.optString("basicWage");
+		double pensionerEMI = (Double.parseDouble(pensionerWage) * Double.parseDouble(globalDTI)) / 100;
+
+		return String.valueOf(pensionerEMI);
+
+	}
+	
+	private String calculateEMIForPvtAndPensioner(JSONObject salaryObj) {
+		String globalDTI = "33";
+		String pvtNetSalary = salaryObj.optString("Monthly_Net_Salary");
+		double pvtEMI = (Double.parseDouble(pvtNetSalary) * Double.parseDouble(globalDTI)) / 100;
+
+		return String.valueOf(pvtEMI);
+
+	}
+
 }

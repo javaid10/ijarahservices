@@ -362,6 +362,7 @@ public class CreateLoan implements JavaService2 {
 			inputParams.put("amount",
 					customerApplicationData.getRecord(index).getParamValueByName("offerAmount").replace(",", ""));
 			inputParams.put("fixed", customerApplicationData.getRecord(index).getParamValueByName("loanRate"));
+			
 			inputParams.put("maturityDate", customerApplicationData.getRecord(index).getParamValueByName("maturityDate"));
 			inputParams.put("sabbNumber",
 					StringUtils.isNotBlank(customerApplicationData.getRecord(index).getParamValueByName("sabbNumber"))
