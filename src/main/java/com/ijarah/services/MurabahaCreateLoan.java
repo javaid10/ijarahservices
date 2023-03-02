@@ -70,12 +70,12 @@ public class MurabahaCreateLoan implements JavaService2 {
                 if (IjarahHelperMethods.hasSuccessCode(getCustomerData) && HelperMethods.hasRecords(getCustomerData)) {
                     Result activateCustomer = activateCustomer(createInputParamsForActivateCustomerService(getCustomerData), dataControllerRequest);
                     if (IjarahHelperMethods.hasSuccessCode(activateCustomer)) {
-                        Map<String, String> inputParams = createInputParamsForCreateLoanService(index, getCustomerData);
+                        Map<String, String> inputParams = createInputParamsForCreateLoanService(index, getCustomerData, CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("voucherID"), dataControllerRequest);
                         Result createLoanResult = createLoan(inputParams, dataControllerRequest);
                         if (IjarahHelperMethods.hasSuccessStatus(createLoanResult)) {
                             if (createLoanResult.getRecordById("header").getParamValueByName("status").equalsIgnoreCase("success")) {
                                 updateCustomerApplicationData(createInputParamsForCustomerApplicationService(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("id")), dataControllerRequest);
-                                getExpiryDateFromDB(dataControllerRequest);
+                                //getExpiryDateFromDB(dataControllerRequest);
                                 updateVoucherData(createInputParamsForUpdateVoucherService(inputParams.get("voucherId"), CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("voucherID")), dataControllerRequest);
                                 /*
                                 Result getNafaesData = getNafaesData(getCustomerData, dataControllerRequest);
@@ -142,10 +142,10 @@ public class MurabahaCreateLoan implements JavaService2 {
     private Map<String, String> createInputParamsForUpdateVoucherService(String voucherCode, String voucherID) {
         Map<String, String> inputParam = new HashMap<>();
         inputParam.put("id", voucherID);
-        inputParam.put("voucherCode", voucherCode);
+        //inputParam.put("voucherCode", voucherCode);
         inputParam.put("voucherStatus", VoucherStatus.UNUTILISED.name());
         inputParam.put("T24Status", VoucherStatus.UNUTILISED.name());
-        inputParam.put("expiryDate", getExpiryDate());
+        //inputParam.put("expiryDate", getExpiryDate());
         return inputParam;
     }
 
@@ -244,7 +244,7 @@ public class MurabahaCreateLoan implements JavaService2 {
         return result;
     }
 
-    private Map<String, String> createInputParamsForCreateLoanService(int index, Result getCustomerData) {
+    private Map<String, String> createInputParamsForCreateLoanService(int index, Result getCustomerData, String voucherId,DataControllerRequest dataControllerRequest) {
         Map<String, String> inputParams = new HashMap<>();
         try {
             inputParams.put("partyId", StringUtils.isNotBlank(HelperMethods.getFieldValue(getCustomerData, "partyId")) ? HelperMethods.getFieldValue(getCustomerData, "partyId") : "");
@@ -257,7 +257,7 @@ public class MurabahaCreateLoan implements JavaService2 {
             inputParams.put("sanadRef", StringUtils.isNotBlank(CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sanadNumber")) ? CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("sanadNumber") : "");
             inputParams.put("infIoanRef", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("applicationID"));
             inputParams.put("charge", CUSTOMERS_APPLICATION_DATA.getRecord(index).getParamValueByName("murabahaCommissionRate"));
-            inputParams.put("voucherId", generateVoucherCode());
+            inputParams.put("voucherId", generateVoucherCode(voucherId, dataControllerRequest));
             inputParams.put("voucherStatus", VoucherStatus.CREATED.name());
         } catch (Exception ex) {
             LOG.error("ERROR createInputParamsForCreateLoanService :: " + ex);
@@ -265,8 +265,8 @@ public class MurabahaCreateLoan implements JavaService2 {
         return inputParams;
     }
 
-    private String generateVoucherCode() {
-
+    private String generateVoucherCode(String voucherId,DataControllerRequest dataControllerRequest) {
+    	/*
         String[] AlphaNumericArray = {"01234ABCDEFGHIJKL56789MNOPQRSTUVWXYZ", "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
                 "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", "ABCDEFGHIJKL56789MNOPQRSTUVWXYZ01234"};
         String AlphaNumericString = AlphaNumericArray[(int) (AlphaNumericArray.length * Math.random())];
@@ -280,6 +280,10 @@ public class MurabahaCreateLoan implements JavaService2 {
             sb.append(AlphaNumericString.charAt(index));
         }
         return sb.toString();
+        */
+        Result voucherDetails = getVoucherData(voucherId, dataControllerRequest);
+        String voucherCode = HelperMethods.getFieldValue(voucherDetails, "voucherCode");
+        return voucherCode;
     }
 
     private Result createLoan(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
@@ -406,6 +410,14 @@ public class MurabahaCreateLoan implements JavaService2 {
 
     private void updateVoucherData(Map<String, String> inputParams, DataControllerRequest dataControllerRequest) {
         ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, VOUCHER_UPDATE_OPERATION_ID, inputParams, null, dataControllerRequest);
+    }
+
+    private Result getVoucherData(String voucherID, DataControllerRequest dataControllerRequest) {
+        Map<String, String> filter = new HashMap<>();
+        filter.put(DBPUtilitiesConstants.FILTER, "id" + DBPUtilitiesConstants.EQUAL + voucherID);
+        Result getVoucherData = ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID, VOUCHER_GET_OPERATION_ID, filter, null, dataControllerRequest);
+        LOG.error("getCustomerApplicationData :: " + ResultToJSON.convert(getVoucherData));
+        return getVoucherData;
     }
 
     /**

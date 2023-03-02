@@ -119,6 +119,7 @@ public class RedeemVoucher implements JavaService2 {
             Result redeemVoucher = ServiceCaller.internal(MURABAHA_T24_JSON_2_SERVICE_ID, REDEEM_VOUCHER_OPERATION_ID, inputParams, null, dataControllerRequest);
             String inputRequest = (new ObjectMapper()).writeValueAsString(inputParams);
             String outputResponse = ResultToJSON.convert(redeemVoucher);
+            dataControllerRequest.addRequestParam_("NationalID", "");
             auditLogData(dataControllerRequest, inputRequest, outputResponse, MURABAHA_T24_JSON_2_SERVICE_ID + " : " + REDEEM_VOUCHER_OPERATION_ID);
 
             if (IjarahHelperMethods.hasSuccessCode(redeemVoucher)) {

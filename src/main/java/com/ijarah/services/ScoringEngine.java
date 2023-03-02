@@ -241,7 +241,8 @@ public class ScoringEngine implements JavaService2 {
                             // DB INTEGRATION SERVICES CALLS
                             result = updateCustomerApplicationData(
                                     createRequestForUpdateCustomerApplicationDataServiceS2(getCustomerApplicationData),
-                                    dataControllerRequest);
+                                    dataControllerRequest, "S2", "Application Declined");
+
                             return result;
                         }
                     }
@@ -262,7 +263,7 @@ public class ScoringEngine implements JavaService2 {
                     LOG.error("ERROR After consumerEnquiryObj :: " + checkConsumerResp);
                     result = updateCustomerApplicationData(
                             createRequestForUpdateCustomerApplicationDataServiceS2(getCustomerApplicationData),
-                            dataControllerRequest);
+                            dataControllerRequest, "S2", "Application Declined");
                     return result;
                 }
 
@@ -289,7 +290,7 @@ public class ScoringEngine implements JavaService2 {
 
                 // DB INTEGRATION SERVICES CALLS
                 result = updateCustomerApplicationData(createRequestForUpdateCustomerApplicationDataService(
-                        getCustomerApplicationData, getScoreCardS2, getScoreCardS3, dataControllerRequest, voucherDetails), dataControllerRequest);
+                        getCustomerApplicationData, getScoreCardS2, getScoreCardS3, dataControllerRequest, voucherDetails), dataControllerRequest, "S3", "Application Declined");
             }
             return result;
         } catch (Exception ex) {
@@ -1177,6 +1178,8 @@ public class ScoringEngine implements JavaService2 {
             }
         }
 
+        //TODO
+        //Add Environment variable check for prod env
         if (loanAmountCap.equalsIgnoreCase("0") || loanAmountCap.equalsIgnoreCase("0.0")) {
             loanAmountCap = "20000";
         }
@@ -2239,7 +2242,7 @@ public class ScoringEngine implements JavaService2 {
     }
 
     private Result updateCustomerApplicationData(Map<String, String> inputParams,
-                                                 DataControllerRequest dataControllerRequest) {
+                                                 DataControllerRequest dataControllerRequest, String knockOutStage, String failureReason) {
         Result updateCustomerApplicationData = StatusEnum.success.setStatus();
         updateCustomerApplicationData.appendResult(ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID,
                 CUSTOMER_APPLICATION_UPDATE_OPERATION_ID, inputParams, null, dataControllerRequest));
@@ -2248,7 +2251,44 @@ public class ScoringEngine implements JavaService2 {
                 || inputParams.get("applicationStatus").equalsIgnoreCase("SID_SUSPENDED")) {
             updateCustomerApplicationData = StatusEnum.error.setStatus();
             IjarahErrors.ERR_660028.setErrorCode(updateCustomerApplicationData);
+            customerBlockingDBCall(inputParams.get("nationalId"), inputParams.get("applicationID"), knockOutStage, failureReason, dataControllerRequest);
         }
         return updateCustomerApplicationData;
+    }
+
+    private void customerBlockingDBCall(String nationalId, String applicationID, String scoreStage, String FailureReason, DataControllerRequest dataControllerRequest) {
+        try {
+            Map<String, String> inputParams = new HashMap<>();
+            inputParams.put("nationalId", nationalId);
+            inputParams.put("applicationID", applicationID);
+            inputParams.put("scoreStage", scoreStage);
+            inputParams.put("FailureReason", FailureReason);
+            ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID,
+                    SP_CREATE_UPDATE_CUSTOMER_BLOCKING_OPERATION_ID, inputParams, null, dataControllerRequest);
+        } catch (Exception ex) {
+            LOG.error("ERROR customerBlockingDBCall :: " + ex);
+        }
+    }
+
+    private void customerApplicationJourneyIncrementDBCall(String nationalId, DataControllerRequest dataControllerRequest) {
+        try {
+            Map<String, String> inputParams = new HashMap<>();
+            inputParams.put("nationalId", nationalId);
+            ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID,
+                    SP_INCREMENT_CUSTOMER_APPLICATION_JOURNEY_OPERATION_ID, inputParams, null, dataControllerRequest);
+        } catch (Exception ex) {
+            LOG.error("ERROR customerApplicationJourneyIncrementDBCall :: " + ex);
+        }
+    }
+
+    private void sanadApprovalIncrementDBCall(String nationalId, DataControllerRequest dataControllerRequest) {
+        try {
+            Map<String, String> inputParams = new HashMap<>();
+            inputParams.put("nationalId", nationalId);
+            ServiceCaller.internalDB(DB_MORA_SERVICES_SERVICE_ID,
+                    SP_INCREMENT_SANAD_SIGN_COUNT_OPERATION_ID, inputParams, null, dataControllerRequest);
+        } catch (Exception ex) {
+            LOG.error("ERROR sanadApprovalIncrementDBCall :: " + ex);
+        }
     }
 }

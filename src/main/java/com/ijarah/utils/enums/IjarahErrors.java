@@ -49,7 +49,10 @@ public enum IjarahErrors {
     ERR_VOUCHER_EXPIRY_SERVICE_FAILED_034("034", "Voucher Expiry Service Failed."),
     ERR_EXPIRE_VOUCHER_DB_SERVICE_FAILED_035("035", "Expire Voucher DB Service Failed."),
     ERR_EXPIRE_VOUCHER_T24_SERVICE_FAILED_036("036", "Expire Voucher T24 Service Failed."),
-    ERR_GET_VOUCHER_DETAILS_FOR_EXPIRY_DB_SERVICE_FAILED_037("037", "Get Voucher Details for Expiry DB Service Failed.");
+    ERR_GET_VOUCHER_DETAILS_FOR_EXPIRY_DB_SERVICE_FAILED_037("037", "Get Voucher Details for Expiry DB Service Failed."),
+    ERR_GET_REAPPLY_DATE_SERVICE_FAILED_038("038", "Get Re Apply Date Failed Service Failed."),
+    ERR_GET_CUSTOMER_APPLICATION_SERVICE_FAILED_039("039", "Get Customer Application Journey Service Failed."),
+    ERR_GET_SANAD_ITERATION_SERVICE_FAILED_040("040", "Get Sanad Iteration Failed.");
 
     public static final String ERROR_CODE_KEY = "dbpErrCode";
     public static final String ERROR_MESSAGE_KEY = "dbpErrMsg";
