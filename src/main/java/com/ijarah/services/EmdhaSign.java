@@ -2,6 +2,7 @@ package com.ijarah.services;
 
 import com.emdha.esign.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ijarah.utils.CustomErrors;
 import com.ijarah.utils.IjarahHelperMethods;
 import com.ijarah.utils.ServiceCaller;
 import com.ijarah.utils.enums.IjarahErrors;
@@ -10,8 +11,10 @@ import com.kony.dbputilities.util.HelperMethods;
 import com.konylabs.middleware.common.JavaService2;
 import com.konylabs.middleware.controller.DataControllerRequest;
 import com.konylabs.middleware.controller.DataControllerResponse;
+import com.konylabs.middleware.dataobject.Param;
 import com.konylabs.middleware.dataobject.Result;
 import com.konylabs.middleware.dataobject.ResultToJSON;
+
 import esign.text.pdf.codec.Base64;
 import org.apache.log4j.Logger;
 
@@ -67,19 +70,23 @@ public class EmdhaSign implements JavaService2 {
 						if (IjarahHelperMethods.hasSuccessCode(getUpdateDocumentStorageData)) {
 							Result successResult = StatusEnum.error.setStatus();
 							StatusEnum.success.setStatus(successResult);
-							successResult.addParam("Message", "Document has been signed by Emdha");
+							setErrorForServiceDown(result, "ERR_60000", "false");
 							return successResult;
 						} else {
-							IjarahErrors.ERR_UPDATE_DOCUMENT_STORAGE_014.setErrorCode(result);
+							// IjarahErrors.ERR_UPDATE_DOCUMENT_STORAGE_014.setErrorCode(result);
+							setErrorForServiceDown(result, "ERR_60101", "false");
 						}
 					} else {
-						IjarahErrors.ERR_UNABLE_TO_SIGN_DOCUMENT_015.setErrorCode(result);
+						// IjarahErrors.ERR_UNABLE_TO_SIGN_DOCUMENT_015.setErrorCode(result);
+						setErrorForServiceDown(result, "ERR_60101", "false");
 					}
 				} else {
-					IjarahErrors.ERR_PREPROCESS_INVALID_RESPONSE_PARAMS_001.setErrorCode(result);
+					// IjarahErrors.ERR_PREPROCESS_INVALID_RESPONSE_PARAMS_001.setErrorCode(result);
+					setErrorForServiceDown(result, "ERR_60101", "false");
 				}
 			} else {
-				IjarahErrors.ERR_NO_DOCUMENT_STORAGE_RECORD_FOUND_017.setErrorCode(result);
+				// IjarahErrors.ERR_NO_DOCUMENT_STORAGE_RECORD_FOUND_017.setErrorCode(result);
+				setErrorForServiceDown(result, "ERR_60101", "false");
 			}
 		}
 		return result;
@@ -139,7 +146,7 @@ public class EmdhaSign implements JavaService2 {
 		AR_FULL_NAME = HelperMethods.getFieldValue(emdhaCustomerDetails, "ArFullName");
 		MOBILE = HelperMethods.getFieldValue(emdhaCustomerDetails, "mobile");
 		EMAIL = HelperMethods.getFieldValue(emdhaCustomerDetails, "Value");
-		
+
 		DOCUMENT = DOCUMENT.substring(2, DOCUMENT.length() - 1);
 		DOCUMENT_ID = HelperMethods.getFieldValue(emdhaCustomerDetails, "uuid");
 
@@ -328,5 +335,13 @@ public class EmdhaSign implements JavaService2 {
 			}
 		}
 		return response.toString();
+	}
+
+	private void setErrorForServiceDown(Result result, String errorCode, String show) {
+		ArrayList<String> selectedId = CustomErrors.getAssignedError().get(errorCode);
+		result.addParam(new Param("ResponseCode", errorCode));
+		result.addParam(new Param("Err_Desc_Eng", selectedId.get(0)));
+		result.addParam(new Param("Err_Desc_Ar", selectedId.get(1)));
+		result.addParam(new Param("onscreen", show));
 	}
 }
